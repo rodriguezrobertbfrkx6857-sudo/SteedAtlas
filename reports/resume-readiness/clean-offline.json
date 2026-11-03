@@ -1,0 +1,234 @@
+{
+  "database": "runtime\\resume-rc\\autonomous-demo.db",
+  "offline": true,
+  "imports": [
+    {
+      "source_id": "ws-7226",
+      "title": "三國演義/第003回",
+      "revision": 2567965,
+      "changed": false,
+      "quotes": 3,
+      "new_claims": 0,
+      "updated_links": 0,
+      "entities": [
+        "chitu"
+      ],
+      "mode": "APPLY"
+    },
+    {
+      "source_id": "ws-12873",
+      "title": "三國志/卷32",
+      "revision": 2583378,
+      "changed": false,
+      "quotes": 1,
+      "new_claims": 0,
+      "updated_links": 0,
+      "entities": [
+        "dilu"
+      ],
+      "mode": "APPLY"
+    },
+    {
+      "source_id": "ws-7541",
+      "title": "史記/卷007",
+      "revision": 5978360,
+      "changed": false,
+      "quotes": 1,
+      "new_claims": 0,
+      "updated_links": 0,
+      "entities": [
+        "wuzhui"
+      ],
+      "mode": "APPLY"
+    },
+    {
+      "source_id": "ws-16112",
+      "title": "三國志/卷07",
+      "revision": 2452141,
+      "changed": false,
+      "quotes": 1,
+      "new_claims": 0,
+      "updated_links": 0,
+      "entities": [
+        "chitu"
+      ],
+      "mode": "APPLY"
+    }
+  ],
+  "blocked": [],
+  "coverage": {
+    "corpus_snapshot_id": "75ae51fa4c68e744c00f742bb69bf9e261a0493523b33dfd1f0de91358ef9fe7",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 6,
+    "review_states": {
+      "DRAFT": 6
+    },
+    "citable_count": 6,
+    "machine_verified_count": 6,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": true
+  },
+  "trace": [
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "meta": "siteinfo",
+        "siprop": "rightsinfo"
+      },
+      "status": "CACHE",
+      "hash": "15c6880ec09d4a3a944e02b80820f5de38aa835e2ee63709846bb7b6fda77e03"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "prop": "revisions",
+        "rvprop": "ids|timestamp|content|sha1",
+        "rvslots": "main",
+        "revids": 2567965
+      },
+      "status": "CACHE",
+      "hash": "3c40e6e3d05daae782e0bce2948ad6d2243e2b7a2532b1f8221a0f4bbf946690"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "parse",
+        "oldid": 2567965,
+        "prop": "text|revid",
+        "disableeditsection": 1
+      },
+      "status": "CACHE",
+      "hash": "8b89f2308de9e24e119c107d4154eed2bee21beee5bf6971a6b8a84e7e6c64b9"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "meta": "siteinfo",
+        "siprop": "rightsinfo"
+      },
+      "status": "CACHE",
+      "hash": "15c6880ec09d4a3a944e02b80820f5de38aa835e2ee63709846bb7b6fda77e03"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "prop": "revisions",
+        "rvprop": "ids|timestamp|content|sha1",
+        "rvslots": "main",
+        "revids": 2583378
+      },
+      "status": "CACHE",
+      "hash": "48ea19902ffc9894661b1f4c83c870ccc13cb6ef37d7545b479ea81dd43aab7a"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "parse",
+        "oldid": 2583378,
+        "prop": "text|revid",
+        "disableeditsection": 1
+      },
+      "status": "CACHE",
+      "hash": "fafb616cdd39d039210db68ffc038f9b7f7c3abd707d22cf2b612154cf0d8b88"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "meta": "siteinfo",
+        "siprop": "rightsinfo"
+      },
+      "status": "CACHE",
+      "hash": "15c6880ec09d4a3a944e02b80820f5de38aa835e2ee63709846bb7b6fda77e03"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "prop": "revisions",
+        "rvprop": "ids|timestamp|content|sha1",
+        "rvslots": "main",
+        "revids": 5978360
+      },
+      "status": "CACHE",
+      "hash": "f416b7702f747d2df142968b4bcd6edb9a768e227dd2aafcc293b0120a9d9fe4"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "parse",
+        "oldid": 5978360,
+        "prop": "text|revid",
+        "disableeditsection": 1
+      },
+      "status": "CACHE",
+      "hash": "11fe66f94a72adff0b8ee2c690a6ec2385b283d1630dcb6887ca9dcb159199f1"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "meta": "siteinfo",
+        "siprop": "rightsinfo"
+      },
+      "status": "CACHE",
+      "hash": "15c6880ec09d4a3a944e02b80820f5de38aa835e2ee63709846bb7b6fda77e03"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "prop": "revisions",
+        "rvprop": "ids|timestamp|content|sha1",
+        "rvslots": "main",
+        "revids": 2452141
+      },
+      "status": "CACHE",
+      "hash": "56002e96e4054aef029216dd2eaac1657abf77973ef18c6c15d2f0a6d823ecf2"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "parse",
+        "oldid": 2452141,
+        "prop": "text|revid",
+        "disableeditsection": 1
+      },
+      "status": "CACHE",
+      "hash": "980415942522bffadeaccd3a8a313a274f86e2589297d8a37ee669fb28989dc4"
+    }
+  ],
+  "network_requests": 0
+}

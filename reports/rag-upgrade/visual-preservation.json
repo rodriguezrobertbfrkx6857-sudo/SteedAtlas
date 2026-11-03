@@ -1,0 +1,91 @@
+{
+  "frozen_assets_checked": 49,
+  "changed_existing_files": [
+    "wangzhan/baiqipu.com-source-20260424-194149/index.html"
+  ],
+  "new_file": "wangzhan/baiqipu.com-source-20260424-194149/evidence-adapter.js",
+  "change": "one script include; scoped evidence panel only",
+  "pixel_differences": [
+    {
+      "page": "home",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 0.05472083333333334
+    },
+    {
+      "page": "home",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.1280228460323247
+    },
+    {
+      "page": "chat",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 0.009500694444444445
+    },
+    {
+      "page": "chat",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.014913719771539677
+    },
+    {
+      "page": "atlas",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "atlas",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "factory",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "factory",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "gacha",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "gacha",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "collection",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 9.027777777777777e-06
+    },
+    {
+      "page": "collection",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "shop",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 0.0035375
+    },
+    {
+      "page": "shop",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.0
+    },
+    {
+      "page": "quiz",
+      "device": "desktop",
+      "changed_pixel_fraction_gt20": 0.0035444444444444442
+    },
+    {
+      "page": "quiz",
+      "device": "mobile",
+      "changed_pixel_fraction_gt20": 0.02032142423137684
+    }
+  ],
+  "note": "Pixel difference is measured, not assumed a style regression; chat status and knowledge panel intentionally change."
+}

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>百骑谱视频工厂工作流</title>
+    <link rel="stylesheet" href="./styles.css?v=20260510-2" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="left-rail">
+        <a class="login-link" href="/login?next=%2Fvideo-factory" target="_top">登录</a>
+        <a class="back-link" href="/" target="_top">返回主页</a>
+        <div class="brand-block">
+          <div class="brand-mark">BQ</div>
+          <div>
+            <div class="brand-name">百骑谱</div>
+            <div class="brand-subtitle">视频工厂工作流</div>
+          </div>
+        </div>
+
+        <section class="rail-section">
+          <div class="section-heading">节点列表</div>
+          <div id="nodeList" class="node-list"></div>
+        </section>
+
+        <section class="rail-section">
+          <div class="section-heading">工作流引擎</div>
+          <div class="engine-card">
+            <strong>站内后端执行</strong>
+            <span>由网站 API 推进任务，后续直接接 GPT / Veo / TTS / FFmpeg。</span>
+          </div>
+          <div class="rail-note">
+            <span class="status-pill muted">站内执行</span>
+            <span class="status-pill waiting">逐步执行</span>
+          </div>
+        </section>
+
+        <section class="rail-section">
+          <div class="section-heading">模板</div>
+          <button id="saveBtn" class="rail-button">保存当前模板</button>
+          <button id="exportBtn" class="rail-button secondary">导出工作流 JSON</button>
+          <button id="layoutBtn" class="rail-button secondary">重置布局</button>
+        </section>
+
+        <section class="rail-section">
+          <div class="section-heading">任务历史</div>
+          <div class="history-actions">
+            <button id="refreshTasksBtn" class="rail-button secondary compact">刷新任务</button>
+            <button id="retryTaskBtn" class="rail-button secondary compact">重新执行</button>
+            <button id="clearTaskHistoryBtn" class="rail-button secondary compact danger">清空历史</button>
+          </div>
+          <div id="taskList" class="task-list"></div>
+        </section>
+      </aside>
+
+      <main class="main-workspace">
+        <header class="topbar">
+          <div>
+            <div class="page-kicker">ChatGPT / Veo / TTS / FFmpeg</div>
+            <h1>可视化视频生成画布</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="zoomOutBtn" class="icon-button" title="缩小画布">-</button>
+            <button id="zoomInBtn" class="icon-button" title="放大画布">+</button>
+            <button id="resetBtn" class="ghost-button">清空状态</button>
+            <button id="runBtn" class="primary-button">运行工作流</button>
+          </div>
+        </header>
+
+        <section class="status-strip">
+          <div class="metric">
+            <span>节点</span>
+            <strong id="nodeCount">0</strong>
+          </div>
+          <div class="metric">
+            <span>连线</span>
+            <strong id="linkCount">0</strong>
+          </div>
+          <div class="metric">
+            <span>当前状态</span>
+            <strong id="workflowStatus">待运行</strong>
+          </div>
+          <div class="metric wide">
+            <span>数据流</span>
+            <strong id="payloadSummary">等待内容输入</strong>
+          </div>
+        </section>
+
+        <section class="canvas-panel">
+          <div class="canvas-toolbar">
+            <div class="toolbar-title">工作流画布</div>
+            <div class="toolbar-meta">
+              <span id="runtimeBadge" class="runtime-badge">Redis 状态同步</span>
+              <span id="zoomLabel">100%</span>
+              <span>API 密钥不写入前端</span>
+            </div>
+          </div>
+          <div id="canvasViewport" class="canvas-viewport">
+            <div id="canvasInner" class="canvas-inner">
+              <svg id="linkLayer" class="link-layer" width="1680" height="560" aria-hidden="true"></svg>
+              <div id="nodesLayer" class="nodes-layer"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="node-brief-panel">
+          <div class="run-panel-header">
+            <div>
+              <div class="section-heading">节点主要内容</div>
+              <strong>节点完成后会在这里逐步更新</strong>
+            </div>
+          </div>
+          <div id="nodeBriefGrid" class="node-brief-grid"></div>
+        </section>
+
+        <section class="run-panel">
+          <div class="run-panel-header">
+            <div>
+              <div class="section-heading">执行记录</div>
+              <strong id="runTitle">尚未运行</strong>
+            </div>
+            <div class="run-panel-actions">
+              <button id="downloadVideoBtn" class="download-button" type="button" disabled>工作流完成后可下载</button>
+              <button id="stopBtn" class="ghost-button compact">停止</button>
+            </div>
+          </div>
+          <div id="executionPulse" class="execution-pulse" aria-hidden="true"></div>
+          <div id="executionTimeline" class="execution-timeline"></div>
+          <div id="runtimeEvents" class="runtime-events"></div>
+          <div id="runLog" class="run-log"></div>
+        </section>
+      </main>
+
+      <aside class="inspector">
+        <section class="preview-panel">
+          <div class="preview-header">
+            <div>
+              <div class="section-heading">成片预览</div>
+              <strong id="previewTitle">等待输入视频主题</strong>
+            </div>
+            <span id="previewStatus" class="status-pill waiting">预览</span>
+          </div>
+          <div id="generatedVideoMenu" class="generated-video-menu">
+            <div class="video-menu-empty">运行完成后，这里会逐条出现视频并支持下载。</div>
+          </div>
+          <div class="video-frame">
+            <img id="previewImage" src="../images/chitu.png" alt="预览素材" />
+            <video id="previewVideo" class="preview-video" controls playsinline preload="metadata"></video>
+            <div class="video-shade"></div>
+            <div class="video-copy">
+              <span id="previewAspect">9:16</span>
+              <strong id="previewHeadline">等待输入视频主题</strong>
+              <small id="previewCaption">先填写主题，系统会先生成脚本和分镜。</small>
+            </div>
+            <div id="previewEmpty" class="preview-empty show">暂无可播放视频，运行后可在上方菜单选择已生成视频。</div>
+          </div>
+          <div id="sceneStrip" class="scene-strip"></div>
+        </section>
+
+        <section class="inspector-panel">
+          <div id="inspectorContent"></div>
+        </section>
+      </aside>
+    </div>
+
+    <dialog id="jsonDialog" class="json-dialog">
+      <div class="dialog-head">
+        <strong>工作流 JSON</strong>
+        <button id="closeJsonBtn" class="icon-button" title="关闭">x</button>
+      </div>
+      <textarea id="jsonExport" readonly></textarea>
+    </dialog>
+
+    <script src="./app.js?v=20260510-2"></script>
+  </body>
+</html>

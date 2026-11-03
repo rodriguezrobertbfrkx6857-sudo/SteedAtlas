@@ -1,0 +1,14 @@
+/* Narrow-screen accessibility fix; original desktop layout and palette stay intact. */
+@media (max-width: 767px) {
+  .app-shell { min-width: 0; height: auto; min-height: 100vh; grid-template-columns: minmax(0, 1fr); }
+  .app-shell > * { min-width: 0; max-width: 100%; }
+  .main-workspace { grid-row: 1; overflow: visible; padding: 12px; }
+  .left-rail, .inspector { overflow: visible; height: auto; }
+  .topbar, .topbar-actions, .canvas-toolbar, .run-panel-actions { flex-wrap: wrap; }
+  .status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .node-brief-grid, .diagnostic-panel, .diagnostic-list { grid-template-columns: minmax(0, 1fr); }
+  .canvas-panel { min-width: 0; height: 440px; flex: none; }
+  .node-list { max-height: 260px; overflow: auto; }
+  .topbar h1 { font-size: 21px; }
+  .metric, .diagnostic-card, .node-brief-panel, .run-panel { min-width: 0; overflow-wrap: anywhere; }
+}

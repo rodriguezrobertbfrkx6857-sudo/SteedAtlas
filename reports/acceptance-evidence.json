@@ -1,0 +1,393 @@
+{
+  "generated_at": "2026-11-01T00:33:26",
+  "probes": {
+    "A0_git": {
+      "status": {
+        "command": "git status --short",
+        "returncode": 0,
+        "stdout_tail": "",
+        "stderr_tail": ""
+      },
+      "branch": {
+        "command": "git branch --show-current",
+        "returncode": 0,
+        "stdout_tail": "upgrade/steedatlas-v2\n",
+        "stderr_tail": ""
+      },
+      "log": {
+        "command": "git log -6 --oneline",
+        "returncode": 0,
+        "stdout_tail": "a29d5de feat(v2): audited legacy asset claiming, agent provider truth layer, acceptance harness\n32e3ea6 feat(v2): wire original video factory to V2 CPU backend via compatibility adapter\na128dbd chore(reports): record verification evidence from the interrupted run\nffa314c feat(v2): add test suite, local runtime scripts, engineering docs and CI\n47c5381 feat(v2): add expand-only V2 backend — evidence, projects, DAG worker, CPU renderer\nefe2550 fix(security): close P0 auth, path traversal and secret-default gaps\n",
+        "stderr_tail": ""
+      }
+    },
+    "A1_security": {
+      "ai_build_unauth_401": 401,
+      "legacy_video_write_frozen_409": 409,
+      "generated_private_requires_auth": 401,
+      "v2_project_unauth_401": 401,
+      "compat_tasks_unauth_401": 401,
+      "capabilities": {
+        "agent_modes": [
+          "MANUAL",
+          "RULE_BASED"
+        ],
+        "agent_provider_catalogue": {
+          "modes": [
+            {
+              "mode": "LIVE_LLM",
+              "truth_level": "blocked",
+              "description": "Reserved for a future external model provider.",
+              "available": false,
+              "deterministic": false,
+              "produces_proposal": false,
+              "requires_approval": true,
+              "notes": [
+                "BLOCKED: LIVE NOT VERIFIED",
+                "No API key is configured in this environment.",
+                "No request is sent to any external service.",
+                "Requests are refused with HTTP 409 so no record can imply a live model answered."
+              ]
+            },
+            {
+              "mode": "MANUAL",
+              "truth_level": "human_decided",
+              "description": "A human decides every change; the agent only records the decision and its reasons.",
+              "available": true,
+              "deterministic": true,
+              "produces_proposal": true,
+              "requires_approval": true,
+              "notes": [
+                "No model is involved.",
+                "The proposal contains no patches."
+              ]
+            },
+            {
+              "mode": "MOCK_TEST",
+              "truth_level": "test_only",
+              "description": "Deterministic fixture used by the automated test suite.",
+              "available": false,
+              "deterministic": true,
+              "produces_proposal": false,
+              "requires_approval": true,
+              "notes": [
+                "Test-only. Refused outside the automated test harness."
+              ]
+            },
+            {
+              "mode": "RULE_BASED",
+              "truth_level": "deterministic_local_rules",
+              "description": "A local rule engine inspects the timeline and proposes a bounded style patch.",
+              "available": true,
+              "deterministic": true,
+              "produces_proposal": true,
+              "requires_approval": true,
+              "notes": [
+                "Runs locally; no network call and no credentials.",
+                "Same project revision always yields the same proposal.",
+                "Cannot grant approval or rewrite facts."
+              ]
+            }
+          ],
+          "runtime_modes": [
+            "MANUAL",
+            "RULE_BASED"
+          ],
+          "live_provider_enabled": false,
+          "statement": "本环境未接入任何外部大模型。RULE_BASED 为站内确定性规则引擎，MANUAL 由人工决策；LIVE_LLM 未开通，返回 BLOCKED: LIVE NOT VERIFIED。"
+        },
+        "external_video": false,
+        "publication": false,
+        "renderer": "FFmpeg CPU",
+        "legacy_commerce": "SANDBOX",
+        "schema_version": 1
+      }
+    },
+    "A4_sources": {
+      "status": 200,
+      "count": 6,
+      "sample_review_states": [
+        "DRAFT",
+        "None"
+      ]
+    },
+    "A4_search": {
+      "status": 200,
+      "mode": "INSUFFICIENT_EVIDENCE",
+      "results": 0
+    },
+    "A5_render_enqueued": {
+      "status": 202,
+      "body": {
+        "id": "b23393e3013c4a09ba33a7ea126d6ce0",
+        "status": "READY"
+      }
+    },
+    "A7_job_state": {
+      "id": "b23393e3013c4a09ba33a7ea126d6ce0",
+      "status": "SUCCEEDED",
+      "revision": 2,
+      "nodes": [
+        {
+          "id": "dc4669ff2ca246f992b3073fa0a5976a",
+          "key": "scene:s1",
+          "kind": "segment",
+          "state": "SUCCEEDED",
+          "deps": [],
+          "attempts": 1,
+          "error": "",
+          "download": "/api/v2/artifacts/dc4669ff2ca246f992b3073fa0a5976a/download"
+        },
+        {
+          "id": "6df8e512d1db4de9b21e880f43e37049",
+          "key": "scene:s2",
+          "kind": "segment",
+          "state": "SUCCEEDED",
+          "deps": [],
+          "attempts": 1,
+          "error": "",
+          "download": "/api/v2/artifacts/6df8e512d1db4de9b21e880f43e37049/download"
+        },
+        {
+          "id": "6ede7571121a44f7af5831416e9b1a63",
+          "key": "scene:s3",
+          "kind": "segment",
+          "state": "SUCCEEDED",
+          "deps": [],
+          "attempts": 1,
+          "error": "",
+          "download": "/api/v2/artifacts/6ede7571121a44f7af5831416e9b1a63/download"
+        },
+        {
+          "id": "11c59385bab342b88f499238ecc2adfa",
+          "key": "audio",
+          "kind": "audio",
+          "state": "SUCCEEDED",
+          "deps": [],
+          "attempts": 1,
+          "error": "",
+          "download": "/api/v2/artifacts/11c59385bab342b88f499238ecc2adfa/download"
+        },
+        {
+          "id": "6d3f254ef301411a9898acac72b26969",
+          "key": "subtitle",
+          "kind": "subtitle",
+          "state": "SUCCEEDED",
+          "deps": [
+            "audio"
+          ],
+          "attempts": 1,
+          "error": "",
+          "download": "/api/v2/artifacts/6d3f254ef301411a9898acac72b26969/download"
+        },
+        {
+          "id": "81a6d6479ee84d829efe591108821ae8",
+          "key": "compose",
+          "kind": "compose",
+          "state": "SUCCEEDED",
+          "deps": [
+            "scene:s1",
+            "scene:s2",
+            "scene:s3",
+            "audio",
+            "subtitle"
+          ],
+          "attempts": 1,
+          "error": "",
+          "download": "/api/v2/artifacts/81a6d6479ee84d829efe591108821ae8/download"
+        },
+        {
+          "id": "6f84c5788171470a8b6e061411931237",
+          "key": "qa",
+          "kind": "qa",
+          "state": "SUCCEEDED",
+          "deps": [
+            "compose"
+          ],
+          "attempts": 1,
+          "error": "",
+          "download": "/api/v2/artifacts/6f84c5788171470a8b6e061411931237/download"
+        }
+      ]
+    },
+    "A5_persistence": {
+      "project_id": "d8832f510a1f4c8399e674825d942110",
+      "version": 2,
+      "scene_count": 3,
+      "timeline_clips": 3
+    },
+    "A6_ffprobe": {
+      "returncode": 0,
+      "stdout": "{\r\n    \"streams\": [\r\n        {\r\n            \"index\": 0,\r\n            \"codec_name\": \"h264\",\r\n            \"codec_long_name\": \"H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10\",\r\n            \"profile\": \"Constrained Baseline\",\r\n            \"codec_type\": \"video\",\r\n            \"codec_tag_string\": \"avc1\",\r\n            \"codec_tag\": \"0x31637661\",\r\n            \"mime_codec_string\": \"avc1.42c01f\",\r\n            \"width\": 1280,\r\n            \"height\": 720,\r\n            \"coded_width\": 1280,\r\n            \"coded_height\": 720,\r\n            \"has_b_frames\": 0,\r\n            \"sample_aspect_ratio\": \"1:1\",\r\n            \"display_aspect_ratio\": \"16:9\",\r\n            \"pix_fmt\": \"yuv420p\",\r\n            \"level\": 31,\r\n            \"chroma_location\": \"left\",\r\n            \"field_order\": \"progressive\",\r\n            \"is_avc\": \"true\",\r\n            \"nal_length_size\": \"4\",\r\n            \"id\": \"0x1\",\r\n            \"r_frame_rate\": \"24/1\",\r\n            \"avg_frame_rate\": \"24/1\",\r\n            \"time_base\": \"1/12288\",\r\n            \"start_pts\": 0,\r\n            \"start_time\": \"0.000000\",\r\n            \"duration_ts\": 73728,\r\n            \"duration\": \"6.000000\",\r\n            \"bit_rate\": \"242396\",\r\n            \"bits_per_raw_sample\": \"8\",\r\n            \"nb_frames\": \"144\",\r\n            \"extradata_size\": 38,\r\n            \"disposition\": {\r\n                \"default\": 1,\r\n                \"dub\": 0,\r\n                \"original\": 0,\r\n                \"comment\": 0,\r\n                \"lyrics\": 0,\r\n                \"karaoke\": 0,\r\n                \"forced\": 0,\r\n                \"hearing_impaired\": 0,\r\n                \"visual_impaired\": 0,\r\n                \"clean_effects\": 0,\r\n                \"attached_pic\": 0,\r\n                \"timed_thumbnails\": 0,\r\n                \"non_diegetic\": 0,\r\n                \"captions\": 0,\r\n                \"descriptions\": 0,\r\n                \"metadata\": 0,\r\n                \"dependent\": 0,\r\n                \"still_image\": 0,\r\n                \"multilayer\": 0\r\n            },\r\n            \"tags\": {\r\n                \"language\": \"und\",\r\n                \"handler_name\": \"VideoHandler\",\r\n                \"encoder\": \"Lavc62.28.101 libx264\"\r\n            }\r\n        }\r\n    ],\r\n    \"format\": {\r\n        \"filename\": \"D:\\\\视频工厂应用\\\\baiqipu-github\\\\deliverables\\\\acceptance-render.mp4\",\r\n        \"nb_streams\": 1,\r\n        \"nb_programs\": 0,\r\n        \"nb_stream_groups\": 0,\r\n        \"format_name\": \"mov,mp4,m4a,3gp,3g2,mj2\",\r\n        \"format_long_name\": \"QuickTime / MOV\",\r\n        \"start_time\": \"0.000000\",\r\n        \"duration\": \"6.000000\",\r\n        \"size\": \"183232\",\r\n        \"bit_rate\": \"244309\",\r\n        \"probe_score\": 100,\r\n        \"tags\": {\r\n            \"major_brand\": \"isom\",\r\n            \"minor_version\": \"512\",\r\n            \"compatible_brands\": \"isomiso2avc1mp41\",\r\n            \"encoder\": \"Lavf62.12.101\"\r\n        }\r\n    }\r\n}\r\n",
+      "sha256": "48a812163cd78c689f4c0029e0edd34d5cc70d09c068a3da93469c9db22e1b76",
+      "bytes": 183232,
+      "path": "D:\\视频工厂应用\\baiqipu-github\\deliverables\\acceptance-render.mp4"
+    },
+    "A6_srt": {
+      "status": 200,
+      "bytes": 265,
+      "sha256": "633d0de53eba6bb56ea4e397576d973f7d4fdc267bc6e3345fe5f6925483b299",
+      "head": "1\r\n00:00:00,000 --> 00:00:02,000\r\n[CREATIVE] 第1幕：循着记载，认识名马。\r\n\r\n2\r\n00:00:02,000 --> 00:00:04,000\r\n[CREATIVE] 第2幕：循着记载，认识名马。\r\n\r\n3\r\n00:00:04,000 --> 00:00:06,000\r\n[CREATIVE] 第3幕：循着记载，认识名马。\r\n",
+      "path": "D:\\视频工厂应用\\baiqipu-github\\deliverables\\acceptance-render.srt"
+    },
+    "A6_environment": {
+      "ffmpeg_binary": [
+        "ffmpeg version 8.1.1-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+      ],
+      "gpu_device_count": 0,
+      "gpu_present": false,
+      "openai_key_configured": false,
+      "video_factory_api_mode": "unset",
+      "renderer": "FFmpeg CPU (no GPU, no local video model)"
+    },
+    "A8_agent": {
+      "catalogue_status": 200,
+      "catalogue": {
+        "modes": [
+          {
+            "mode": "LIVE_LLM",
+            "truth_level": "blocked",
+            "description": "Reserved for a future external model provider.",
+            "available": false,
+            "deterministic": false,
+            "produces_proposal": false,
+            "requires_approval": true,
+            "notes": [
+              "BLOCKED: LIVE NOT VERIFIED",
+              "No API key is configured in this environment.",
+              "No request is sent to any external service.",
+              "Requests are refused with HTTP 409 so no record can imply a live model answered."
+            ]
+          },
+          {
+            "mode": "MANUAL",
+            "truth_level": "human_decided",
+            "description": "A human decides every change; the agent only records the decision and its reasons.",
+            "available": true,
+            "deterministic": true,
+            "produces_proposal": true,
+            "requires_approval": true,
+            "notes": [
+              "No model is involved.",
+              "The proposal contains no patches."
+            ]
+          },
+          {
+            "mode": "MOCK_TEST",
+            "truth_level": "test_only",
+            "description": "Deterministic fixture used by the automated test suite.",
+            "available": false,
+            "deterministic": true,
+            "produces_proposal": false,
+            "requires_approval": true,
+            "notes": [
+              "Test-only. Refused outside the automated test harness."
+            ]
+          },
+          {
+            "mode": "RULE_BASED",
+            "truth_level": "deterministic_local_rules",
+            "description": "A local rule engine inspects the timeline and proposes a bounded style patch.",
+            "available": true,
+            "deterministic": true,
+            "produces_proposal": true,
+            "requires_approval": true,
+            "notes": [
+              "Runs locally; no network call and no credentials.",
+              "Same project revision always yields the same proposal.",
+              "Cannot grant approval or rewrite facts."
+            ]
+          }
+        ],
+        "runtime_modes": [
+          "MANUAL",
+          "RULE_BASED"
+        ],
+        "live_provider_enabled": false,
+        "statement": "本环境未接入任何外部大模型。RULE_BASED 为站内确定性规则引擎，MANUAL 由人工决策；LIVE_LLM 未开通，返回 BLOCKED: LIVE NOT VERIFIED。"
+      },
+      "live_llm_status": 409,
+      "live_llm_detail": {
+        "detail": "BLOCKED: LIVE NOT VERIFIED: Reserved for a future external model provider.",
+        "error_code": "BLOCKED",
+        "message": "BLOCKED: LIVE NOT VERIFIED: Reserved for a future external model provider.",
+        "request_id": "95628d51c1a24a4cbd1c56b17b406400"
+      },
+      "rule_based_status": 200,
+      "rule_based_traces": [
+        {
+          "id": "48db1a6485b248889bb0c8d9edc611ec",
+          "kind": "proposal",
+          "version": 1,
+          "data": {
+            "mode": "RULE_BASED",
+            "roles": [
+              "DIRECTOR",
+              "REVIEW"
+            ],
+            "reason_codes": [
+              "SCENE_PLAN_REQUESTED",
+              "HUMAN_REVIEW_REQUIRED"
+            ],
+            "patches": [
+              {
+                "path": "/bible/style",
+                "value": "克制的数字博物馆编辑风格"
+              }
+            ],
+            "findings": [],
+            "tool_calls": [
+              "inspect_timeline",
+              "get_scene_bible",
+              "validate_citations"
+            ],
+            "input_hash": "713749da9fab39965c4e90b0e97eb87a294447b0e1a9ad2d29fede2cdad34895",
+            "policy_version": "controller-1",
+            "review_state": "PENDING",
+            "tool_results": [
+              {
+                "tool": "inspect_timeline",
+                "output_hash": "c6c3f62dbb1469dfa068853d5d53108365d5d42717dbc1b78d30d080b041ed1d"
+              },
+              {
+                "tool": "get_scene_bible",
+                "output_hash": "31bca6af45a6d50b6aa684fa802e52612676a86956149a8c552dce3efc390441"
+              },
+              {
+                "tool": "check_scene_constraints",
+                "output": []
+              },
+              {
+                "tool": "validate_citations",
+                "result": "VALID"
+              }
+            ],
+            "project_id": "d8832f510a1f4c8399e674825d942110",
+            "base_version": 2,
+            "max_turns": 2
+          }
+        }
+      ]
+    },
+    "A9_lineage": {
+      "edges": 17,
+      "relations": [
+        "COMPILED_TO",
+        "COMPOSES",
+        "GENERATED"
+      ],
+      "unknown_semantic_dependencies": "REVIEW_REQUIRED"
+    },
+    "A10_licences": {
+      "THIRD_PARTY_NOTICES": true,
+      "frontend_sbom": true,
+      "dependency_inventory": true
+    },
+    "UI0_home": {
+      "status": 200
+    },
+    "UI0_workflow_studio": {
+      "status": 200
+    }
+  }
+}

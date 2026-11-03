@@ -1,0 +1,22 @@
+{
+  "login_retained": true,
+  "evidence_status_unchanged": true,
+  "persisted_research_trace_unchanged": true,
+  "status": {
+    "corpus_snapshot_id": "75ae51fa4c68e744c00f742bb69bf9e261a0493523b33dfd1f0de91358ef9fe7",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 6,
+    "review_states": {
+      "DRAFT": 6
+    },
+    "citable_count": 6,
+    "machine_verified_count": 6,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": true
+  },
+  "paid_api_calls": 0
+}

@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>百骑谱 RAG马库</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0f14;
+        --panel: #111722;
+        --panel-2: #0f151f;
+        --line: #263445;
+        --line-2: #2f4158;
+        --text: #eef4ff;
+        --muted: #a6b4c7;
+        --soft: #d3ddeb;
+        --blue: #6bb0ff;
+        --cyan: #58d0d4;
+        --amber: #e7bf72;
+        --green: #6ddb95;
+        --danger: #ff7f93;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top right, rgba(91, 166, 255, 0.1), transparent 30%),
+          linear-gradient(180deg, rgba(15, 21, 29, 0.96), rgba(8, 12, 18, 1)),
+          var(--bg);
+        color: var(--text);
+        font-family:
+          "Microsoft YaHei",
+          "PingFang SC",
+          "Inter",
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(10, 14, 20, 0.9);
+        padding: 12px 18px;
+      }
+
+      .top-left {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        gap: 10px;
+      }
+
+      .brand {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(231, 191, 114, 0.35);
+        border-radius: 8px;
+        background: linear-gradient(145deg, #302312, #111722);
+        color: #ffe3ac;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .top-links {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .top-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #0f1621;
+        color: var(--soft);
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 700;
+        transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+      }
+
+      .top-link:hover {
+        border-color: rgba(107, 176, 255, 0.58);
+        background: #142235;
+        color: #f5f9ff;
+      }
+
+      .top-link.active {
+        border-color: rgba(88, 208, 212, 0.55);
+        background: rgba(88, 208, 212, 0.14);
+        color: #cbfdff;
+      }
+
+      .top-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(15, 21, 31, 0.9);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 0 10px;
+      }
+
+      .pill.ok {
+        border-color: rgba(109, 219, 149, 0.35);
+        background: rgba(109, 219, 149, 0.12);
+        color: #c8f6d8;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 360px minmax(0, 1fr);
+        gap: 12px;
+        min-height: 0;
+        padding: 12px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(14, 20, 30, 0.88);
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-bottom: 1px solid var(--line);
+        padding: 12px;
+      }
+
+      .panel-title {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .panel-sub {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .filter-box {
+        border-bottom: 1px solid var(--line);
+        padding: 12px;
+      }
+
+      .search-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+      }
+
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+
+      .input,
+      .select {
+        width: 100%;
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #0a0f16;
+        color: var(--text);
+        padding: 0 10px;
+        outline: none;
+      }
+
+      .input:focus,
+      .select:focus {
+        border-color: rgba(107, 176, 255, 0.72);
+      }
+
+      .btn {
+        min-height: 36px;
+        border: 1px solid rgba(107, 176, 255, 0.46);
+        border-radius: 9px;
+        background: rgba(107, 176, 255, 0.18);
+        color: #d8ebff;
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        border-color: rgba(107, 176, 255, 0.72);
+        background: rgba(107, 176, 255, 0.28);
+      }
+
+      .filter-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 90px;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        border: 1px solid rgba(231, 191, 114, 0.3);
+        border-radius: 9px;
+        background: rgba(231, 191, 114, 0.1);
+        color: #ffebc0;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .list-wrap {
+        height: calc(100vh - 224px);
+        overflow: auto;
+        padding: 8px;
+      }
+
+      .horse-item {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #0c121b;
+        padding: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: border-color 160ms ease, background 160ms ease;
+      }
+
+      .horse-item:hover {
+        border-color: rgba(88, 208, 212, 0.52);
+        background: #111d2c;
+      }
+
+      .horse-item.active {
+        border-color: rgba(107, 176, 255, 0.72);
+        background: #122238;
+      }
+
+      .horse-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .horse-name {
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.3;
+      }
+
+      .horse-id {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .horse-meta {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 7px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        border: 1px solid rgba(88, 208, 212, 0.28);
+        border-radius: 6px;
+        background: rgba(88, 208, 212, 0.12);
+        color: #ccf8fb;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 0 8px;
+      }
+
+      .detail-scroll {
+        height: calc(100vh - 128px);
+        overflow: auto;
+        padding: 12px;
+      }
+
+      .detail-header {
+        display: flex;
+        align-items: flex-start;
+        gap: clamp(28px, 4vw, 64px);
+        border: 1px solid var(--line-2);
+        border-radius: 12px;
+        background: #0d1521;
+        padding: 20px 24px;
+        overflow: hidden;
+      }
+
+      .detail-cover {
+        flex: 0 0 clamp(260px, 24vw, 340px);
+        margin: 0;
+        width: 100%;
+        max-width: 340px;
+        min-width: 0;
+        aspect-ratio: 3 / 4;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #070c12;
+        overflow: hidden;
+        justify-self: start;
+      }
+
+      .detail-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .detail-title {
+        margin: 0;
+        font-size: clamp(28px, 3vw, 42px);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .detail-main {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+        padding-left: 0;
+      }
+
+      .detail-heading-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .btn {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #101a27;
+        color: var(--soft);
+        min-height: 34px;
+        padding: 0 12px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .btn.primary {
+        border-color: rgba(246, 196, 93, 0.55);
+        background: linear-gradient(135deg, #f4c35f, #7ecaf1);
+        color: #08111c;
+      }
+
+      .btn.secondary {
+        border-color: rgba(126, 202, 241, 0.32);
+        background: rgba(126, 202, 241, 0.1);
+        color: #d9efff;
+      }
+
+      .detail-kv {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .kv {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #0a121d;
+        min-width: 0;
+        padding: 10px 12px;
+      }
+
+      .kv span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .kv strong {
+        display: block;
+        margin-top: 3px;
+        color: var(--soft);
+        font-size: 15px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .section {
+        margin-top: 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #0d141f;
+        padding: 10px;
+      }
+
+      .section h3 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+
+      .section p {
+        margin: 0;
+        color: var(--soft);
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+      }
+
+      .editor-section {
+        display: grid;
+        gap: 12px;
+        border-color: rgba(246, 196, 93, 0.34);
+        background: #101826;
+      }
+
+      .editor-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .editor-field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .editor-field.full {
+        grid-column: 1 / -1;
+      }
+
+      .editor-field label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .editor-field textarea {
+        width: 100%;
+        min-height: 112px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #07101a;
+        color: var(--soft);
+        padding: 10px;
+        font: inherit;
+        line-height: 1.6;
+      }
+
+      .editor-field textarea[data-list-field] {
+        min-height: 86px;
+      }
+
+      .editor-help {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 6px;
+      }
+
+      .list li {
+        border: 1px solid rgba(166, 180, 199, 0.22);
+        border-radius: 7px;
+        background: rgba(8, 13, 21, 0.64);
+        color: #d7e3f4;
+        font-size: 12px;
+        line-height: 1.5;
+        padding: 6px 8px;
+      }
+
+      .empty {
+        border: 1px dashed rgba(166, 180, 199, 0.35);
+        border-radius: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+        padding: 14px;
+      }
+
+      .loading {
+        color: #cae8ff;
+      }
+
+      .error {
+        color: #ffc9d3;
+        border-color: rgba(255, 127, 147, 0.4);
+      }
+
+      @media (max-width: 1200px) {
+        .workspace {
+          grid-template-columns: 320px minmax(0, 1fr);
+        }
+      }
+
+      @media (max-width: 980px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .list-wrap,
+        .detail-scroll {
+          height: auto;
+          max-height: none;
+        }
+
+        .detail-header {
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        .detail-cover {
+          width: min(100%, 360px);
+          max-width: 360px;
+        }
+
+        .detail-kv {
+          grid-template-columns: 1fr;
+        }
+
+        .editor-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .topbar,
+        .top-left,
+        .top-meta {
+          align-items: flex-start;
+        }
+
+        .workspace,
+        .detail-scroll {
+          padding: 8px;
+        }
+
+        .detail-header {
+          gap: 14px;
+          padding: 12px;
+        }
+
+        .detail-title {
+          font-size: 26px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="top-left">
+          <div class="brand">BQ</div>
+          <div class="top-links">
+            <a class="top-link" href="/">主界面</a>
+            <a class="top-link" href="/workflow-studio/">视频工厂</a>
+            <a class="top-link active" href="/horse-rag/">RAG马库</a>
+          </div>
+        </div>
+        <div class="top-meta">
+          <span class="pill ok">100马数据库</span>
+          <span id="statusPill" class="pill">加载中</span>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="panel">
+          <div class="panel-head">
+            <div class="detail-main">
+              <h1 class="panel-title">马库目录</h1>
+              <div class="panel-sub">点击左侧马匹，右侧查看马与人物完整故事</div>
+            </div>
+          </div>
+
+          <div class="filter-box">
+            <div class="search-row">
+              <input id="searchInput" class="input" placeholder="搜索：马名 / 人物 / 朝代 / 关键词" />
+              <button id="searchBtn" class="btn" type="button">搜索</button>
+            </div>
+            <div class="filter-row">
+              <select id="sourceSelect" class="select">
+                <option value="">全部来源</option>
+              </select>
+              <div id="countBadge" class="count-badge">0匹</div>
+            </div>
+          </div>
+
+          <div id="listWrap" class="list-wrap">
+            <div class="empty loading">正在加载马库数据...</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div id="detailScroll" class="detail-scroll">
+            <div class="empty">请先从左侧选择一匹马。</div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "/api/v1/horses/rag-library";
+      const els = {
+        listWrap: document.getElementById("listWrap"),
+        detailScroll: document.getElementById("detailScroll"),
+        searchInput: document.getElementById("searchInput"),
+        searchBtn: document.getElementById("searchBtn"),
+        sourceSelect: document.getElementById("sourceSelect"),
+        countBadge: document.getElementById("countBadge"),
+        statusPill: document.getElementById("statusPill"),
+      };
+
+      const state = {
+        items: [],
+        filtered: [],
+        selectedId: "",
+        sourceTypes: [],
+        currentDetail: null,
+        editingId: "",
+        saving: false,
+      };
+
+      const AUTH_STORAGE_KEY = "auth-storage";
+
+      function getAccessToken() {
+        try {
+          const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+          if (!raw) return "";
+          const parsed = JSON.parse(raw);
+          const authState = parsed?.state ?? null;
+          return authState?.accessToken ?? authState?.access_token ?? "";
+        } catch {
+          return "";
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function setStatus(text, cls = "") {
+        els.statusPill.textContent = text;
+        els.statusPill.className = `pill ${cls}`.trim();
+      }
+
+      async function request(path, options = {}) {
+        const headers = { Accept: "application/json", ...(options.headers || {}) };
+        const token = getAccessToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        const response = await fetch(path, { ...options, credentials: "include", headers });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.detail || `请求失败：${response.status}`);
+        }
+        return payload;
+      }
+
+      function gatherSourceTypes(items) {
+        const counter = new Map();
+        items.forEach((item) => {
+          const key = String(item.source_type || "").trim() || "未知来源";
+          counter.set(key, (counter.get(key) || 0) + 1);
+        });
+        return [...counter.entries()].sort((a, b) => b[1] - a[1]);
+      }
+
+      function renderSourceSelect() {
+        const current = els.sourceSelect.value;
+        els.sourceSelect.innerHTML =
+          `<option value="">全部来源</option>` +
+          state.sourceTypes
+            .map(([name, count]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}（${count}）</option>`)
+            .join("");
+        if ([...els.sourceSelect.options].some((option) => option.value === current)) {
+          els.sourceSelect.value = current;
+        }
+      }
+
+      function applyFilters() {
+        const query = String(els.searchInput.value || "").trim().toLowerCase();
+        const source = String(els.sourceSelect.value || "").trim();
+        state.filtered = state.items.filter((item) => {
+          const sourceOk = !source || String(item.source_type || "") === source;
+          if (!sourceOk) return false;
+          if (!query) return true;
+          const blob = [
+            item.id,
+            item.name,
+            item.owner,
+            item.figure,
+            item.dynasty,
+            item.story,
+            item.trait,
+            ...(Array.isArray(item.traits) ? item.traits : []),
+          ]
+            .join(" ")
+            .toLowerCase();
+          return blob.includes(query);
+        });
+        els.countBadge.textContent = `${state.filtered.length}匹`;
+      }
+
+      function horseItemTemplate(item) {
+        const tags = (Array.isArray(item.labels) ? item.labels : Array.isArray(item.traits) ? item.traits : [])
+          .slice(0, 4)
+          .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
+          .join("");
+        return `
+          <article class="horse-item ${state.selectedId === item.id ? "active" : ""}" data-horse-id="${escapeHtml(item.id)}">
+            <div class="horse-row">
+              <div class="horse-name">${escapeHtml(item.name)}</div>
+              <div class="horse-id">${escapeHtml(item.id)}</div>
+            </div>
+            <div class="horse-meta">
+              <div>人物：${escapeHtml(item.owner || item.figure || "未标注")}</div>
+              <div>来源：${escapeHtml(item.source_type || "未标注")} · ${escapeHtml(item.dynasty || "未标注")}</div>
+            </div>
+            <div class="tag-row">${tags}</div>
+          </article>
+        `;
+      }
+
+      function renderHorseList() {
+        if (!state.filtered.length) {
+          els.listWrap.innerHTML = `<div class="empty">没有匹配结果，请换个关键词再试。</div>`;
+          return;
+        }
+        els.listWrap.innerHTML = state.filtered.map(horseItemTemplate).join("");
+      }
+
+      function listTemplate(values) {
+        if (!Array.isArray(values) || !values.length) {
+          return `<div class="empty">暂无</div>`;
+        }
+        return `<ul class="list">${values.map((v) => `<li>${escapeHtml(v)}</li>`).join("")}</ul>`;
+      }
+
+      function listText(value) {
+        return Array.isArray(value) ? value.join("\n") : String(value || "");
+      }
+
+      function renderEditor(detail) {
+        if (state.editingId !== String(detail.id || "")) return "";
+        return `
+          <section class="section editor-section">
+            <div>
+              <h3>编辑马库资料</h3>
+              <div class="editor-help">保存后会写入服务器马库 JSON 文件，视频工厂后续会直接参考这些内容。</div>
+            </div>
+            <div class="editor-grid">
+              <div class="editor-field">
+                <label>简介</label>
+                <textarea data-edit-field="rag_summary">${escapeHtml(detail.rag_summary || detail.story || "")}</textarea>
+              </div>
+              <div class="editor-field">
+                <label>马的一生</label>
+                <textarea data-edit-field="horse_life_story">${escapeHtml(detail.horse_life_story || "")}</textarea>
+              </div>
+              <div class="editor-field full">
+                <label>主人的一生</label>
+                <textarea data-edit-field="owner_life_story">${escapeHtml(detail.owner_life_story || "")}</textarea>
+              </div>
+              <div class="editor-field full">
+                <label>完整故事与视频建议</label>
+                <textarea data-edit-field="full_story">${escapeHtml(detail.full_story || "")}</textarea>
+              </div>
+              <div class="editor-field">
+                <label>视觉关键词（每行一条）</label>
+                <textarea data-edit-field="visual_keywords" data-list-field>${escapeHtml(listText(detail.visual_keywords))}</textarea>
+              </div>
+              <div class="editor-field">
+                <label>镜头节拍（每行一条）</label>
+                <textarea data-edit-field="shot_beats" data-list-field>${escapeHtml(listText(detail.shot_beats))}</textarea>
+              </div>
+              <div class="editor-field">
+                <label>视频角度（每行一条）</label>
+                <textarea data-edit-field="video_angles" data-list-field>${escapeHtml(listText(detail.video_angles))}</textarea>
+              </div>
+              <div class="editor-field">
+                <label>旁白种子</label>
+                <textarea data-edit-field="voiceover_seed" data-list-field>${escapeHtml(detail.voiceover_seed || "")}</textarea>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button type="button" class="btn secondary" data-cancel-edit>取消</button>
+              <button type="button" class="btn primary" data-save-horse="${escapeHtml(detail.id)}" ${state.saving ? "disabled" : ""}>
+                ${state.saving ? "保存中" : "保存资料"}
+              </button>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderDetail(detail) {
+        if (!detail) {
+          els.detailScroll.innerHTML = `<div class="empty">请先从左侧选择一匹马。</div>`;
+          return;
+        }
+
+        els.detailScroll.innerHTML = `
+          <section class="detail-header">
+            <figure class="detail-cover">
+              <img src="${escapeHtml(detail.image || "/images/chitu.png")}" alt="${escapeHtml(detail.name)}" />
+            </figure>
+            <div class="detail-main">
+              <div class="detail-heading-row">
+                <div>
+                  <h2 class="detail-title">${escapeHtml(detail.name)}</h2>
+                  <div class="panel-sub">${escapeHtml(detail.id || "")}</div>
+                </div>
+                <div class="detail-actions">
+                  <button type="button" class="btn secondary" data-edit-horse="${escapeHtml(detail.id)}">
+                    ${state.editingId === String(detail.id || "") ? "正在编辑" : "编辑资料"}
+                  </button>
+                </div>
+              </div>
+              <div class="detail-kv">
+                <div class="kv"><span>对应人物</span><strong>${escapeHtml(detail.owner || detail.figure || "未标注")}</strong></div>
+                <div class="kv"><span>时代</span><strong>${escapeHtml(detail.dynasty || "未标注")}</strong></div>
+                <div class="kv"><span>来源类型</span><strong>${escapeHtml(detail.source_type || "未标注")}</strong></div>
+                <div class="kv"><span>核心气质</span><strong>${escapeHtml(detail.trait || "未标注")}</strong></div>
+              </div>
+            </div>
+          </section>
+
+          ${renderEditor(detail)}
+
+          <section class="section">
+            <h3>简介</h3>
+            <p>${escapeHtml(detail.rag_summary || detail.story || "暂无简介。")}</p>
+          </section>
+
+          <section class="section">
+            <h3>马的一生</h3>
+            <p>${escapeHtml(detail.horse_life_story || "暂无“马的一生”资料。")}</p>
+          </section>
+
+          <section class="section">
+            <h3>主人的一生</h3>
+            <p>${escapeHtml(detail.owner_life_story || "暂无“主人的一生”资料。")}</p>
+          </section>
+
+          <section class="section">
+            <h3>完整故事与视频创作建议</h3>
+            <p>${escapeHtml(detail.full_story || "暂无完整故事。")}</p>
+          </section>
+
+          <section class="section">
+            <h3>马匹时间线</h3>
+            ${listTemplate(detail.horse_timeline)}
+          </section>
+
+          <section class="section">
+            <h3>人物时间线</h3>
+            ${listTemplate(detail.owner_timeline)}
+          </section>
+
+          <section class="section">
+            <h3>镜头与提示词参考</h3>
+            ${listTemplate(detail.shot_beats)}
+            <div style="height:8px;"></div>
+            ${listTemplate(detail.video_angles)}
+            ${detail.voiceover_seed ? `<div style="height:8px;"></div><p>${escapeHtml(detail.voiceover_seed)}</p>` : ""}
+          </section>
+        `;
+      }
+
+      async function loadDetail(horseId) {
+        try {
+          setStatus("加载详情中");
+          const detail = await request(`${API_BASE}/${encodeURIComponent(horseId)}`);
+          state.selectedId = String(detail.id || horseId);
+          state.currentDetail = detail;
+          renderHorseList();
+          renderDetail(detail);
+          setStatus("详情已加载", "ok");
+        } catch (error) {
+          renderDetail(null);
+          setStatus("详情加载失败");
+          els.detailScroll.innerHTML = `<div class="empty error">${escapeHtml(error.message || "详情加载失败")}</div>`;
+        }
+      }
+
+      function editPayloadFromDetail() {
+        const payload = {};
+        els.detailScroll.querySelectorAll("[data-edit-field]").forEach((field) => {
+          const key = field.getAttribute("data-edit-field");
+          if (!key) return;
+          const value = String(field.value || "").trim();
+          if (field.hasAttribute("data-list-field")) {
+            payload[key] = value
+              .split(/\n+/)
+              .map((item) => item.trim())
+              .filter(Boolean);
+          } else {
+            payload[key] = value;
+          }
+        });
+        return payload;
+      }
+
+      async function saveHorseProfile(horseId) {
+        if (!horseId || state.saving) return;
+        const payload = editPayloadFromDetail();
+        try {
+          state.saving = true;
+          renderDetail(state.currentDetail);
+          setStatus("保存中");
+          const result = await request(`${API_BASE}/${encodeURIComponent(horseId)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const detail = result?.item || (await request(`${API_BASE}/${encodeURIComponent(horseId)}`));
+          state.currentDetail = detail;
+          state.editingId = "";
+          const index = state.items.findIndex((item) => item.id === detail.id);
+          if (index !== -1) state.items[index] = { ...state.items[index], ...detail };
+          applyFilters();
+          renderHorseList();
+          renderDetail(detail);
+          setStatus("已保存", "ok");
+        } catch (error) {
+          state.saving = false;
+          setStatus("保存失败");
+          alert(error.message || "保存失败，请确认已登录并且后端可写入马库文件。");
+          renderDetail(state.currentDetail);
+        } finally {
+          state.saving = false;
+        }
+      }
+
+      async function bootstrap() {
+        try {
+          setStatus("加载列表中");
+          const payload = await request(`${API_BASE}?page=1&size=200`);
+          state.items = Array.isArray(payload.items) ? payload.items : [];
+          state.sourceTypes = gatherSourceTypes(state.items);
+          renderSourceSelect();
+          applyFilters();
+          renderHorseList();
+          setStatus(`已加载 ${state.items.length} 匹`, "ok");
+
+          const queryId = new URLSearchParams(window.location.search).get("id");
+          const initial = queryId
+            ? state.items.find((item) => item.id === queryId || item.name === queryId)
+            : state.filtered[0];
+          if (initial) {
+            await loadDetail(initial.id);
+          } else {
+            renderDetail(null);
+          }
+        } catch (error) {
+          setStatus("加载失败");
+          els.listWrap.innerHTML = `<div class="empty error">${escapeHtml(error.message || "列表加载失败")}</div>`;
+          els.detailScroll.innerHTML = `<div class="empty error">请先确认后端已启动，并且接口 <code>/api/v1/horses/rag-library</code> 可访问。</div>`;
+        }
+      }
+
+      els.searchBtn.addEventListener("click", () => {
+        applyFilters();
+        renderHorseList();
+      });
+      els.searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          applyFilters();
+          renderHorseList();
+        }
+      });
+      els.sourceSelect.addEventListener("change", () => {
+        applyFilters();
+        renderHorseList();
+      });
+      els.listWrap.addEventListener("click", (event) => {
+        const card = event.target.closest("[data-horse-id]");
+        if (!card) return;
+        const horseId = card.getAttribute("data-horse-id");
+        if (!horseId) return;
+        void loadDetail(horseId);
+      });
+
+      els.detailScroll.addEventListener("click", (event) => {
+        const editButton = event.target.closest("[data-edit-horse]");
+        if (editButton) {
+          state.editingId = editButton.getAttribute("data-edit-horse") || "";
+          renderDetail(state.currentDetail);
+          return;
+        }
+        const cancelButton = event.target.closest("[data-cancel-edit]");
+        if (cancelButton) {
+          state.editingId = "";
+          renderDetail(state.currentDetail);
+          return;
+        }
+        const saveButton = event.target.closest("[data-save-horse]");
+        if (saveButton) {
+          void saveHorseProfile(saveButton.getAttribute("data-save-horse") || state.selectedId);
+        }
+      });
+
+      void bootstrap();
+    </script>
+  </body>
+</html>

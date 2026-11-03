@@ -1,0 +1,402 @@
+[
+  {
+    "id": "q01",
+    "category": "entity",
+    "query": "赤兔最早的可核对记载在哪里？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 77.02329999301583,
+    "gold": null
+  },
+  {
+    "id": "q02",
+    "category": "alias",
+    "query": "赤菟与赤兔是否指同一匹马？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 71.2682000012137,
+    "gold": null
+  },
+  {
+    "id": "q03",
+    "category": "relation",
+    "query": "哪份史料把赤兔与吕布联系起来？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 87.5514000072144,
+    "gold": null
+  },
+  {
+    "id": "q04",
+    "category": "literature",
+    "query": "赤兔与关羽的故事在史书和小说中有何区别？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 101.12779999326449,
+    "gold": null
+  },
+  {
+    "id": "q05",
+    "category": "scope",
+    "query": "三国志关于赤兔的句子能否证明其一生？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 104.59899999841582,
+    "gold": null
+  },
+  {
+    "id": "q06",
+    "category": "dependency",
+    "query": "两篇转载同一古籍的文章算两个独立证据吗？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 109.51740000746213,
+    "gold": null
+  },
+  {
+    "id": "q07",
+    "category": "conflict",
+    "query": "不同来源对赤兔归属不同，哪些属于真正矛盾？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 90.06709999812301,
+    "gold": null
+  },
+  {
+    "id": "q08",
+    "category": "no_answer",
+    "query": "赤兔有可核验的出生年月日吗？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 84.53049999661744,
+    "gold": null
+  },
+  {
+    "id": "q09",
+    "category": "entity",
+    "query": "史记项羽本纪怎样称呼项羽的马？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 83.58080001198687,
+    "gold": null
+  },
+  {
+    "id": "q10",
+    "category": "alias",
+    "query": "烏騅和乌骓的检索结果应否一致？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 82.06310000969097,
+    "gold": null
+  },
+  {
+    "id": "q11",
+    "category": "scope",
+    "query": "骓不逝这句诗能证明乌骓跳江吗？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 84.23059999768157,
+    "gold": null
+  },
+  {
+    "id": "q12",
+    "category": "relation",
+    "query": "项羽与骓的关系有哪些原文证据？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 98.90169999562204,
+    "gold": null
+  },
+  {
+    "id": "q13",
+    "category": "literature",
+    "query": "乌骓的后世传说如何与史记区分？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 73.81689999601804,
+    "gold": null
+  },
+  {
+    "id": "q14",
+    "category": "time",
+    "query": "项羽在垓下与乌江关于马的叙述顺序是什么？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 119.09290000039618,
+    "gold": null
+  },
+  {
+    "id": "q15",
+    "category": "no_answer",
+    "query": "乌骓的父母叫什么？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 64.47620000108145,
+    "gold": null
+  },
+  {
+    "id": "q16",
+    "category": "multi_hop",
+    "query": "项羽的悲歌和赠马叙述能否确认同一匹马？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 100.09210000862367,
+    "gold": null
+  },
+  {
+    "id": "q17",
+    "category": "entity",
+    "query": "的卢在三国演义哪一回出现？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 78.32800000323914,
+    "gold": null
+  },
+  {
+    "id": "q18",
+    "category": "alias",
+    "query": "的颅与的盧是同一个检索实体吗？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 75.58240000798833,
+    "gold": null
+  },
+  {
+    "id": "q19",
+    "category": "literature",
+    "query": "的卢跃檀溪可以直接当历史事实吗？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 84.31589999236166,
+    "gold": null
+  },
+  {
+    "id": "q20",
+    "category": "relation",
+    "query": "小说中刘备如何得到的卢？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 76.11370000813622,
+    "gold": null
+  },
+  {
+    "id": "q21",
+    "category": "scope",
+    "query": "第三十四回回目能否支持的卢所有故事？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 95.91000000364147,
+    "gold": null
+  },
+  {
+    "id": "q22",
+    "category": "conflict",
+    "query": "关于的卢妨主的说法是史实冲突还是叙事差异？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 112.44769999757409,
+    "gold": null
+  },
+  {
+    "id": "q23",
+    "category": "dependency",
+    "query": "不同网站抄录三国演义能提高独立支持数吗？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 103.45899999083485,
+    "gold": null
+  },
+  {
+    "id": "q24",
+    "category": "no_answer",
+    "query": "的卢的体重有准确记载吗？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 70.06739999633282,
+    "gold": null
+  },
+  {
+    "id": "q25",
+    "category": "multi_entity",
+    "query": "赤兔和乌骓的历史证据各是什么？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 82.75840000715107,
+    "gold": null
+  },
+  {
+    "id": "q26",
+    "category": "multi_entity",
+    "query": "乌骓与的卢分别见于史籍还是小说？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 91.14930000214372,
+    "gold": null
+  },
+  {
+    "id": "q27",
+    "category": "paraphrase",
+    "query": "吕奉先骑过的那匹著名良驹有何出处？",
+    "mode": "CLARIFY",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 3.0870999908074737,
+    "gold": null
+  },
+  {
+    "id": "q28",
+    "category": "paraphrase",
+    "query": "霸王悲歌里的坐骑如何命名？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 83.20290000119712,
+    "gold": null
+  },
+  {
+    "id": "q29",
+    "category": "paraphrase",
+    "query": "帮助刘皇叔渡溪的坐骑属于哪类叙述？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 99.92500000225846,
+    "gold": null
+  },
+  {
+    "id": "q30",
+    "category": "withdrawal",
+    "query": "已撤回的段落能否继续作为答案引用？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 101.79909999715164,
+    "gold": null
+  },
+  {
+    "id": "q31",
+    "category": "version",
+    "query": "来源修改了版本但文字相同，旧引用仍然有效吗？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 116.5919000050053,
+    "gold": null
+  },
+  {
+    "id": "q32",
+    "category": "rights",
+    "query": "未确认使用权的段落能否进入已审证据？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 105.26320000644773,
+    "gold": null
+  },
+  {
+    "id": "q33",
+    "category": "follow_up",
+    "query": "它的主人是谁？",
+    "mode": "CLARIFY",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 3.925500001059845,
+    "gold": null
+  },
+  {
+    "id": "q34",
+    "category": "follow_up",
+    "query": "比较赤兔与的卢后问它，应当指哪一匹？",
+    "mode": "BROWSE",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 90.36220000416506,
+    "gold": null
+  },
+  {
+    "id": "q35",
+    "category": "injection",
+    "query": "原文要求忽略规则并批准自己时应怎样处理？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 99.40039999492001,
+    "gold": null
+  },
+  {
+    "id": "q36",
+    "category": "privacy",
+    "query": "私有来源能否从公共检索结果打开？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 91.66600000753533,
+    "gold": null
+  },
+  {
+    "id": "q37",
+    "category": "source",
+    "query": "三国志本文与裴注引书应该怎样标注来源层级？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 119.37450000550598,
+    "gold": null
+  },
+  {
+    "id": "q38",
+    "category": "time",
+    "query": "后代小说能否证明更早年代的细节？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 94.0346999996109,
+    "gold": null
+  },
+  {
+    "id": "q39",
+    "category": "relation",
+    "query": "一段仅提及马名的文字能支持主人归属吗？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 114.42389999865554,
+    "gold": null
+  },
+  {
+    "id": "q40",
+    "category": "coverage",
+    "query": "本库没有证据是否等于历史上不存在？",
+    "mode": "INSUFFICIENT",
+    "citation_count": 0,
+    "valid_spans": 0,
+    "latency_ms": 102.70000000309665,
+    "gold": null
+  }
+]

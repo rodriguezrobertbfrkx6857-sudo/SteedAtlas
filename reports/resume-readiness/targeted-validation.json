@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-02",
+  "base_commit": "999c692a4993acce7c474bca0fb66af2edd0e525",
+  "branch": "fix/resume-readiness-20261102",
+  "scope": "DEPENDENCY_ISOLATED_PRODUCTION_FUNCTIONS",
+  "method": "Exact original production module copies verified against Git blob SHA; AST extraction executes actual functions/classes with explicit database/retrieval/provider unit doubles.",
+  "original_blobs": {
+    "culture.py": "dfc542ad2e6c1de8e930dcb9a2c0406fe42ec6f0",
+    "research.py": "48b9ce4b64c18cf78cf3a5c05d811cad7d429def"
+  },
+  "patched_blobs": {
+    "culture.py": "1566f18d366c660d7945ffc11d56fc1f5517e4ed",
+    "research.py": "6d9b33f10106c53e479fd769b4b40c31174f427d"
+  },
+  "before": {"tests_run": 18, "passed": 7, "failures": 5, "errors": 6},
+  "after": {"tests_run": 18, "passed": 18, "failures": 0, "errors": 0},
+  "production_sha256": {
+    "culture.py": "71a20e7c8d4aa0597dc0830866ce611fb05ddc27adafffe20d7c380ed0c24c29",
+    "research.py": "d8fb3623469c66b010f3110b1afe53ae286296c95b91316803e0bf2b07122044"
+  },
+  "compile_check": "PASS",
+  "external_model_calls": 0,
+  "network_calls": 0,
+  "database_writes": 0,
+  "full_repository_suite_rerun": false,
+  "reproduce": "python scripts/verify_resume_hardening.py --source-dir \"wangzhan/{E4A9AA9B-E341-4443-82B1-6CD600640AE6}/files/var/www/baiqipu/server/app/v2\" --report runtime/resume-hardening-recheck.json",
+  "limitations": [
+    "The old failures and errors are failed regression expectations, not a claimed rerun of the old full test suite.",
+    "Only two production modules were independently executed with dependency isolation.",
+    "No full 88-test suite, local Windows instance, browser, source refresh or production deployment was rerun here.",
+    "Do not combine these 18 checks with the earlier 88-test report and claim 106 full-suite tests passed.",
+    "Run the real application pytest, API, browser and CPU-video regressions before merging."
+  ]
+}

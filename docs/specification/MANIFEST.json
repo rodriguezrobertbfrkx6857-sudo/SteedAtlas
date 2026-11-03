@@ -1,0 +1,108 @@
+{
+  "project": "SteedAtlas V2 / 百骑谱 V2",
+  "date": "2026-10-31",
+  "purpose": "Development instructions and cited research reference files; not an implementation",
+  "language": "zh-CN with necessary English technical terms",
+  "files": {
+    "00_README_开始阅读.md": {
+      "bytes": 5077,
+      "sha256": "0ab33cbadf03bc132bfcb7065e1814a07a0521e8b20d57602393fddd33e94b95"
+    },
+    "01_SOL_聊天框总指令.md": {
+      "bytes": 4813,
+      "sha256": "f744e4568c2d474c7b0f2f3abb400fa755fec91caad0e66a2f65ac3c3b9cafc3"
+    },
+    "02_项目范围及验收.md": {
+      "bytes": 3200,
+      "sha256": "7d00edad9da1510dc61aaf115164603fe5697a8c63c1f40b9cb7b2d1b327dafc"
+    },
+    "03_仓库现状映射与风险.md": {
+      "bytes": 4514,
+      "sha256": "6bb0212b03942c6acc038a4d6aecb231de0d4795537f25b325bccd3466b2134f"
+    },
+    "04_技术架构与ADR.md": {
+      "bytes": 4557,
+      "sha256": "6559210805607f1c5a131eddd3aaf936ae995ba6ab68fec56462522e53da851d"
+    },
+    "05_前端UX与页面.md": {
+      "bytes": 2702,
+      "sha256": "0c230f245b4dcdcd405da80037a1bf999f640d48b03291ca0fbd4527c37bbdc0"
+    },
+    "06_知识证据与RAG.md": {
+      "bytes": 3623,
+      "sha256": "877ef5f512462a033f564d0de7bf8b47126dd016177ed9ed33ec329aaff9f83b"
+    },
+    "07_Agent创新与调用协议.md": {
+      "bytes": 5800,
+      "sha256": "affc5efdb6ec784c91d96be8f2ceb2ddfa87094b808f81ca99a7455f48b40424"
+    },
+    "08_视频工厂创作链路.md": {
+      "bytes": 4575,
+      "sha256": "e5af59eb6000c61ae2921c0cd96926a15a24b9f84ae57e2611afad7a97df36a1"
+    },
+    "09_时间轴媒体与CPU渲染.md": {
+      "bytes": 3397,
+      "sha256": "8d622de737d812662ed9693e0d9e8433e4c7f06862ee564be5cd3436ce62abb6"
+    },
+    "10_DAG运行时与选择性恢复.md": {
+      "bytes": 4263,
+      "sha256": "edd966a88860545185a2bc6b0826cc871c0f2b4e91d76ff19617a3b91040f0b6"
+    },
+    "11_数据模型与API契约.md": {
+      "bytes": 4242,
+      "sha256": "5f1271e913ad3dada645be24e73bc4ae359f78a5b2b9a0c37f8878c337765761"
+    },
+    "12_开源技术选型及许可证.md": {
+      "bytes": 4334,
+      "sha256": "e6c7d22c106f7a5c7386df448bebb5e41c51133231f6e7575f06de68713d26b3"
+    },
+    "13_安全与版权治理.md": {
+      "bytes": 2824,
+      "sha256": "34f0130a3213b3818907dd3e2f67e3769435c36e53cf6596771a753ca6a446d0"
+    },
+    "14_迁移计划与回滚.md": {
+      "bytes": 4313,
+      "sha256": "cf14c459b25168c200a051e982bd194030c40a7b0387d8cf33d94cf77ee32150"
+    },
+    "15_科研对照实验.md": {
+      "bytes": 3668,
+      "sha256": "135b2ada6f7027313bbd6fa4e844982fee67b39b31c4ffae889c1b2b481b24c5"
+    },
+    "16_测试策略与自动化.md": {
+      "bytes": 3356,
+      "sha256": "4739015749d9440c8b633a7b69d1fdfdf2919b5937fb922e800bb2d71cd3ae0e"
+    },
+    "17_验收及缺陷处理.md": {
+      "bytes": 3252,
+      "sha256": "214c3ff60e435dec6f0957a8ade31d289873a55d07d0fc55f2985499dcfaa8b3"
+    },
+    "18_决策记录及待验证问题.md": {
+      "bytes": 2243,
+      "sha256": "d0bf250923f44fe18bb9b51c47ef0ece2557d6764fe9c1df9e5d83dc3c3b442d"
+    },
+    "19_参考来源及引用.md": {
+      "bytes": 2327,
+      "sha256": "bcf279416b0bd716a1da99048c7e9462a9656d78f44c4bb1a5dc05d13dc13196"
+    },
+    "20_短版Sol聊天框指令.md": {
+      "bytes": 1008,
+      "sha256": "0b83a58dccf7371b63a659a006bdc7a9b7914034185fd33a9a09aa534a1a9ec2"
+    },
+    "参考研究/SteedAtlas_Architecture_Research_Report.md": {
+      "bytes": 94758,
+      "sha256": "59ed4f50b2b8fd8ca135683a1dcfaf6347efe8dceb2ae07029f31e45485a817e"
+    },
+    "参考研究/SteedAtlas_V2_Comprehensive_Architecture_Audit_CN.md": {
+      "bytes": 33247,
+      "sha256": "51ff82b8d5766033eb6e6b49c6c4cfa70c957a92569c9285d6821c0c4eebc3c3"
+    },
+    "参考研究/SteedAtlas_V2_Detailed_Architecture_Analysis_20261031_CN.md": {
+      "bytes": 18957,
+      "sha256": "9f1bc42f89bc1eb5384e97214b77fad0e40504d786346ee17845b05ecdfc0d05"
+    },
+    "参考研究/SteedAtlas_V2_Upgrade_Architecture_Blueprint_CN_20261031.md": {
+      "bytes": 14661,
+      "sha256": "9c249eabb2c6bb29a04c87e2bececdd4c28b1e5bcbb71a79dbcdc88d51b4171b"
+    }
+  }
+}

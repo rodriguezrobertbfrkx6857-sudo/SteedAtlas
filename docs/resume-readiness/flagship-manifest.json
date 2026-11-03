@@ -1,0 +1,61 @@
+{
+  "sources": [
+    {
+      "id": "ws-7226",
+      "version": 1,
+      "title": "三國演義/第003回",
+      "upstream_revision": 2567965,
+      "edition": "維基文庫 oldid=2567965; render=5d28ba0360d3444e; mediawiki-paragraphs-v1",
+      "url": "https://zh.wikisource.org/w/index.php?oldid=2567965",
+      "document_hash": "1bdf95b0df853a9fa4789e833a2903d83c0d63c0cbcb325fe1f0209161b93ffb",
+      "content_hash": "aeb74b3060eaba06de6c373d478be287877aa8b53673d2f26c0376ab26e3ce1b",
+      "license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+      "attribution": "《三國演義/第003回》；羅貫中；維基文庫貢獻者；修訂2567965",
+      "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text."
+    },
+    {
+      "id": "ws-12873",
+      "version": 1,
+      "title": "三國志/卷32",
+      "upstream_revision": 2583378,
+      "edition": "維基文庫 oldid=2583378; render=e105341f560b1b56; mediawiki-paragraphs-v1",
+      "url": "https://zh.wikisource.org/w/index.php?oldid=2583378",
+      "document_hash": "1e9ad3e1ca8a270cb2514930dc4e662d5ef747dceec5edaead4b01a6c1df3487",
+      "content_hash": "5508eee27a9e9e5cd3af6d8fd4ced8badb835cfedea6026247f6901bada9d4e1",
+      "license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+      "attribution": "《三國志/卷32》；陳壽；含裴松之注；維基文庫貢獻者；修訂2583378",
+      "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text."
+    },
+    {
+      "id": "ws-7541",
+      "version": 1,
+      "title": "史記/卷007",
+      "upstream_revision": 5978360,
+      "edition": "維基文庫 oldid=5978360; render=b4d5bc651bb851c7; mediawiki-paragraphs-v1",
+      "url": "https://zh.wikisource.org/w/index.php?oldid=5978360",
+      "document_hash": "04b419d57ee6bd774bb3b347263ec1ed00aa565eb98f161298d572c63f854a3a",
+      "content_hash": "c99e0f7f95d4a3c4230a7dd21375f7b3df7b52e70602ce073a7cf649f7929e18",
+      "license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+      "attribution": "《史記/卷007》；司馬遷；維基文庫貢獻者；修訂5978360",
+      "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text."
+    },
+    {
+      "id": "ws-16112",
+      "version": 1,
+      "title": "三國志/卷07",
+      "upstream_revision": 2452141,
+      "edition": "維基文庫 oldid=2452141; render=f8664dc54604d052; mediawiki-paragraphs-v1",
+      "url": "https://zh.wikisource.org/w/index.php?oldid=2452141",
+      "document_hash": "ad609630da29032c14d48112e2306048a16a0422e6abe669a4e914740d98ba66",
+      "content_hash": "20b12bf87961cda99361cbb3f058a83974ca758f1d7105cb4d504d4b79d6973f",
+      "license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+      "attribution": "《三國志/卷07》；陳壽；含裴松之注；維基文庫貢獻者；修訂2452141",
+      "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text."
+    }
+  ],
+  "policy": "Pinned flagship editions; CC BY-SA attribution retained; no raw assets or user database bundled."
+}

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="5" time="2.472" timestamp="2026-11-02T02:10:35.298796-08:00" hostname="desktop"><testcase classname="tests.test_resume_release" name="test_saturated_topk_keeps_opposition_and_reports_truncation" time="0.472"><failure message="AssertionError: assert '4fc92677c1fe40bea5814ff2fafa0e30' in {'3ae1f3f523a644beaa10ca3b4b237062', '4d078b4291294d539dd5b9357bd8ce77'}">system = &lt;isolated test client, session factory, redacted test authentication&gt;
+
+    def test_saturated_topk_keeps_opposition_and_reports_truncation(system):
+        client, factory, headers = system
+        for _ in range(3):
+            seed(client, headers)
+        _, _, opposing = seed(client, headers, name="异文", relation="CONTRADICTS")
+        with factory() as db:
+            result = EvidenceSearch(KnowledgeRepository(db)).search("赤兔归属", limit=2)
+            assert len(result["results"]) == 2
+&gt;           assert opposing["id"] in {h["id"] for h in result["results"]}
+E           AssertionError: assert '4fc92677c1fe40bea5814ff2fafa0e30' in {'3ae1f3f523a644beaa10ca3b4b237062', '4d078b4291294d539dd5b9357bd8ce77'}
+
+tests\test_resume_release.py:17: AssertionError</failure></testcase><testcase classname="tests.test_resume_release" name="test_entity_limit_and_candidate_scope" time="0.276"><failure message="AssertionError: assert 2 == 1&#10; +  where 2 = len([{'citation': {'attribution': '', 'changes': '', 'claim_id': 'ac7f7d02faf84f919efa5c57d4e3e825', 'claim_revision': 2, ... 'cb72f2037ad04e529e26904d37c267d2', ...}, 'id': '62d94a8b4ca543258976ba1507aa61df', 'score': 2.6419843414918565, ...}])">system = &lt;isolated test client, session factory, redacted test authentication&gt;
+
+    def test_entity_limit_and_candidate_scope(system):
+        client, factory, headers = system
+        seed(client, headers)
+        seed(client, headers, name="的卢", horse="dilu", genre="LITERARY_WORK")
+        with factory() as db:
+            result = EvidenceSearch(KnowledgeRepository(db)).search("赤兔和的卢", "all", 1)
+&gt;           assert len(result["results"]) == 1
+E           AssertionError: assert 2 == 1
+E            +  where 2 = len([{'citation': {'attribution': '', 'changes': '', 'claim_id': 'ac7f7d02faf84f919efa5c57d4e3e825', 'claim_revision': 2, ... 'cb72f2037ad04e529e26904d37c267d2', ...}, 'id': '62d94a8b4ca543258976ba1507aa61df', 'score': 2.6419843414918565, ...}])
+
+tests\test_resume_release.py:28: AssertionError</failure></testcase><testcase classname="tests.test_resume_release" name="test_mixed_intent_and_unsupported_date" time="0.230"><failure message="AssertionError: assert 'SOURCE_ATTRIBUTED' == 'INSUFFICIENT'&#10;  &#10;  - INSUFFICIENT&#10;  + SOURCE_ATTRIBUTED">system = &lt;isolated test client, session factory, redacted test authentication&gt;
+
+    def test_mixed_intent_and_unsupported_date(system):
+        client, factory, _ = system
+        with factory() as db:
+            ingest(db)
+        assert ask(client, "给我讲赤兔故事，但先列原文")["mode"] == "SOURCE_ATTRIBUTED"
+        result = ask(client, "赤兔出生于哪年哪月哪日？")
+&gt;       assert result["mode"] == "INSUFFICIENT"
+E       AssertionError: assert 'SOURCE_ATTRIBUTED' == 'INSUFFICIENT'
+E         
+E         - INSUFFICIENT
+E         + SOURCE_ATTRIBUTED
+
+tests\test_resume_release.py:40: AssertionError</failure></testcase><testcase classname="tests.test_resume_release" name="test_actual_agent_failure_trace_and_cleanup[TimeoutError]" time="0.131"><failure message="IndexError: list index out of range">system = &lt;isolated test client, session factory, redacted test authentication&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000188E2FDA580&gt;
+failure = &lt;class 'TimeoutError'&gt;
+
+    @pytest.mark.parametrize("failure", [TimeoutError, RuntimeError])
+    def test_actual_agent_failure_trace_and_cleanup(system, monkeypatch, failure):
+        from app.v2.research import ResearchAgent
+        _, factory, _ = system
+        class Provider:
+            closed = False
+            def close(self):
+                self.closed = True
+                raise ValueError("cleanup")
+        with factory() as db:
+            agent = ResearchAgent(db)
+            provider = agent.provider = Provider()
+            def fail(*args):
+                raise failure("primary")
+            monkeypatch.setattr(agent.repo, "entities", fail)
+            with pytest.raises(failure, match="primary"):
+                agent.run("赤兔")
+            assert provider.closed and agent.provider is None
+&gt;           assert agent.trace[-1]["status"] == "FAILED"
+                   ^^^^^^^^^^^^^^^
+E           IndexError: list index out of range
+
+tests\test_resume_release.py:63: IndexError</failure></testcase><testcase classname="tests.test_resume_release" name="test_actual_agent_failure_trace_and_cleanup[RuntimeError]" time="0.198"><failure message="IndexError: list index out of range">system = &lt;isolated test client, session factory, redacted test authentication&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000188E2FD88D0&gt;
+failure = &lt;class 'RuntimeError'&gt;
+
+    @pytest.mark.parametrize("failure", [TimeoutError, RuntimeError])
+    def test_actual_agent_failure_trace_and_cleanup(system, monkeypatch, failure):
+        from app.v2.research import ResearchAgent
+        _, factory, _ = system
+        class Provider:
+            closed = False
+            def close(self):
+                self.closed = True
+                raise ValueError("cleanup")
+        with factory() as db:
+            agent = ResearchAgent(db)
+            provider = agent.provider = Provider()
+            def fail(*args):
+                raise failure("primary")
+            monkeypatch.setattr(agent.repo, "entities", fail)
+            with pytest.raises(failure, match="primary"):
+                agent.run("赤兔")
+            assert provider.closed and agent.provider is None
+&gt;           assert agent.trace[-1]["status"] == "FAILED"
+                   ^^^^^^^^^^^^^^^
+E           IndexError: list index out of range
+
+tests\test_resume_release.py:63: IndexError</failure></testcase></testsuite></testsuites>

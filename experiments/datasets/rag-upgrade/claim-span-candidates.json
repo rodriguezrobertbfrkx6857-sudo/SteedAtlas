@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "j001",
+    "claim_candidate": "赤兔与吕布有关",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j002",
+    "claim_candidate": "赤兔与吕布有关",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j003",
+    "claim_candidate": "赤兔与吕布有关",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j004",
+    "claim_candidate": "赤兔与关羽有关",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j005",
+    "claim_candidate": "赤兔与关羽有关",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j006",
+    "claim_candidate": "赤兔与关羽有关",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j007",
+    "claim_candidate": "赤兔的出生日期已知",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j008",
+    "claim_candidate": "赤兔的出生日期已知",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j009",
+    "claim_candidate": "赤兔的出生日期已知",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j010",
+    "claim_candidate": "赤兔属于历史文献中的马名",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j011",
+    "claim_candidate": "赤兔属于历史文献中的马名",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j012",
+    "claim_candidate": "赤兔属于历史文献中的马名",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j013",
+    "claim_candidate": "赤兔的所有故事都可信",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j014",
+    "claim_candidate": "赤兔的所有故事都可信",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j015",
+    "claim_candidate": "赤兔的所有故事都可信",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j016",
+    "claim_candidate": "赤兔的主人只有一人",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j017",
+    "claim_candidate": "赤兔的主人只有一人",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j018",
+    "claim_candidate": "赤兔的主人只有一人",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j019",
+    "claim_candidate": "赤兔日行千里有独立证实",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j020",
+    "claim_candidate": "赤兔日行千里有独立证实",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j021",
+    "claim_candidate": "赤兔日行千里有独立证实",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j022",
+    "claim_candidate": "赤兔与赤菟同名",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j023",
+    "claim_candidate": "赤兔与赤菟同名",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j024",
+    "claim_candidate": "赤兔与赤菟同名",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j025",
+    "claim_candidate": "赤兔传说与史实相同",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j026",
+    "claim_candidate": "赤兔传说与史实相同",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j027",
+    "claim_candidate": "赤兔传说与史实相同",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j028",
+    "claim_candidate": "赤兔去世日期已知",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j029",
+    "claim_candidate": "赤兔去世日期已知",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j030",
+    "claim_candidate": "赤兔去世日期已知",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j031",
+    "claim_candidate": "乌骓与项羽有关",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j032",
+    "claim_candidate": "乌骓与项羽有关",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j033",
+    "claim_candidate": "乌骓与项羽有关",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j034",
+    "claim_candidate": "史记记录骏马名骓",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j035",
+    "claim_candidate": "史记记录骏马名骓",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j036",
+    "claim_candidate": "史记记录骏马名骓",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j037",
+    "claim_candidate": "乌骓跳江得到证明",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j038",
+    "claim_candidate": "乌骓跳江得到证明",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j039",
+    "claim_candidate": "乌骓跳江得到证明",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j040",
+    "claim_candidate": "乌骓的毛色得到证明",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j041",
+    "claim_candidate": "乌骓的毛色得到证明",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j042",
+    "claim_candidate": "乌骓的毛色得到证明",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j043",
+    "claim_candidate": "乌骓的生日已知",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j044",
+    "claim_candidate": "乌骓的生日已知",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j045",
+    "claim_candidate": "乌骓的生日已知",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j046",
+    "claim_candidate": "悲歌提及骓",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j047",
+    "claim_candidate": "悲歌提及骓",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j048",
+    "claim_candidate": "悲歌提及骓",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j049",
+    "claim_candidate": "悲歌能证明马的结局",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j050",
+    "claim_candidate": "悲歌能证明马的结局",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j051",
+    "claim_candidate": "悲歌能证明马的结局",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j052",
+    "claim_candidate": "乌骓只有文学证据",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j053",
+    "claim_candidate": "乌骓只有文学证据",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j054",
+    "claim_candidate": "乌骓只有文学证据",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j055",
+    "claim_candidate": "项羽赠马与悲歌同一场景",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j056",
+    "claim_candidate": "项羽赠马与悲歌同一场景",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j057",
+    "claim_candidate": "项羽赠马与悲歌同一场景",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j058",
+    "claim_candidate": "骓与乌骓必然完全等同",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j059",
+    "claim_candidate": "骓与乌骓必然完全等同",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j060",
+    "claim_candidate": "骓与乌骓必然完全等同",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j061",
+    "claim_candidate": "的卢与刘备有关",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j062",
+    "claim_candidate": "的卢与刘备有关",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j063",
+    "claim_candidate": "的卢与刘备有关",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j064",
+    "claim_candidate": "的卢跃檀溪属于小说叙述",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j065",
+    "claim_candidate": "的卢跃檀溪属于小说叙述",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j066",
+    "claim_candidate": "的卢跃檀溪属于小说叙述",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j067",
+    "claim_candidate": "的卢妨主得到史实证明",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j068",
+    "claim_candidate": "的卢妨主得到史实证明",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j069",
+    "claim_candidate": "的卢妨主得到史实证明",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j070",
+    "claim_candidate": "的卢有体重记载",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j071",
+    "claim_candidate": "的卢有体重记载",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j072",
+    "claim_candidate": "的卢有体重记载",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j073",
+    "claim_candidate": "的卢相关故事都见于正史",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j074",
+    "claim_candidate": "的卢相关故事都见于正史",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j075",
+    "claim_candidate": "的卢相关故事都见于正史",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j076",
+    "claim_candidate": "第三十四回提及刘皇叔跃马",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j077",
+    "claim_candidate": "第三十四回提及刘皇叔跃马",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j078",
+    "claim_candidate": "第三十四回提及刘皇叔跃马",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j079",
+    "claim_candidate": "回目能证明马的全部生平",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j080",
+    "claim_candidate": "回目能证明马的全部生平",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j081",
+    "claim_candidate": "回目能证明马的全部生平",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j082",
+    "claim_candidate": "的卢属于小说中的坐骑",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j083",
+    "claim_candidate": "的卢属于小说中的坐骑",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j084",
+    "claim_candidate": "的卢属于小说中的坐骑",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j085",
+    "claim_candidate": "刘备取得的卢的细节可由回目推出",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j086",
+    "claim_candidate": "刘备取得的卢的细节可由回目推出",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j087",
+    "claim_candidate": "刘备取得的卢的细节可由回目推出",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j088",
+    "claim_candidate": "的卢与赤兔相同",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j089",
+    "claim_candidate": "的卢与赤兔相同",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j090",
+    "claim_candidate": "的卢与赤兔相同",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j091",
+    "claim_candidate": "来源是三国志",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j092",
+    "claim_candidate": "来源是三国志",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j093",
+    "claim_candidate": "来源是三国志",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j094",
+    "claim_candidate": "来源是史记",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j095",
+    "claim_candidate": "来源是史记",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j096",
+    "claim_candidate": "来源是史记",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j097",
+    "claim_candidate": "来源是三国演义",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j098",
+    "claim_candidate": "来源是三国演义",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j099",
+    "claim_candidate": "来源是三国演义",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j100",
+    "claim_candidate": "文段是史籍本文",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j101",
+    "claim_candidate": "文段是史籍本文",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j102",
+    "claim_candidate": "文段是史籍本文",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j103",
+    "claim_candidate": "文段是文学叙事",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j104",
+    "claim_candidate": "文段是文学叙事",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j105",
+    "claim_candidate": "文段是文学叙事",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j106",
+    "claim_candidate": "原文有明确马名",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j107",
+    "claim_candidate": "原文有明确马名",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j108",
+    "claim_candidate": "原文有明确马名",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j109",
+    "claim_candidate": "原文有明确主人名",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j110",
+    "claim_candidate": "原文有明确主人名",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j111",
+    "claim_candidate": "原文有明确主人名",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j112",
+    "claim_candidate": "原文有具体年份",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j113",
+    "claim_candidate": "原文有具体年份",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j114",
+    "claim_candidate": "原文有具体年份",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j115",
+    "claim_candidate": "原文能证明历史真实性",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j116",
+    "claim_candidate": "原文能证明历史真实性",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j117",
+    "claim_candidate": "原文能证明历史真实性",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j118",
+    "claim_candidate": "原文仅支持归属式表述",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j119",
+    "claim_candidate": "原文仅支持归属式表述",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j120",
+    "claim_candidate": "原文仅支持归属式表述",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j121",
+    "claim_candidate": "相关性分数代表真实性",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j122",
+    "claim_candidate": "相关性分数代表真实性",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j123",
+    "claim_candidate": "相关性分数代表真实性",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j124",
+    "claim_candidate": "转载构成独立证据",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j125",
+    "claim_candidate": "转载构成独立证据",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j126",
+    "claim_candidate": "转载构成独立证据",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j127",
+    "claim_candidate": "缺失记载等于不存在",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j128",
+    "claim_candidate": "缺失记载等于不存在",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j129",
+    "claim_candidate": "缺失记载等于不存在",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j130",
+    "claim_candidate": "同名人物必然同一实体",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j131",
+    "claim_candidate": "同名人物必然同一实体",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j132",
+    "claim_candidate": "同名人物必然同一实体",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j133",
+    "claim_candidate": "引文版本可随意替换",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j134",
+    "claim_candidate": "引文版本可随意替换",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j135",
+    "claim_candidate": "引文版本可随意替换",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j136",
+    "claim_candidate": "已撤回材料可以继续支持结论",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j137",
+    "claim_candidate": "已撤回材料可以继续支持结论",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j138",
+    "claim_candidate": "已撤回材料可以继续支持结论",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j139",
+    "claim_candidate": "作品体裁影响解释范围",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j140",
+    "claim_candidate": "作品体裁影响解释范围",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j141",
+    "claim_candidate": "作品体裁影响解释范围",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j142",
+    "claim_candidate": "一句引文能支持所有后世故事",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j143",
+    "claim_candidate": "一句引文能支持所有后世故事",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j144",
+    "claim_candidate": "一句引文能支持所有后世故事",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j145",
+    "claim_candidate": "片段可能仅有MENTIONS关系",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j146",
+    "claim_candidate": "片段可能仅有MENTIONS关系",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j147",
+    "claim_candidate": "片段可能仅有MENTIONS关系",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j148",
+    "claim_candidate": "该断言需要额外上下文",
+    "passage_candidate": "passage-1",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j149",
+    "claim_candidate": "该断言需要额外上下文",
+    "passage_candidate": "passage-2",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  },
+  {
+    "id": "j150",
+    "claim_candidate": "该断言需要额外上下文",
+    "passage_candidate": "passage-3",
+    "relation": null,
+    "annotator_a": null,
+    "annotator_b": null,
+    "adjudicator": null,
+    "status": "CANDIDATE_ONLY"
+  }
+]

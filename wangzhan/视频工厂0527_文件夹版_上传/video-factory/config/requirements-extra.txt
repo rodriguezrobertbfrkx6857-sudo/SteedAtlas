@@ -1,0 +1,9 @@
+# 目标后端已有 FastAPI / SQLAlchemy 时，只需要确认这些额外依赖可用。
+httpx
+redis
+pydantic
+sqlalchemy
+
+# 系统依赖：
+# - ffmpeg 必须安装，并且 BAIQIPU_FFMPEG_BIN 能找到它。
+# - Redis 推荐安装，用于工作流运行态、事件、并行节点展示。

@@ -1,0 +1,4 @@
+variant,injected_metadata_conflicts,detected,mode
+no_bible,1,0,DETERMINISTIC_METADATA_ONLY
+global_only,1,0,DETERMINISTIC_METADATA_ONLY
+structured,1,1,DETERMINISTIC_METADATA_ONLY

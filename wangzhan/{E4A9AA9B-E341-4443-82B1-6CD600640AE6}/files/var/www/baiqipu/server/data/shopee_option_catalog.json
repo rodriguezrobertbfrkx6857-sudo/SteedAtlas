@@ -1,0 +1,18 @@
+{
+  "version": "2026-04-20-admin-catalog",
+  "notes": "Optional starter catalog for named Shopee category and logistic dropdowns. Database values override this file.",
+  "platforms": {
+    "shopee_my": {
+      "category_options": [],
+      "logistic_options": []
+    },
+    "shopee_th": {
+      "category_options": [],
+      "logistic_options": []
+    },
+    "shopee_sg": {
+      "category_options": [],
+      "logistic_options": []
+    }
+  }
+}

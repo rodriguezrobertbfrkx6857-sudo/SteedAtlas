@@ -1,0 +1,33 @@
+{
+  "python": {
+    "tests": 62,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 126.374
+  },
+  "original_report_preserved": true,
+  "original_legacy_counts_preserved": true,
+  "video": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 720,
+        "height": 1280,
+        "r_frame_rate": "24/1"
+      }
+    ],
+    "format": {
+      "duration": "24.000000",
+      "size": "841269"
+    }
+  },
+  "video_sha256": "2875403d143ebd10b0ea272acffaae1a992ba559481ffc9656a19b0b3c106267",
+  "external_model_calls": 0,
+  "paid_cost": 0,
+  "publication": "NOT_PERFORMED",
+  "scope": "LOCAL_ISOLATED_COPY_DEMO",
+  "srt_sha256": "a91cd6a7ecb11e00d7c4c75afce56c425bdd526b3f8b33ae1eba367e3ac850f1",
+  "srt_cues": 3
+}

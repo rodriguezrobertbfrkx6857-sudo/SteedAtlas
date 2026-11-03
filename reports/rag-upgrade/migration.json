@@ -1,0 +1,54 @@
+{
+  "scope": "UNIQUE_COPIES_ONLY",
+  "legacy_row_digests": {
+    "horses": "f3f3f16091ed41e108a43c55d884f34bab56a4cc144b5bd9ccf345ba561c2da5",
+    "users": "b39f09d296bd090de91129dc800b74652c83c2fa904a4225b400280396878821",
+    "products": "f837eeb936a51672a8d87d7dcda77dbb82445498ae5b11dc8e3eb49a35c6db93",
+    "orders": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "gacha_records": "f6fe764134c69d4d575cb2372cd8df53944a962707fa4e31d23dc3d65eb2d296",
+    "collections": "d57bf3e5b2117237dae48ed642debc610aba17a7501f73e1c6f32336c7a33f8b",
+    "video_tasks": "fced6e399e3edfbabbbfb9c620d79fb1a242cb2541435e81e4eda60bb3184e0e",
+    "shopee_connections": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "shopee_publish_configs": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "crossborder_publish_records": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "workflow_tasks": "1dedf65e2b5eba64913c65d4e8cf97e5418aa75adedc360d83632af77182e0ea",
+    "gacha_fragments": "8d2ed8353b5691583a74439adb02c54d210f329beb29b3a61610d145c8c50e1b"
+  },
+  "steps": [
+    {
+      "command": [
+        "upgrade",
+        "head"
+      ],
+      "exit_code": 0,
+      "legacy_rows_identical": true
+    },
+    {
+      "command": [
+        "upgrade",
+        "head"
+      ],
+      "exit_code": 0,
+      "legacy_rows_identical": true
+    },
+    {
+      "command": [
+        "downgrade",
+        "a8d4e7f9c201"
+      ],
+      "exit_code": 0,
+      "legacy_rows_identical": true
+    },
+    {
+      "command": [
+        "upgrade",
+        "head"
+      ],
+      "exit_code": 0,
+      "legacy_rows_identical": true
+    }
+  ],
+  "idempotent": true,
+  "original_unchanged": true,
+  "demo_database": "runtime\\rag-live-1793600861221398000.db"
+}

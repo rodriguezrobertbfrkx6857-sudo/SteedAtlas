@@ -1,0 +1,151 @@
+{
+  "name": "Baiqipu Video Factory Skeleton",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "video-factory-run-v2",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "f8d32fb3-0909-4b83-9b8f-2dcf0fc9457a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const incoming = $input.first().json;\nconst body = incoming.body || incoming;\nconst inputPayload = body.input_payload || {};\nconst workflowDefinition = body.workflow_definition || {};\nconst taskId = body.task_id || inputPayload.task_id || '';\nconst title = body.title || inputPayload.title || 'Untitled video';\nconst horseName = body.horse_name || inputPayload.horse_name || inputPayload.horse || '';\nconst duration = Number(body.duration || inputPayload.duration || 30);\nconst aspectRatio = body.aspect_ratio || inputPayload.aspect_ratio || '9:16';\nconst callbackUrl = body.callback_url || incoming.callback_url || '';\nconst callbackToken = body.callback_token || incoming.callback_token || '';\nconst normalized = {\n  task_id: taskId,\n  title,\n  horse_name: horseName,\n  duration,\n  aspect_ratio: aspectRatio,\n  input_payload: inputPayload,\n  workflow_definition: workflowDefinition,\n  callback_url: callbackUrl,\n  callback_token: callbackToken,\n  source: body.source || 'baiqipu-video-factory'\n};\nreturn [{\n  json: {\n    ...normalized,\n    normalized_payload: normalized,\n    pipeline_version: 'video-factory-n8n-skeleton-v3',\n    status: 'processing',\n    progress: 12,\n    current_node: 'script',\n    node_states: [\n      { node_id: 'input', status: 'completed', progress: 100, output: { title, horse_name: horseName, duration, aspect_ratio: aspectRatio } },\n      { node_id: 'script', status: 'queued', progress: 0, output: {} },\n      { node_id: 'storyboard', status: 'queued', progress: 0, output: {} },\n      { node_id: 'veo', status: 'queued', progress: 0, output: {} },\n      { node_id: 'voice', status: 'queued', progress: 0, output: {} },\n      { node_id: 'subtitle', status: 'queued', progress: 0, output: {} },\n      { node_id: 'compose', status: 'queued', progress: 0, output: {} },\n      { node_id: 'output', status: 'queued', progress: 0, output: {} }\n    ],\n    result_payload: {\n      pipeline_version: 'video-factory-n8n-skeleton-v3',\n      normalized,\n      next_required_api: 'script_or_storyboard_provider'\n    }\n  }\n}];"
+      },
+      "id": "2",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nfunction upsert(states, next) {\n  const copy = Array.isArray(states) ? states.map((state) => ({ ...state, output: { ...(state.output || {}) } })) : [];\n  const index = copy.findIndex((state) => state.node_id === next.node_id);\n  if (index >= 0) copy[index] = { ...copy[index], ...next, output: { ...(copy[index].output || {}), ...(next.output || {}) } };\n  else copy.push(next);\n  return copy;\n}\nconst prompt = data.input_payload?.prompt || data.input_payload?.text || data.title;\nconst script = {\n  title: data.title,\n  logline: `${data.title} - ${data.horse_name || 'video subject'}`,\n  narration: `Placeholder script for ${prompt}. Replace this Code node with the real script provider.`,\n  tone: data.input_payload?.tone || 'cinematic',\n  duration: data.duration\n};\nconst node_states = upsert(data.node_states, { node_id: 'script', status: 'completed', progress: 100, output: { script } });\nreturn [{ json: { ...data, script, node_states, progress: 24, current_node: 'storyboard', result_payload: { ...(data.result_payload || {}), script, next_required_api: 'storyboard_provider' } } }];"
+      },
+      "id": "3",
+      "name": "Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nfunction upsert(states, next) {\n  const copy = Array.isArray(states) ? states.map((state) => ({ ...state, output: { ...(state.output || {}) } })) : [];\n  const index = copy.findIndex((state) => state.node_id === next.node_id);\n  if (index >= 0) copy[index] = { ...copy[index], ...next, output: { ...(copy[index].output || {}), ...(next.output || {}) } };\n  else copy.push(next);\n  return copy;\n}\nconst storyboard = [\n  { scene: 1, duration_sec: Math.max(4, Math.round(data.duration * 0.25)), visual: `Opening shot for ${data.title}`, narration: data.script?.narration || '' },\n  { scene: 2, duration_sec: Math.max(6, Math.round(data.duration * 0.45)), visual: `Core visual sequence for ${data.horse_name || data.title}`, narration: 'Main development beat.' },\n  { scene: 3, duration_sec: Math.max(4, Math.round(data.duration * 0.30)), visual: 'Closing branded frame', narration: 'Closing beat and callout.' }\n];\nconst node_states = upsert(data.node_states, { node_id: 'storyboard', status: 'completed', progress: 100, output: { storyboard } });\nreturn [{ json: { ...data, storyboard, node_states, progress: 36, current_node: 'veo', result_payload: { ...(data.result_payload || {}), storyboard, next_required_api: 'veo_video_provider' } } }];"
+      },
+      "id": "4",
+      "name": "Storyboard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nfunction upsert(states, next) {\n  const copy = Array.isArray(states) ? states.map((state) => ({ ...state, output: { ...(state.output || {}) } })) : [];\n  const index = copy.findIndex((state) => state.node_id === next.node_id);\n  if (index >= 0) copy[index] = { ...copy[index], ...next, output: { ...(copy[index].output || {}), ...(next.output || {}) } };\n  else copy.push(next);\n  return copy;\n}\nconst veo_request = {\n  provider: 'pending',\n  model: 'to-be-decided',\n  aspect_ratio: data.aspect_ratio,\n  scenes: data.storyboard || [],\n  status: 'waiting_for_api_selection'\n};\nconst node_states = upsert(data.node_states, { node_id: 'veo', status: 'queued', progress: 0, output: { veo_request } });\nreturn [{ json: { ...data, veo_request, node_states, progress: 45, current_node: 'veo', result_payload: { ...(data.result_payload || {}), veo_request, next_required_api: 'veo_video_provider' } } }];"
+      },
+      "id": "5",
+      "name": "Veo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nfunction upsert(states, next) {\n  const copy = Array.isArray(states) ? states.map((state) => ({ ...state, output: { ...(state.output || {}) } })) : [];\n  const index = copy.findIndex((state) => state.node_id === next.node_id);\n  if (index >= 0) copy[index] = { ...copy[index], ...next, output: { ...(copy[index].output || {}), ...(next.output || {}) } };\n  else copy.push(next);\n  return copy;\n}\nconst voice_request = {\n  provider: 'pending',\n  voice: data.input_payload?.voice || 'to-be-decided',\n  narration: data.script?.narration || '',\n  status: 'waiting_for_api_selection'\n};\nconst node_states = upsert(data.node_states, { node_id: 'voice', status: 'queued', progress: 0, output: { voice_request } });\nreturn [{ json: { ...data, voice_request, node_states, result_payload: { ...(data.result_payload || {}), voice_request } } }];"
+      },
+      "id": "6",
+      "name": "Voice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nfunction upsert(states, next) {\n  const copy = Array.isArray(states) ? states.map((state) => ({ ...state, output: { ...(state.output || {}) } })) : [];\n  const index = copy.findIndex((state) => state.node_id === next.node_id);\n  if (index >= 0) copy[index] = { ...copy[index], ...next, output: { ...(copy[index].output || {}), ...(next.output || {}) } };\n  else copy.push(next);\n  return copy;\n}\nconst subtitle_request = {\n  provider: 'pending',\n  format: 'srt',\n  language: data.input_payload?.language || 'zh-CN',\n  status: 'waiting_for_api_selection'\n};\nconst node_states = upsert(data.node_states, { node_id: 'subtitle', status: 'queued', progress: 0, output: { subtitle_request } });\nreturn [{ json: { ...data, subtitle_request, node_states, result_payload: { ...(data.result_payload || {}), subtitle_request } } }];"
+      },
+      "id": "7",
+      "name": "Subtitle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nfunction upsert(states, next) {\n  const copy = Array.isArray(states) ? states.map((state) => ({ ...state, output: { ...(state.output || {}) } })) : [];\n  const index = copy.findIndex((state) => state.node_id === next.node_id);\n  if (index >= 0) copy[index] = { ...copy[index], ...next, output: { ...(copy[index].output || {}), ...(next.output || {}) } };\n  else copy.push(next);\n  return copy;\n}\nconst compose_request = {\n  provider: 'pending',\n  inputs: ['video', 'voice', 'subtitle'],\n  target_aspect_ratio: data.aspect_ratio,\n  status: 'waiting_for_api_selection'\n};\nlet node_states = upsert(data.node_states, { node_id: 'compose', status: 'queued', progress: 0, output: { compose_request } });\nnode_states = upsert(node_states, { node_id: 'output', status: 'queued', progress: 0, output: { note: 'Final media URL will be written here after Compose is connected.' } });\nreturn [{ json: { ...data, compose_request, node_states, status: 'processing', progress: 45, current_node: 'veo', result_payload: { ...(data.result_payload || {}), compose_request, note: 'video factory skeleton expanded; real provider APIs are not connected yet' } } }];"
+      },
+      "id": "8",
+      "name": "Compose",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2020, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Workflow-Task-Token",
+              "value": "={{ $json.callback_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: $json.status || 'processing', progress: $json.progress || 45, current_node: $json.current_node || 'veo', node_states: $json.node_states || [], normalized_payload: $json.normalized_payload || {}, result_payload: $json.result_payload || {}, dispatch_response: { workflow: 'Baiqipu Video Factory Skeleton', pipeline_version: $json.pipeline_version || 'video-factory-n8n-skeleton-v3' } } }}"
+      },
+      "id": "9",
+      "name": "Callback Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2280, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]]
+    },
+    "Normalize Input": {
+      "main": [[{ "node": "Script", "type": "main", "index": 0 }]]
+    },
+    "Script": {
+      "main": [[{ "node": "Storyboard", "type": "main", "index": 0 }]]
+    },
+    "Storyboard": {
+      "main": [[{ "node": "Veo", "type": "main", "index": 0 }]]
+    },
+    "Veo": {
+      "main": [[{ "node": "Voice", "type": "main", "index": 0 }]]
+    },
+    "Voice": {
+      "main": [[{ "node": "Subtitle", "type": "main", "index": 0 }]]
+    },
+    "Subtitle": {
+      "main": [[{ "node": "Compose", "type": "main", "index": 0 }]]
+    },
+    "Compose": {
+      "main": [[{ "node": "Callback Website", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "video-factory-skeleton-v3",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

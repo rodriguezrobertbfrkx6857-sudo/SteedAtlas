@@ -1,0 +1,124 @@
+{
+  "database": "runtime\\resume-rc\\autonomous-demo.db",
+  "read_only": true,
+  "database_sha256": "6642d9a14b832e7ce08f31e070595bc89345f8048c547cbd7f767448601809db",
+  "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+  "tools": {
+    "node": "v22.20.0",
+    "ffmpeg": "ffmpeg version 8.1.1-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+    "ffprobe": "ffprobe version 8.1.1-full_build-www.gyan.dev Copyright (c) 2007-2026 the FFmpeg developers"
+  },
+  "ports": {
+    "8006": "FREE",
+    "5178": "FREE"
+  },
+  "sources": [
+    {
+      "id": "ws-7226",
+      "title": "三國演義/第003回",
+      "revision": 2567965,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-7226",
+        "checked_at": "2026-11-02T10:39:38.815602+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 3
+    },
+    {
+      "id": "ws-12873",
+      "title": "三國志/卷32",
+      "revision": 2583378,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-12873",
+        "checked_at": "2026-11-02T10:39:38.815602+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    },
+    {
+      "id": "ws-7541",
+      "title": "史記/卷007",
+      "revision": 5978360,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-7541",
+        "checked_at": "2026-11-02T10:39:38.815602+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    },
+    {
+      "id": "ws-16112",
+      "title": "三國志/卷07",
+      "revision": 2452141,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-16112",
+        "checked_at": "2026-11-02T10:39:38.815602+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    }
+  ],
+  "cache": [
+    {
+      "title": "三國演義/第003回",
+      "revision": 2567965,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    },
+    {
+      "title": "三國志/卷32",
+      "revision": 2583378,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    },
+    {
+      "title": "史記/卷007",
+      "revision": 5978360,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    },
+    {
+      "title": "三國志/卷07",
+      "revision": 2452141,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    }
+  ],
+  "cost_paths": "DISABLED_BY_RC_LAUNCHER; PREFLIGHT_CALLS_NO_MODEL",
+  "manifest_sha256": "5ed2ea790e70b124700843121fe4083d17085c08884a4224ca989e541866556d",
+  "chinese_font_available": true,
+  "coverage": {
+    "corpus_snapshot_id": "75ae51fa4c68e744c00f742bb69bf9e261a0493523b33dfd1f0de91358ef9fe7",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 6,
+    "review_states": {
+      "DRAFT": 6
+    },
+    "citable_count": 6,
+    "machine_verified_count": 6,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": true
+  },
+  "snapshot_quote_count": 6,
+  "snapshot_links": [
+    "/api/v2/snapshot-evidence/wsc-c1df3fd0995e6e7210d8317b542aaddab6bf125cd89ea94a",
+    "/api/v2/snapshot-evidence/wsc-6be393207be665df9f31312a2485e7d2ebe0079a80f072e0",
+    "/api/v2/snapshot-evidence/wsc-deb6b45007c36a5edaad79ced1bb9ba1cd34514225e2b04c",
+    "/api/v2/snapshot-evidence/wsc-2efea90fe3ab5b1c64d21fdcf5a392f4695d0ba3ce8c9f49",
+    "/api/v2/snapshot-evidence/wsc-58d0f146e14252aaebabe6b6413eadac7fc0ca385341cae4",
+    "/api/v2/snapshot-evidence/wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd"
+  ],
+  "network_requests": 0,
+  "source_health_issues": [],
+  "missing_database_versions": [],
+  "status": "PASS",
+  "policy": "Current citations require successful observation <=7 days. Snapshot browsing never renews observation and never bypasses hashes, rights, withdrawal or private access. Missing cache: run resume_demo.py replay online."
+}

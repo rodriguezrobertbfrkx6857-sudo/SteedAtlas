@@ -1,0 +1,88 @@
+{
+  "status": "SUCCEEDED",
+  "job_id": "a53ce21113384e54a6f14b189caaee72",
+  "project_id": "8ac2edfb018846e6a1abfa1cb9a24ad8",
+  "source_citation": {
+    "claim_id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+    "claim_revision": 1,
+    "source_id": "ws-16112",
+    "source_revision": 1,
+    "passage_id": "wsp-c5f792d55a0a01dd49a607b68b884caa0c09596d940a6ab5",
+    "passage_revision": 1,
+    "span": [
+      0,
+      437
+    ],
+    "quote": "布自以殺卓為術報讎，欲以德之。術惡其反覆，拒而不受。北詣袁紹，紹與布擊張燕于常山。燕精兵萬餘，騎數千。布有良馬曰赤兔。 〈《曹瞞傳》曰：時人語曰：「人中有呂布，馬中有赤兔。」〉常與其親近成廉、魏越等陷鋒突陳，遂破燕軍。而求益兵眾，將士鈔掠，紹患忌之。布覺其意，從紹求去。紹恐還為己害，遣壯士夜掩殺布，不獲。事露，布走河內，〈《英雄記》曰：布自以有功於袁氏，輕傲紹下諸將，以為擅相署置，不足貴也。布求還洛，紹假布領司隸校尉。外言當遣，內欲殺布。明日當發，紹遣甲士三十人，辭以送布。布使止於帳側，偽使人於帳中鼓箏。紹兵臥，布無何出帳去，而兵不覺。夜半兵起，亂斫布床被，謂為已死。明日，紹訊問，知布尚在，乃閉城門。布遂引去。 〉與張楊合。紹令眾追之，皆畏布，莫敢逼近者。 〈《英雄記》曰：楊及部曲諸將，皆受傕、汜購募，共圖布。布聞之，謂楊曰：「布，卿州里也。卿殺布，於卿弱。不如賣布，可極得汜、傕爵寵。」楊於是外許汜、傕，內實保護布。汜、傕患之，更下大封詔書，以布為潁川太守。 〉",
+    "locator": "呂布 / 段4",
+    "source_title": "三國志/卷07",
+    "edition": "維基文庫 oldid=2452141; render=f8664dc54604d052; mediawiki-paragraphs-v1",
+    "source_url": "https://zh.wikisource.org/w/index.php?oldid=2452141",
+    "genre": "PRIMARY_RECORD",
+    "relation": "MENTIONS",
+    "epistemic_status": "ATTESTED",
+    "review_state": "DRAFT",
+    "verification": "MACHINE_VERIFIED",
+    "source_observation": {
+      "source_id": "ws-16112",
+      "checked_at": "2026-11-02T10:39:38.815602+00:00",
+      "status": "AVAILABLE"
+    },
+    "snapshot_only": false,
+    "human_review_state": "NOT_REVIEWED",
+    "presentation_track": "AUTO_VERIFIED_SOURCE",
+    "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+    "entailment": "UNVERIFIED",
+    "entity_identity": "ALIAS_CANDIDATE_NOT_IDENTITY_PROOF",
+    "attribution": "《三國志/卷07》；陳壽；含裴松之注；維基文庫貢獻者；修訂2452141",
+    "license": "CC-BY-SA-4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+    "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text.",
+    "upstream_revision": 2452141,
+    "independence_group": [
+      "work:三國志"
+    ],
+    "proposition_key": "",
+    "href": "/api/v2/evidence/wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd@1",
+    "index_snapshot_id": "75ae51fa4c68e744c00f742bb69bf9e261a0493523b33dfd1f0de91358ef9fe7"
+  },
+  "scene_label": "SOURCE_ATTRIBUTED",
+  "video": "deliverables\\clean-source-quote.mp4",
+  "video_bytes": 95000,
+  "sha256": "cde1f545c989496786e0474a0ba421f13c6129a389cd47c1ed752050c46b0d70",
+  "nodes": [
+    {
+      "key": "scene:quote",
+      "kind": "segment",
+      "state": "SUCCEEDED",
+      "output": null
+    },
+    {
+      "key": "audio",
+      "kind": "audio",
+      "state": "SUCCEEDED",
+      "output": null
+    },
+    {
+      "key": "subtitle",
+      "kind": "subtitle",
+      "state": "SUCCEEDED",
+      "output": null
+    },
+    {
+      "key": "compose",
+      "kind": "compose",
+      "state": "SUCCEEDED",
+      "output": null
+    },
+    {
+      "key": "qa",
+      "kind": "qa",
+      "state": "SUCCEEDED",
+      "output": null
+    }
+  ],
+  "historical_claim_review": "NOT_PERFORMED",
+  "project_approval": "LOCAL_RENDER_REQUEST_ONLY",
+  "paid_api_calls": 0
+}

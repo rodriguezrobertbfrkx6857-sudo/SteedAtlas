@@ -1,0 +1,1644 @@
+from __future__ import annotations
+
+import base64
+import json
+import mimetypes
+import re
+import subprocess
+import time
+import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any, Callable
+
+import httpx
+
+from app.config import get_settings
+
+
+class VideoFactoryProviderNotConfigured(RuntimeError):
+    pass
+
+
+class VideoFactoryProviderError(RuntimeError):
+    pass
+
+
+SERVER_DIR = Path(__file__).resolve().parents[2]
+GENERATED_DIR = SERVER_DIR / "generated"
+REFERENCE_FRAME_DIR = GENERATED_DIR / "reference-frames"
+
+
+def _api_mode_allows_calls() -> bool:
+    mode = str(get_settings().VIDEO_FACTORY_API_MODE or "auto").strip().lower()
+    return mode not in {"placeholder", "mock", "dry-run", "dry_run", "off", "disabled"}
+
+
+def _join_url(base_url: str, path: str) -> str:
+    if path.lower().startswith(("http://", "https://")):
+        return path
+    if not path:
+        return base_url.rstrip("/")
+    base = base_url.rstrip("/")
+    clean_path = path.lstrip("/")
+    if base.lower().endswith("/v1") and clean_path.lower().startswith("v1/"):
+        clean_path = clean_path[3:]
+    return f"{base}/{clean_path}"
+
+
+def _public_generated_url(path: Path) -> str:
+    settings = get_settings()
+    relative = path.resolve().relative_to(GENERATED_DIR.resolve()).as_posix()
+    return f"{str(settings.VIDEO_FACTORY_MEDIA_BASE_URL or '/generated').rstrip('/')}/{relative}"
+
+
+def _save_bytes(kind: str, task_id: str, scene: int | str, suffix: str, data: bytes) -> str:
+    safe_task_id = re.sub(r"[^a-zA-Z0-9_-]+", "_", str(task_id or "task"))
+    safe_scene = re.sub(r"[^a-zA-Z0-9_-]+", "_", str(scene or "0"))
+    out_dir = GENERATED_DIR / kind
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"{safe_task_id}_{safe_scene}_{uuid.uuid4().hex[:8]}{suffix}"
+    path.write_bytes(data)
+    return _public_generated_url(path)
+
+
+def _save_base64_media(kind: str, task_id: str, scene: int | str, suffix: str, value: str) -> str:
+    encoded = value.split(",", 1)[1] if "," in value and value.strip().startswith("data:") else value
+    return _save_bytes(kind, task_id, scene, suffix, base64.b64decode(encoded))
+
+
+def _extract_text_response(payload: dict[str, Any]) -> str:
+    direct_text = payload.get("output_text")
+    if isinstance(direct_text, str) and direct_text.strip():
+        return direct_text.strip()
+
+    choices = payload.get("choices")
+    if isinstance(choices, list) and choices:
+        message = choices[0].get("message") if isinstance(choices[0], dict) else None
+        content = message.get("content") if isinstance(message, dict) else None
+        if isinstance(content, str) and content.strip():
+            return content.strip()
+        if isinstance(content, list):
+            fragments = [
+                str(item.get("text") or item.get("content") or "")
+                for item in content
+                if isinstance(item, dict)
+            ]
+            text = "".join(fragments).strip()
+            if text:
+                return text
+
+    fragments: list[str] = []
+    for item in payload.get("output", []):
+        if not isinstance(item, dict) or item.get("type") != "message":
+            continue
+        for content in item.get("content", []):
+            if isinstance(content, dict) and content.get("type") == "output_text" and content.get("text"):
+                fragments.append(str(content["text"]))
+
+    return "".join(fragments).strip()
+
+
+def _strip_json_fences(text: str) -> str:
+    value = text.strip()
+    value = re.sub(r"^```(?:json)?\s*", "", value, flags=re.IGNORECASE)
+    value = re.sub(r"\s*```$", "", value)
+    return value.strip()
+
+
+def _coerce_int(value: Any, fallback: int, *, minimum: int = 1, maximum: int = 999) -> int:
+    if isinstance(value, int):
+        number = value
+    else:
+        match = re.search(r"\d+", str(value or ""))
+        number = int(match.group(0)) if match else fallback
+    return max(minimum, min(maximum, number))
+
+
+def _coerce_float(value: Any, fallback: float, *, minimum: float = 0.0, maximum: float = 2.0) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        number = fallback
+    return max(minimum, min(maximum, number))
+
+
+def _provider_timeout(seconds: float) -> httpx.Timeout:
+    value = max(10.0, float(seconds or 60.0))
+    return httpx.Timeout(connect=min(30.0, value), read=value, write=value, pool=30.0)
+
+
+def _request_with_retries(send: Callable[[], httpx.Response], *, attempts: int = 3) -> httpx.Response:
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            response = send()
+            response.raise_for_status()
+            return response
+        except httpx.HTTPStatusError as exc:
+            last_error = exc
+            if exc.response.status_code >= 500 and attempt < attempts - 1:
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            raise
+        except httpx.HTTPError as exc:
+            last_error = exc
+            if attempt < attempts - 1:
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            raise
+    if last_error:
+        raise last_error
+    raise VideoFactoryProviderError("Provider request did not return a response.")
+
+
+def _load_json_object(text: str) -> dict[str, Any]:
+    value = _strip_json_fences(text)
+    try:
+        data = json.loads(value)
+    except json.JSONDecodeError:
+        start = value.find("{")
+        end = value.rfind("}")
+        if start < 0 or end <= start:
+            raise
+        data = json.loads(value[start : end + 1])
+    if not isinstance(data, dict):
+        raise ValueError("Provider returned JSON, but it was not an object.")
+    return data
+
+
+def _post_provider_json(
+    *,
+    provider: str,
+    base_url: str,
+    api_path: str,
+    api_key: str,
+    model: str,
+    payload: dict[str, Any],
+    timeout: float,
+) -> dict[str, Any]:
+    if not _api_mode_allows_calls():
+        raise VideoFactoryProviderNotConfigured("Video factory API mode is disabled.")
+    if not base_url.strip() or not api_key.strip() or not model.strip():
+        raise VideoFactoryProviderNotConfigured(f"{provider} provider is not configured.")
+
+    endpoint = _join_url(base_url, api_path)
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "X-Client-Request-Id": str(uuid.uuid4()),
+    }
+
+    try:
+        response = _request_with_retries(
+            lambda: httpx.post(
+                endpoint,
+                headers=headers,
+                json=payload,
+                timeout=_provider_timeout(timeout),
+                trust_env=False,
+            )
+        )
+    except httpx.HTTPStatusError as exc:
+        body = exc.response.text.strip()
+        detail = f"{exc}; response body: {body[:1000]}" if body else str(exc)
+        raise VideoFactoryProviderError(detail) from exc
+    except httpx.HTTPError as exc:
+        raise VideoFactoryProviderError(str(exc)) from exc
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise VideoFactoryProviderError("Provider response was not valid JSON.") from exc
+    if not isinstance(data, dict):
+        raise VideoFactoryProviderError("Provider response JSON was not an object.")
+    return data
+
+
+def _model_quality_hint(model_id: str) -> str:
+    lowered = str(model_id or "").lower()
+    if any(token in lowered for token in ("fast", "flash", "lite", "mini", "turbo", "instant")):
+        return "速度优先"
+    if any(token in lowered for token in ("pro", "opus", "thinking", "ultra", "quality", "high", "4k", "gpt-5.4", "gpt-5.5")):
+        return "质量优先"
+    return "均衡"
+
+
+def _model_label(model_id: str) -> str:
+    hint = _model_quality_hint(model_id)
+    return f"{model_id} · {hint}" if hint else model_id
+
+
+def _extract_model_ids(payload: Any) -> list[str]:
+    if isinstance(payload, dict):
+        if isinstance(payload.get("data"), list):
+            items = payload["data"]
+        elif isinstance(payload.get("models"), list):
+            items = payload["models"]
+        elif isinstance(payload.get("items"), list):
+            items = payload["items"]
+        else:
+            items = []
+    elif isinstance(payload, list):
+        items = payload
+    else:
+        items = []
+
+    model_ids: list[str] = []
+    for item in items:
+        if isinstance(item, str):
+            model_id = item
+        elif isinstance(item, dict):
+            model_id = str(item.get("id") or item.get("model") or item.get("name") or "").strip()
+        else:
+            model_id = ""
+        if model_id and model_id not in model_ids:
+            model_ids.append(model_id)
+    return model_ids
+
+
+def _model_allowed_for_provider(provider: str, model_id: str) -> bool:
+    lowered = str(model_id or "").lower()
+    if not lowered:
+        return False
+    if provider == "gpt":
+        if any(token in lowered for token in ("image", "imagine", "video", "sora", "diffusion", "seedance", "kling", "jimeng")):
+            return False
+        return any(token in lowered for token in ("gpt", "claude", "gemini", "deepseek", "grok"))
+    if provider == "image":
+        if any(token in lowered for token in ("video", "sora", "seedance", "kling")):
+            return False
+        return any(
+            token in lowered
+            for token in (
+                "gpt-image",
+                "gpt-4o-image",
+                "image",
+                "imagine",
+                "midjourney",
+                "jimeng-4",
+                "nano-banana",
+            )
+        )
+    if provider == "veo":
+        return any(token in lowered for token in ("veo", "sora", "video", "seedance", "kling", "jimeng-video", "grok-video"))
+    if provider == "asr":
+        return any(token in lowered for token in ("transcribe", "whisper", "asr"))
+    return True
+
+
+def _default_candidate_models(provider: str, default_model: str) -> list[str]:
+    defaults = {
+        "gpt": [
+            "gpt-5.5",
+            "gpt-5.4",
+            "gpt-5.2",
+            "claude-sonnet-4-6",
+            "gemini-3.1-pro-preview",
+            "gemini-3-pro-preview-thinking",
+        ],
+        "image": [
+            "gpt-image-2",
+            "gpt-image-2-all",
+            "gpt-image-1.5",
+            "gpt-4o-image",
+            "grok-4-2-image",
+            "midjourney",
+            "jimeng-4.5",
+            "nano-banana",
+        ],
+        "veo": [
+            "veo_3_1-4K",
+            "veo_3_1",
+            "veo_3_1-components-4K",
+            "veo_3_1-components",
+            "veo_3_1-fast-components-4K",
+            "veo_3_1-fast-components",
+            "veo_3_1-fast-4K",
+            "veo_3_1-fast",
+            "sora-2",
+            "grok-video-3-15s",
+            "kling-3.0-omni",
+            "jimeng-video-3.0",
+            "doubao-seedance-2-0-260128",
+        ],
+        "asr": [
+            "gpt-4o-mini-transcribe",
+            "whisper-1",
+        ],
+    }
+    candidates = list(defaults.get(provider, []))
+    if default_model and default_model not in candidates:
+        candidates.insert(0, default_model)
+    return candidates
+
+
+def _filter_model_ids(provider: str, model_ids: list[str], default_model: str) -> list[str]:
+    allowed = [model_id for model_id in model_ids if _model_allowed_for_provider(provider, model_id)]
+    defaults = _default_candidate_models(provider, default_model)
+    # Keep only provider-advertised defaults unless the model is the current configured default.
+    for model_id in defaults:
+        if model_id == default_model or model_id in model_ids:
+            if model_id not in allowed:
+                allowed.append(model_id)
+    return allowed
+
+
+def _model_sort_key(model: dict[str, str], default_model: str) -> tuple[int, int, str]:
+    model_id = str(model.get("id") or "")
+    hint = str(model.get("qualityHint") or "")
+    priority = {"质量优先": 0, "均衡": 1, "速度优先": 2}.get(hint, 1)
+    return (priority, 0 if model_id == default_model else 1, model_id.lower())
+
+
+def _model_probe_paths(base_url: str) -> list[str]:
+    base_path = httpx.URL(base_url).path.lower().rstrip("/") if base_url else ""
+    paths = ["/models"]
+    if base_path != "/v1":
+        paths.append("/v1/models")
+    return paths
+
+
+def _models_payload(
+    *,
+    provider: str,
+    name: str,
+    base_url: str,
+    api_key: str,
+    default_model: str,
+    timeout: float = 20.0,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "configured": bool(base_url and api_key),
+        "baseUrlSet": bool(base_url),
+        "defaultModel": default_model,
+        "models": [],
+        "error": "",
+    }
+    collected: list[str] = []
+    if base_url and api_key and _api_mode_allows_calls():
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json",
+            "X-Client-Request-Id": str(uuid.uuid4()),
+        }
+        errors: list[str] = []
+        for path in _model_probe_paths(base_url):
+            endpoint = _join_url(base_url, path)
+            try:
+                response = _request_with_retries(
+                    lambda: httpx.get(
+                        endpoint,
+                        headers=headers,
+                        timeout=httpx.Timeout(connect=5.0, read=min(10.0, max(5.0, timeout)), write=5.0, pool=5.0),
+                        trust_env=False,
+                    ),
+                    attempts=1,
+                )
+                candidate_ids = _extract_model_ids(response.json())
+                if candidate_ids:
+                    collected = _filter_model_ids(provider, candidate_ids, default_model)
+                    if collected:
+                        result["sourcePath"] = path
+                        break
+                errors.append(f"{path}: 未找到适合{name}节点的模型")
+            except httpx.HTTPStatusError as exc:
+                errors.append(f"{path}: HTTP {exc.response.status_code}")
+            except httpx.HTTPError as exc:
+                errors.append(f"{path}: {str(exc)[:120]}")
+            except ValueError:
+                errors.append(f"{path}: 响应不是 JSON")
+        if not collected:
+            result["error"] = f"{name} 模型列表读取失败：" + "；".join(errors[:3])
+    elif base_url and api_key:
+        result["error"] = "当前 VIDEO_FACTORY_API_MODE 未开启真实接口调用"
+
+    if not collected:
+        collected = _default_candidate_models(provider, default_model)
+    elif default_model and default_model not in collected:
+        collected.insert(0, default_model)
+
+    models = [
+        {
+            "id": model_id,
+            "label": _model_label(model_id),
+            "qualityHint": _model_quality_hint(model_id),
+            "source": "baseurl" if collected and not result["error"] else "default",
+        }
+        for model_id in collected
+        if model_id
+    ]
+    result["models"] = sorted(models, key=lambda item: _model_sort_key(item, default_model))
+    return result
+
+
+def list_video_factory_models() -> dict[str, Any]:
+    settings = get_settings()
+    gpt_key = settings.VIDEO_FACTORY_GPT_API_KEY or settings.OPENAI_API_KEY
+    gpt_base = settings.VIDEO_FACTORY_GPT_BASE_URL or settings.OPENAI_BASE_URL
+    gpt_model = settings.VIDEO_FACTORY_GPT_MODEL or settings.OPENAI_MODEL
+    asr_key = settings.VIDEO_FACTORY_ASR_API_KEY or gpt_key
+    asr_base = settings.VIDEO_FACTORY_ASR_BASE_URL or gpt_base
+    asr_model = settings.VIDEO_FACTORY_ASR_MODEL or "gpt-4o-mini-transcribe"
+    jobs = {
+        "gpt": {
+            "provider": "gpt",
+            "name": "GPT",
+            "base_url": gpt_base,
+            "api_key": gpt_key,
+            "default_model": gpt_model,
+        },
+        "image": {
+            "provider": "image",
+            "name": "图片",
+            "base_url": settings.VIDEO_FACTORY_IMAGE_BASE_URL,
+            "api_key": settings.VIDEO_FACTORY_IMAGE_API_KEY,
+            "default_model": settings.VIDEO_FACTORY_IMAGE_MODEL,
+        },
+        "veo": {
+            "provider": "veo",
+            "name": "Veo",
+            "base_url": settings.VIDEO_FACTORY_VEO_BASE_URL,
+            "api_key": settings.VIDEO_FACTORY_VEO_API_KEY,
+            "default_model": settings.VIDEO_FACTORY_VEO_MODEL,
+        },
+        "asr": {
+            "provider": "asr",
+            "name": "字幕识别",
+            "base_url": asr_base,
+            "api_key": asr_key,
+            "default_model": asr_model,
+        },
+    }
+    results: dict[str, Any] = {"updatedAt": time.time()}
+    with ThreadPoolExecutor(max_workers=min(4, len(jobs))) as executor:
+        future_to_key = {
+            executor.submit(_models_payload, **config): key
+            for key, config in jobs.items()
+        }
+        for future in as_completed(future_to_key):
+            key = future_to_key[future]
+            try:
+                results[key] = future.result()
+            except Exception as exc:
+                config = jobs[key]
+                default_model = str(config.get("default_model") or "")
+                results[key] = {
+                    "configured": bool(config.get("base_url") and config.get("api_key")),
+                    "baseUrlSet": bool(config.get("base_url")),
+                    "defaultModel": default_model,
+                    "models": [
+                        {
+                            "id": default_model,
+                            "label": _model_label(default_model),
+                            "qualityHint": _model_quality_hint(default_model),
+                            "source": "default",
+                        }
+                    ]
+                    if default_model
+                    else [],
+                    "error": f"{config.get('name') or key} 模型列表读取失败：{str(exc)[:180]}",
+                }
+    return results
+
+
+def video_factory_provider_status() -> dict[str, Any]:
+    settings = get_settings()
+    gpt_key = settings.VIDEO_FACTORY_GPT_API_KEY or settings.OPENAI_API_KEY
+    gpt_base = settings.VIDEO_FACTORY_GPT_BASE_URL or settings.OPENAI_BASE_URL
+    gpt_model = settings.VIDEO_FACTORY_GPT_MODEL or settings.OPENAI_MODEL
+    asr_key = settings.VIDEO_FACTORY_ASR_API_KEY or gpt_key
+    asr_base = settings.VIDEO_FACTORY_ASR_BASE_URL or gpt_base
+    asr_model = settings.VIDEO_FACTORY_ASR_MODEL or "gpt-4o-mini-transcribe"
+    tts_configured = bool(settings.AZURE_TTS_KEY and settings.AZURE_TTS_REGION)
+    return {
+        "mode": settings.VIDEO_FACTORY_API_MODE,
+        "gpt": {
+            "configured": bool(gpt_key and gpt_base and gpt_model),
+            "baseUrlSet": bool(gpt_base),
+            "model": gpt_model,
+            "apiPath": settings.VIDEO_FACTORY_GPT_API_PATH,
+            "apiStyle": settings.VIDEO_FACTORY_GPT_API_STYLE,
+        },
+        "image": {
+            "configured": bool(
+                settings.VIDEO_FACTORY_IMAGE_API_KEY
+                and settings.VIDEO_FACTORY_IMAGE_BASE_URL
+                and settings.VIDEO_FACTORY_IMAGE_MODEL
+            ),
+            "baseUrlSet": bool(settings.VIDEO_FACTORY_IMAGE_BASE_URL),
+            "model": settings.VIDEO_FACTORY_IMAGE_MODEL,
+            "apiPath": settings.VIDEO_FACTORY_IMAGE_API_PATH,
+            "size": settings.VIDEO_FACTORY_IMAGE_SIZE,
+        },
+        "veo": {
+            "configured": bool(
+                settings.VIDEO_FACTORY_VEO_API_KEY
+                and settings.VIDEO_FACTORY_VEO_BASE_URL
+                and settings.VIDEO_FACTORY_VEO_MODEL
+            ),
+            "baseUrlSet": bool(settings.VIDEO_FACTORY_VEO_BASE_URL),
+            "model": settings.VIDEO_FACTORY_VEO_MODEL,
+            "fallbackModels": [
+                item.strip()
+                for item in (
+                    f"{settings.VIDEO_FACTORY_VEO_FALLBACK_MODELS},"
+                    f"{settings.VIDEO_FACTORY_AGENT_VIDEO_MODEL},"
+                    f"{settings.VIDEO_FACTORY_AGENT_VIDEO_FALLBACK_MODELS}"
+                ).split(",")
+                if item.strip()
+            ],
+            "apiPath": settings.VIDEO_FACTORY_VEO_API_PATH,
+            "statusApiPath": settings.VIDEO_FACTORY_VEO_STATUS_API_PATH,
+            "requestFormat": settings.VIDEO_FACTORY_VEO_REQUEST_FORMAT,
+            "generateAudio": settings.VIDEO_FACTORY_VEO_GENERATE_AUDIO,
+            "maxClipsPerTask": settings.VIDEO_FACTORY_VEO_MAX_CLIPS_PER_TASK,
+            "waitForCompletion": settings.VIDEO_FACTORY_VEO_WAIT_FOR_COMPLETION,
+        },
+        "tts": {
+            "configured": tts_configured,
+            "provider": "azure",
+            "language": "zh-CN",
+            "fallback": "Veo native audio prompt",
+        },
+        "asr": {
+            "enabled": bool(settings.VIDEO_FACTORY_ASR_ENABLED),
+            "configured": bool(asr_key and asr_base and asr_model),
+            "baseUrlSet": bool(asr_base),
+            "model": asr_model,
+            "apiPath": settings.VIDEO_FACTORY_ASR_API_PATH,
+            "language": settings.VIDEO_FACTORY_ASR_LANGUAGE,
+        },
+        "xhs": {
+            "configured": bool(settings.XHS_MCP_BASE_URL and settings.XHS_MCP_PUBLISH_VIDEO_PATH),
+            "enabled": bool(settings.XHS_AUTOPUBLISH_ENABLED),
+            "baseUrl": settings.XHS_MCP_BASE_URL,
+            "publishPath": settings.XHS_MCP_PUBLISH_VIDEO_PATH,
+            "autoCommentPath": settings.XHS_MCP_AUTO_COMMENT_PATH,
+            "collectCommentsPath": settings.XHS_MCP_FETCH_COMMENTS_PATH,
+            "cookiePath": settings.XHS_COOKIE_PATH,
+            "cookieConfigured": bool(
+                settings.XHS_COOKIE_PATH and Path(settings.XHS_COOKIE_PATH).expanduser().is_file()
+            ),
+            "defaultVisibility": settings.XHS_DEFAULT_VISIBILITY,
+            "defaultCommentText": settings.XHS_COMMENT_DEFAULT_TEXT,
+            "defaultCommentLimit": settings.XHS_COMMENT_DEFAULT_LIMIT,
+        },
+        "mediaBaseUrl": settings.VIDEO_FACTORY_MEDIA_BASE_URL,
+        "downloadRemoteMedia": settings.VIDEO_FACTORY_DOWNLOAD_REMOTE_MEDIA,
+    }
+
+
+def _safe_stem(value: str, fallback: str) -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9_-]+", "_", str(value or "")).strip("_")
+    return cleaned or fallback
+
+
+def _local_path_from_generated_url(value: str) -> Path | None:
+    text = str(value or "").strip()
+    if not text.startswith("/generated/"):
+        return None
+    relative = text.removeprefix("/generated/").lstrip("/\\")
+    path = (GENERATED_DIR / relative).resolve()
+    root = GENERATED_DIR.resolve()
+    if not str(path).startswith(str(root)):
+        return None
+    if not path.exists() or not path.is_file():
+        return None
+    return path
+
+
+def _is_video_path(path: Path) -> bool:
+    return path.suffix.lower() in {
+        ".mp4",
+        ".mov",
+        ".m4v",
+        ".avi",
+        ".mkv",
+        ".webm",
+        ".wmv",
+        ".mpeg",
+        ".mpg",
+    }
+
+
+def _is_image_path(path: Path) -> bool:
+    return path.suffix.lower() in {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".bmp",
+        ".gif",
+    }
+
+
+def _guess_media_type(path: Path | None, declared: str | None = None) -> str:
+    value = str(declared or "").strip().lower()
+    if value in {"image", "video"}:
+        return value
+    if path:
+        if _is_video_path(path):
+            return "video"
+        if _is_image_path(path):
+            return "image"
+    return "unknown"
+
+
+def _extract_video_frame(task_id: str, video_path: Path) -> Path | None:
+    settings = get_settings()
+    ffmpeg_bin = str(settings.BAIQIPU_FFMPEG_BIN or "ffmpeg").strip() or "ffmpeg"
+    REFERENCE_FRAME_DIR.mkdir(parents=True, exist_ok=True)
+    frame_path = REFERENCE_FRAME_DIR / f"{_safe_stem(task_id, 'task')}_{uuid.uuid4().hex[:8]}.jpg"
+    cmd = [
+        ffmpeg_bin,
+        "-y",
+        "-i",
+        str(video_path),
+        "-vf",
+        "select=eq(n\\,0),scale=1024:-2",
+        "-vframes",
+        "1",
+        str(frame_path),
+    ]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if not frame_path.exists() or frame_path.stat().st_size <= 0:
+        return None
+    return frame_path
+
+
+def _image_data_url(path: Path) -> str | None:
+    if not path.exists() or not path.is_file():
+        return None
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return None
+    if not raw:
+        return None
+    mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
+    return f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
+
+
+def _reference_style_fallback(
+    *,
+    media_url: str,
+    local_path: Path | None,
+    media_type: str,
+) -> dict[str, Any]:
+    basename = ""
+    if local_path:
+        basename = local_path.name
+    elif media_url:
+        basename = media_url.split("/")[-1]
+    basename = basename or "reference-media"
+    return {
+        "analysisMode": "fallback",
+        "summary": f"Reference {media_type} detected: {basename}",
+        "visualStyle": "Keep overall visual style close to the uploaded reference.",
+        "colorPalette": ["follow-reference"],
+        "lighting": "follow-reference",
+        "cameraLanguage": "follow-reference",
+        "mood": "follow-reference",
+        "subjects": ["main-subject-from-reference"],
+        "composition": "Keep framing and composition close to reference rhythm.",
+        "motion": "Natural cinematic motion, coherent transitions between clips.",
+        "continuityTips": [
+            "Maintain subject consistency across all generated shots.",
+            "Keep costume and environment style aligned with the reference.",
+            "Avoid abrupt style jumps between consecutive clips.",
+        ],
+        "negative": "Avoid introducing unrelated style elements not present in the reference.",
+        "source": {"mediaUrl": media_url, "mediaType": media_type, "localPath": str(local_path) if local_path else ""},
+    }
+
+
+def analyze_reference_media(
+    *,
+    task_id: str,
+    media_url: str | None = None,
+    local_path: str | None = None,
+    media_type: str | None = None,
+    model: str | None = None,
+) -> dict[str, Any]:
+    settings = get_settings()
+    raw_media_url = str(media_url or "").strip()
+    resolved_local_path: Path | None = None
+
+    if local_path:
+        candidate = Path(str(local_path).strip()).expanduser()
+        if candidate.exists() and candidate.is_file():
+            resolved_local_path = candidate.resolve()
+    if resolved_local_path is None and raw_media_url:
+        resolved_local_path = _local_path_from_generated_url(raw_media_url)
+
+    kind = _guess_media_type(resolved_local_path, media_type)
+    frame_path: Path | None = None
+    analysis_image_path: Path | None = None
+    if resolved_local_path and kind == "video":
+        frame_path = _extract_video_frame(task_id, resolved_local_path)
+        analysis_image_path = frame_path
+    elif resolved_local_path and kind == "image":
+        analysis_image_path = resolved_local_path
+
+    image_data_url = _image_data_url(analysis_image_path) if analysis_image_path else None
+    if not raw_media_url and analysis_image_path:
+        raw_media_url = _public_generated_url(analysis_image_path)
+
+    base_url = settings.VIDEO_FACTORY_GPT_BASE_URL or settings.OPENAI_BASE_URL
+    api_key = settings.VIDEO_FACTORY_GPT_API_KEY or settings.OPENAI_API_KEY
+    target_model = str(model or settings.VIDEO_FACTORY_GPT_MODEL or settings.OPENAI_MODEL or "").strip()
+    api_style = str(settings.VIDEO_FACTORY_GPT_API_STYLE or "chat_completions").strip().lower()
+    api_path = settings.VIDEO_FACTORY_GPT_API_PATH
+    if api_style in {"responses", "openai_responses"} and api_path == "/chat/completions":
+        api_path = "/responses"
+
+    if not (_api_mode_allows_calls() and base_url.strip() and api_key.strip() and target_model):
+        return _reference_style_fallback(media_url=raw_media_url, local_path=resolved_local_path, media_type=kind)
+
+    system_prompt = (
+        "You are a video style analyst. "
+        "Return strict JSON only. "
+        "Your output language must be Simplified Chinese for summary text fields. "
+        "Do not include markdown."
+    )
+    user_prompt = (
+        "分析参考素材并提取可用于视频生成的风格信息。"
+        "返回 JSON 字段: summary, visualStyle, colorPalette, lighting, cameraLanguage, mood, "
+        "subjects, composition, motion, continuityTips, negative。"
+        "continuityTips 必须是字符串数组。"
+        f"素材类型: {kind}。"
+        "如果参考素材是视频，请重点提炼镜头语言和运动节奏。"
+    )
+
+    try:
+        if api_style in {"responses", "openai_responses"}:
+            content_items: list[dict[str, Any]] = [{"type": "input_text", "text": user_prompt}]
+            if image_data_url:
+                content_items.append({"type": "input_image", "image_url": image_data_url})
+            payload = {
+                "model": target_model,
+                "instructions": system_prompt,
+                "input": [{"role": "user", "content": content_items}],
+                "max_output_tokens": min(1200, int(settings.VIDEO_FACTORY_GPT_MAX_TOKENS or 1200)),
+                "temperature": 0.2,
+            }
+        else:
+            user_content: Any = user_prompt
+            if image_data_url:
+                user_content = [
+                    {"type": "text", "text": user_prompt},
+                    {"type": "image_url", "image_url": {"url": image_data_url}},
+                ]
+            payload = {
+                "model": target_model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content},
+                ],
+                "temperature": 0.2,
+                "max_tokens": min(1200, int(settings.VIDEO_FACTORY_GPT_MAX_TOKENS or 1200)),
+                "response_format": {"type": "json_object"},
+            }
+
+        response_payload = _post_provider_json(
+            provider="gpt",
+            base_url=base_url,
+            api_path=api_path,
+            api_key=api_key,
+            model=target_model,
+            payload=payload,
+            timeout=settings.VIDEO_FACTORY_GPT_TIMEOUT_SECONDS,
+        )
+        text = _extract_text_response(response_payload)
+        result = _load_json_object(text) if text else response_payload
+        if not isinstance(result, dict):
+            raise VideoFactoryProviderError("Reference analyzer returned non-object JSON.")
+        result["analysisMode"] = "provider"
+        result["model"] = target_model
+        result["source"] = {
+            "mediaUrl": raw_media_url,
+            "mediaType": kind,
+            "localPath": str(resolved_local_path) if resolved_local_path else "",
+            "frameUrl": _public_generated_url(frame_path) if frame_path else "",
+        }
+        if "continuityTips" in result and not isinstance(result.get("continuityTips"), list):
+            result["continuityTips"] = [str(result.get("continuityTips") or "").strip()]
+        return result
+    except Exception:
+        return _reference_style_fallback(media_url=raw_media_url, local_path=resolved_local_path, media_type=kind)
+
+
+def _normalize_provider_shots(raw_shots: Any, fallback_seconds: int) -> list[dict[str, Any]]:
+    if not isinstance(raw_shots, list):
+        return []
+    shots: list[dict[str, Any]] = []
+    for index, raw in enumerate(raw_shots, start=1):
+        if not isinstance(raw, dict):
+            continue
+        visual = str(raw.get("visual") or raw.get("description") or raw.get("prompt") or "").strip()
+        prompt = str(raw.get("prompt") or raw.get("veo_prompt") or visual).strip()
+        image_prompt = str(raw.get("image_prompt") or raw.get("imagePrompt") or raw.get("keyframe_prompt") or "").strip()
+        video_prompt = str(raw.get("video_prompt") or raw.get("videoPrompt") or raw.get("motion_prompt") or "").strip()
+        if image_prompt and not visual:
+            visual = image_prompt
+        if video_prompt and not prompt:
+            prompt = video_prompt
+        if not prompt:
+            continue
+        shots.append(
+            {
+                "scene": _coerce_int(raw.get("scene") or raw.get("index"), index, minimum=1, maximum=99),
+                "seconds": _coerce_int(
+                    raw.get("seconds") or raw.get("duration") or raw.get("duration_sec"),
+                    fallback_seconds,
+                    minimum=2,
+                    maximum=12,
+                ),
+                "camera": str(raw.get("camera") or raw.get("camera_move") or raw.get("shot") or "电影感镜头").strip(),
+                "visual": visual or prompt,
+                "prompt": prompt,
+                "imagePrompt": image_prompt or visual or prompt,
+                "videoPrompt": video_prompt or prompt,
+                "narration": str(raw.get("narration") or raw.get("voiceover") or "").strip(),
+                "subtitle": str(raw.get("subtitle") or raw.get("caption") or "").strip(),
+                "audio": str(raw.get("audio") or raw.get("sound") or "").strip(),
+            }
+        )
+    return shots
+
+
+def generate_script_plan(context: dict[str, Any]) -> dict[str, Any]:
+    settings = get_settings()
+    base_url = settings.VIDEO_FACTORY_GPT_BASE_URL or settings.OPENAI_BASE_URL
+    api_key = settings.VIDEO_FACTORY_GPT_API_KEY or settings.OPENAI_API_KEY
+    model = str(context.get("model") or settings.VIDEO_FACTORY_GPT_MODEL or settings.OPENAI_MODEL or "").strip()
+    temperature = _coerce_float(context.get("temperature"), 0.6, minimum=0.0, maximum=1.5)
+    api_style = str(settings.VIDEO_FACTORY_GPT_API_STYLE or "chat_completions").strip().lower()
+    api_path = settings.VIDEO_FACTORY_GPT_API_PATH
+    if api_style in {"responses", "openai_responses"} and api_path == "/chat/completions":
+        api_path = "/responses"
+
+    references = []
+    for ref in context.get("rag_references", [])[:3]:
+        if not isinstance(ref, dict):
+            continue
+        references.append(
+            {
+                "name": ref.get("name"),
+                "figure": ref.get("figure"),
+                "source": ref.get("source"),
+                "hook": ref.get("hook"),
+                "story": ref.get("story") or ref.get("text"),
+                "visualKeywords": ref.get("visualKeywords"),
+                "shotBeats": ref.get("shotBeats"),
+                "avoid": ref.get("avoid"),
+            }
+        )
+
+    system_prompt = (
+        "你是百骑谱视频工厂的短视频总导演，只能依据给定素材生成结构化方案。"
+        "所有 voiceover、shots.narration、shots.subtitle 必须是简体中文口语短句，适合真人普通话配音。"
+        "方案必须像真人历史讲解故事，不是静态概念图集合；每个镜头都要有明确事件、动作、因果和情绪推进。"
+    )
+    user_prompt = "\n".join(
+        [
+            "请返回严格 JSON，不要 markdown，不要额外解释。",
+            "JSON 字段：title, voiceover, opening_hook, emotional_arc, shots, veo_prompt_guidance, negative_prompt。",
+            "shots 是数组，每项包含 scene, seconds, camera, visual, prompt, narration, subtitle, audio。",
+            "画面 prompt 尽量写成英文电影感视频提示词；voiceover、narration、subtitle 必须保留简体中文。",
+            "旁白必须像真人短视频讲解：开头抛出悬念，中段讲清人物和马的关系，结尾给出一句有记忆点的判断。",
+            "旁白必须是中文口语，不要英文、不要拼音、不要文言长句；每个 shot 的 narration 只写当前片段要读的一句话，并且必须和该镜头画面一一对应。",
+            "每句 narration 控制在 12 到 24 个汉字，便于 Veo 或中文 TTS 清晰朗读。",
+            "每个 visual/prompt 必须包含：具体场景、人物位置、马的动作、镜头运动、光线、情绪变化；禁止只写“史诗感”“电影感”这种空泛词。",
+            "视频要有讲故事的连续感：镜头之间必须能看出同一匹马、同一主人、同一场事件在推进，而不是随机画面拼接。",
+            "negative_prompt 要覆盖：现代元素、文字水印、字幕入画、马匹畸形、多人脸崩坏、额外肢体、画面闪烁、黑场、照搬样片构图。",
+            f"主题：{context.get('topic')}",
+            f"名马：{context.get('horse')}",
+            f"补充要求：{context.get('brief') or '无'}",
+            f"目标时长：{context.get('duration')} 秒",
+            f"画幅：{context.get('aspect')}",
+            f"分镜数量：{context.get('shot_count')}",
+            f"单镜建议秒数：{context.get('shot_seconds')}",
+            f"脚本风格：{context.get('script_style') or '情绪叙事'}",
+            f"画面风格：{context.get('visual_style')}",
+            f"镜头偏好：{context.get('camera') or '按素材生成'}",
+            f"提示词语言：{context.get('prompt_language') or '中文提示词'}",
+            f"画布补充提示词：{context.get('custom_prompt') or '无'}",
+            f"分镜补充要求：{context.get('storyboard_guidance') or '无'}",
+            f"素材层命中：{json.dumps(references, ensure_ascii=False)}",
+            f"提示词种子：{json.dumps(context.get('prompt_seed') or {}, ensure_ascii=False)}",
+        ]
+    )
+
+    user_prompt = user_prompt + "\n" + "\n".join(
+        [
+            "Pixelle-Video workflow adaptation rule: treat every shot as one independent StoryboardFrame with narration, subtitle, prompt, camera, seconds, and later artifacts. Keep these fields complete and aligned.",
+            "Pixelle staged-output rule: return narrations, image_prompts, and video_prompts arrays with exactly the same length as shots. narrations must be natural Simplified Chinese speech; image_prompts and video_prompts must be detailed English generation prompts.",
+            "Prompt separation rule: image_prompt is for the still keyframe composition. video_prompt is for movement, camera, continuity, action and ending pose. Do not collapse both into vague style words.",
+            "Frame quality rule: one shot = one event beat. It must have a clear start, visible action, and readable ending; do not put multiple unrelated scenes into the same shot.",
+            "Timing rule: narration must fit inside seconds. If the sentence is too long, simplify it instead of letting voice and image drift apart.",
+        ]
+    )
+
+    if api_style in {"responses", "openai_responses"}:
+        payload = {
+            "model": model,
+            "instructions": system_prompt,
+            "input": [{"role": "user", "content": user_prompt}],
+            "max_output_tokens": settings.VIDEO_FACTORY_GPT_MAX_TOKENS,
+            "temperature": temperature,
+        }
+    else:
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": temperature,
+            "max_tokens": settings.VIDEO_FACTORY_GPT_MAX_TOKENS,
+            "response_format": {"type": "json_object"},
+        }
+
+    response_payload = _post_provider_json(
+        provider="gpt",
+        base_url=base_url,
+        api_path=api_path,
+        api_key=api_key,
+        model=model,
+        payload=payload,
+        timeout=settings.VIDEO_FACTORY_GPT_TIMEOUT_SECONDS,
+    )
+    text = _extract_text_response(response_payload)
+    data = _load_json_object(text) if text else response_payload
+    raw_narrations = data.get("narrations", [])
+    raw_image_prompts = data.get("image_prompts", data.get("imagePrompts", []))
+    raw_video_prompts = data.get("video_prompts", data.get("videoPrompts", []))
+    narrations = [str(item or "").strip() for item in raw_narrations] if isinstance(raw_narrations, list) else []
+    image_prompts = [str(item or "").strip() for item in raw_image_prompts] if isinstance(raw_image_prompts, list) else []
+    video_prompts = [str(item or "").strip() for item in raw_video_prompts] if isinstance(raw_video_prompts, list) else []
+    raw_shots = data.get("shots")
+    if not isinstance(raw_shots, list) and (narrations or image_prompts or video_prompts):
+        frame_count = max(len(narrations), len(image_prompts), len(video_prompts), int(context.get("shot_count") or 1))
+        raw_shots = [
+            {
+                "scene": index + 1,
+                "seconds": int(context.get("shot_seconds") or 6),
+                "camera": "cinematic readable movement",
+                "visual": image_prompts[index] if index < len(image_prompts) else "",
+                "prompt": video_prompts[index] if index < len(video_prompts) else (image_prompts[index] if index < len(image_prompts) else ""),
+                "image_prompt": image_prompts[index] if index < len(image_prompts) else "",
+                "video_prompt": video_prompts[index] if index < len(video_prompts) else "",
+                "narration": narrations[index] if index < len(narrations) else "",
+                "subtitle": narrations[index] if index < len(narrations) else "",
+            }
+            for index in range(frame_count)
+        ]
+    shots = _normalize_provider_shots(raw_shots, int(context.get("shot_seconds") or 6))
+    if not shots:
+        raise VideoFactoryProviderError("GPT provider returned no usable shots.")
+
+    voiceover = str(data.get("voiceover") or "").strip()
+    if not voiceover:
+        voiceover = " ".join(shot["narration"] for shot in shots if shot.get("narration")).strip()
+    for index, shot in enumerate(shots):
+        if index < len(narrations) and narrations[index]:
+            shot["narration"] = shot.get("narration") or narrations[index]
+            shot["subtitle"] = shot.get("subtitle") or narrations[index]
+        if index < len(image_prompts) and image_prompts[index]:
+            shot["imagePrompt"] = shot.get("imagePrompt") or image_prompts[index]
+        if index < len(video_prompts) and video_prompts[index]:
+            shot["videoPrompt"] = shot.get("videoPrompt") or video_prompts[index]
+
+    return {
+        "title": str(data.get("title") or context.get("topic") or "").strip(),
+        "voiceover": voiceover,
+        "openingHook": str(data.get("opening_hook") or data.get("openingHook") or "").strip(),
+        "emotionalArc": str(data.get("emotional_arc") or data.get("emotionalArc") or "").strip(),
+        "narrations": narrations or [shot.get("narration", "") for shot in shots],
+        "imagePrompts": image_prompts or [shot.get("imagePrompt", "") for shot in shots],
+        "videoPrompts": video_prompts or [shot.get("videoPrompt", "") for shot in shots],
+        "shots": shots,
+        "veoPromptGuidance": str(data.get("veo_prompt_guidance") or data.get("veoPromptGuidance") or "").strip(),
+        "negativePrompt": str(data.get("negative_prompt") or data.get("negativePrompt") or "").strip(),
+        "generationMode": "provider",
+        "provider": "gpt",
+        "model": model,
+    }
+
+
+def generate_keyframe_image(
+    *,
+    task_id: str,
+    scene: int,
+    prompt: str,
+    size: str | None = None,
+    model: str | None = None,
+) -> dict[str, Any]:
+    settings = get_settings()
+    model = str(model or settings.VIDEO_FACTORY_IMAGE_MODEL or "").strip()
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "n": 1,
+        "size": size or settings.VIDEO_FACTORY_IMAGE_SIZE,
+        "response_format": "b64_json",
+    }
+    response_payload = _post_provider_json(
+        provider="image",
+        base_url=settings.VIDEO_FACTORY_IMAGE_BASE_URL,
+        api_path=settings.VIDEO_FACTORY_IMAGE_API_PATH,
+        api_key=settings.VIDEO_FACTORY_IMAGE_API_KEY,
+        model=model,
+        payload=payload,
+        timeout=settings.VIDEO_FACTORY_IMAGE_TIMEOUT_SECONDS,
+    )
+
+    item: dict[str, Any] = response_payload
+    data = response_payload.get("data")
+    if isinstance(data, dict):
+        item = data
+    elif isinstance(data, list) and data and isinstance(data[0], dict):
+        item = data[0]
+    url = str(item.get("url") or item.get("image_url") or item.get("imageUrl") or "").strip()
+    b64 = str(item.get("b64_json") or item.get("image_base64") or item.get("base64") or "").strip()
+    if b64:
+        url = _save_base64_media("keyframes", task_id, scene, ".png", b64)
+    if not url:
+        raise VideoFactoryProviderError("Image provider returned no image URL or base64 data.")
+
+    return {
+        "scene": scene,
+        "imageUrl": url,
+        "provider": "image",
+        "model": model,
+        "status": "completed",
+    }
+
+
+def transcribe_media_segments(
+    *,
+    media_path: Path,
+    model: str | None = None,
+    language: str | None = None,
+    prompt: str | None = None,
+) -> dict[str, Any]:
+    settings = get_settings()
+    if not settings.VIDEO_FACTORY_ASR_ENABLED:
+        raise VideoFactoryProviderNotConfigured("ASR is disabled.")
+    if not media_path.exists() or not media_path.is_file():
+        raise VideoFactoryProviderError("ASR media file does not exist.")
+
+    base_url = str(settings.VIDEO_FACTORY_ASR_BASE_URL or settings.VIDEO_FACTORY_GPT_BASE_URL or settings.OPENAI_BASE_URL).strip()
+    api_key = str(settings.VIDEO_FACTORY_ASR_API_KEY or settings.VIDEO_FACTORY_GPT_API_KEY or settings.OPENAI_API_KEY).strip()
+    model_name = str(model or settings.VIDEO_FACTORY_ASR_MODEL or "gpt-4o-mini-transcribe").strip()
+    api_path = str(settings.VIDEO_FACTORY_ASR_API_PATH or "/audio/transcriptions").strip()
+    lang = str(language or settings.VIDEO_FACTORY_ASR_LANGUAGE or "zh").strip()
+    if not _api_mode_allows_calls():
+        raise VideoFactoryProviderNotConfigured("Video factory API mode is disabled.")
+    if not base_url or not api_key or not model_name:
+        raise VideoFactoryProviderNotConfigured("ASR provider is not configured.")
+
+    endpoint = _join_url(base_url, api_path)
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "X-Client-Request-Id": str(uuid.uuid4()),
+    }
+
+    mime = mimetypes.guess_type(media_path.name)[0] or "application/octet-stream"
+    form_data: dict[str, Any] = {
+        "model": model_name,
+        "response_format": "verbose_json",
+        "language": lang,
+        "temperature": "0",
+    }
+    prompt_text = str(prompt or "").strip()
+    if prompt_text:
+        form_data["prompt"] = prompt_text
+    # Try to request segment timestamps when provider supports OpenAI-compatible fields.
+    form_data["timestamp_granularities[]"] = "segment"
+
+    try:
+        with media_path.open("rb") as media_file:
+            files = {"file": (media_path.name, media_file, mime)}
+            response = _request_with_retries(
+                lambda: httpx.post(
+                    endpoint,
+                    headers=headers,
+                    data=form_data,
+                    files=files,
+                    timeout=_provider_timeout(settings.VIDEO_FACTORY_ASR_TIMEOUT_SECONDS),
+                    trust_env=False,
+                )
+            )
+    except httpx.HTTPStatusError as exc:
+        body = exc.response.text.strip()
+        detail = f"{exc}; response body: {body[:1000]}" if body else str(exc)
+        raise VideoFactoryProviderError(detail) from exc
+    except httpx.HTTPError as exc:
+        raise VideoFactoryProviderError(str(exc)) from exc
+    except OSError as exc:
+        raise VideoFactoryProviderError(f"Failed to read ASR media file: {exc}") from exc
+
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise VideoFactoryProviderError("ASR response was not valid JSON.") from exc
+    if not isinstance(payload, dict):
+        raise VideoFactoryProviderError("ASR response JSON was not an object.")
+
+    data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+    segments = data.get("segments") if isinstance(data.get("segments"), list) else payload.get("segments")
+    if not isinstance(segments, list):
+        segments = []
+
+    text = str(data.get("text") or payload.get("text") or "").strip()
+    return {
+        "provider": "asr",
+        "model": model_name,
+        "language": lang,
+        "text": text,
+        "segments": segments,
+        "raw": payload,
+    }
+
+
+def _first_text(*values: Any) -> str:
+    for value in values:
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def _response_summary(payload: dict[str, Any]) -> dict[str, Any]:
+    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+    return {
+        "keys": sorted(str(key) for key in payload.keys())[:20],
+        "id": payload.get("id") or payload.get("operation") or payload.get("operation_id") or data.get("id") or data.get("task_id"),
+        "status": payload.get("status") or data.get("status"),
+    }
+
+
+def _extract_nested_video_url(payload: dict[str, Any]) -> str:
+    candidates: list[Any] = [
+        payload.get("url"),
+        payload.get("video_url"),
+        payload.get("videoUrl"),
+        payload.get("output_url"),
+        payload.get("outputUrl"),
+        payload.get("result_url"),
+        payload.get("resultUrl"),
+    ]
+    for key in ("video", "videos", "output", "outputs", "result", "results"):
+        value = payload.get(key)
+        if isinstance(value, str):
+            candidates.append(value)
+        elif isinstance(value, list):
+            candidates.extend(value)
+        elif isinstance(value, dict):
+            candidates.extend(value.values())
+    data = payload.get("data")
+    if isinstance(data, dict):
+        candidates.extend(
+            [
+                data.get("url"),
+                data.get("video_url"),
+                data.get("videoUrl"),
+                data.get("output_url"),
+                data.get("outputUrl"),
+                data.get("result_url"),
+                data.get("resultUrl"),
+            ]
+        )
+        for key in ("video", "videos", "output", "outputs", "result", "results"):
+            value = data.get(key)
+            if isinstance(value, str):
+                candidates.append(value)
+            elif isinstance(value, list):
+                candidates.extend(value)
+            elif isinstance(value, dict):
+                candidates.extend(value.values())
+    elif isinstance(data, list):
+        candidates.extend(data)
+    if isinstance(data, dict):
+        meta_data = data.get("meta_data")
+        if isinstance(meta_data, dict):
+            candidates.extend(meta_data.values())
+        properties = data.get("properties")
+        if isinstance(properties, dict):
+            candidates.extend(
+                [
+                    properties.get("url"),
+                    properties.get("video_url"),
+                    properties.get("videoUrl"),
+                    properties.get("output_url"),
+                    properties.get("outputUrl"),
+                    properties.get("result_url"),
+                    properties.get("resultUrl"),
+                ]
+            )
+            for key in ("video", "videos", "output", "outputs", "result", "results"):
+                value = properties.get(key)
+                if isinstance(value, str):
+                    candidates.append(value)
+                elif isinstance(value, list):
+                    candidates.extend(value)
+                elif isinstance(value, dict):
+                    candidates.extend(value.values())
+    meta_data = payload.get("meta_data")
+    if isinstance(meta_data, dict):
+        candidates.extend(meta_data.values())
+    for candidate in candidates:
+        if isinstance(candidate, str) and candidate.strip().lower().startswith(("http://", "https://", "/generated/")):
+            return candidate.strip()
+        if isinstance(candidate, dict):
+            nested = _extract_nested_video_url(candidate)
+            if nested:
+                return nested
+    return ""
+
+
+def _video_size_for_aspect_ratio(aspect_ratio: str) -> str:
+    value = str(aspect_ratio or "").strip()
+    if value == "9:16":
+        return "720x1280"
+    if value == "16:9":
+        return "1280x720"
+    if value == "1:1":
+        return "1024x1024"
+    if "x" in value.lower():
+        return value
+    return "720x1280"
+
+
+def poll_veo_clip(task_id: str) -> dict[str, Any]:
+    settings = get_settings()
+    raw_task_id = str(task_id or "").strip()
+    unified_video_api = raw_task_id.startswith("unified:")
+    if unified_video_api:
+        raw_task_id = raw_task_id.removeprefix("unified:")
+        endpoint = _join_url(settings.VIDEO_FACTORY_VEO_BASE_URL, "/v1/video/query")
+    else:
+        status_path = str(settings.VIDEO_FACTORY_VEO_STATUS_API_PATH or "").strip()
+        if not status_path:
+            status_path = f"{settings.VIDEO_FACTORY_VEO_API_PATH.rstrip('/')}/{{task_id}}"
+        endpoint = _join_url(settings.VIDEO_FACTORY_VEO_BASE_URL, status_path.replace("{task_id}", raw_task_id))
+    headers = {"Authorization": f"Bearer {settings.VIDEO_FACTORY_VEO_API_KEY}"}
+    try:
+        response = _request_with_retries(
+            lambda: httpx.get(
+                endpoint,
+                params={"id": raw_task_id} if unified_video_api else None,
+                headers=headers,
+                timeout=_provider_timeout(settings.VIDEO_FACTORY_VEO_TIMEOUT_SECONDS),
+                trust_env=False,
+            )
+        )
+    except httpx.HTTPStatusError as exc:
+        body = exc.response.text.strip()
+        detail = f"{exc}; response body: {body[:1000]}" if body else str(exc)
+        raise VideoFactoryProviderError(detail) from exc
+    except httpx.HTTPError as exc:
+        raise VideoFactoryProviderError(str(exc)) from exc
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise VideoFactoryProviderError("Provider status response was not valid JSON.") from exc
+    if not isinstance(payload, dict):
+        raise VideoFactoryProviderError("Provider status response JSON was not an object.")
+
+    data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+    status = str(data.get("status") or payload.get("status") or "").strip()
+    progress = str(data.get("progress") or payload.get("progress") or "").strip()
+    fail_reason = str(data.get("fail_reason") or data.get("error") or payload.get("message") or "").strip()
+    return {
+        "taskId": task_id,
+        "status": status,
+        "progress": progress,
+        "url": _extract_nested_video_url(payload),
+        "failReason": fail_reason,
+        "responseSummary": _response_summary(data),
+    }
+
+
+def wait_for_veo_clip(task_id: str, should_cancel: Callable[[], bool] | None = None) -> dict[str, Any]:
+    settings = get_settings()
+    attempts = max(1, int(settings.VIDEO_FACTORY_VEO_MAX_POLL_ATTEMPTS or 1))
+    interval = max(1.0, float(settings.VIDEO_FACTORY_VEO_POLL_INTERVAL_SECONDS or 1))
+    last: dict[str, Any] = {}
+    terminal_statuses = {"SUCCESS", "SUCCEEDED", "COMPLETED", "COMPLETE", "FAILED", "FAILURE", "ERROR"}
+    for attempt in range(attempts):
+        if should_cancel and should_cancel():
+            return {
+                "taskId": task_id,
+                "status": "CANCELLED",
+                "progress": "",
+                "url": "",
+                "failReason": "cancelled by user",
+                "responseSummary": {},
+            }
+        try:
+            last = poll_veo_clip(task_id)
+        except VideoFactoryProviderError as exc:
+            if attempt >= attempts - 1:
+                raise
+            last = {"taskId": task_id, "status": "POLL_TRANSIENT_ERROR", "failReason": str(exc)}
+        status = str(last.get("status") or "").upper()
+        if last.get("url") or status in terminal_statuses:
+            return last
+        if attempt < attempts - 1:
+            if should_cancel and should_cancel():
+                return {
+                    "taskId": task_id,
+                    "status": "CANCELLED",
+                    "progress": str(last.get("progress") or ""),
+                    "url": "",
+                    "failReason": "cancelled by user",
+                    "responseSummary": last.get("responseSummary") or {},
+                }
+            time.sleep(interval)
+    return last
+
+
+def submit_veo_clip(
+    *,
+    task_id: str,
+    scene: int,
+    prompt: str,
+    duration_seconds: int,
+    aspect_ratio: str,
+    generate_audio: bool,
+    audio_prompt: str,
+    subtitle_prompt: str,
+    negative_prompt: str = "",
+    reference_image: str | None = None,
+    model: str | None = None,
+    quality: str | None = None,
+) -> dict[str, Any]:
+    settings = get_settings()
+    model = str(model or settings.VIDEO_FACTORY_VEO_MODEL or "").strip()
+    request_format = str(settings.VIDEO_FACTORY_VEO_REQUEST_FORMAT or "json").strip().lower()
+    openai_payload: dict[str, Any] = {
+        "model": model,
+        "prompt": prompt,
+        "size": _video_size_for_aspect_ratio(aspect_ratio),
+        "seconds": str(max(1, int(duration_seconds or 1))),
+    }
+    if reference_image:
+        openai_payload["image"] = reference_image
+
+    rich_payload: dict[str, Any] = {
+        **openai_payload,
+        "duration": duration_seconds,
+        "response_format": "url",
+        "n": 1,
+        "aspect_ratio": aspect_ratio,
+        "duration_seconds": duration_seconds,
+        "generate_audio": generate_audio,
+        "audio_prompt": audio_prompt,
+        "subtitle_prompt": subtitle_prompt,
+        "negative_prompt": negative_prompt,
+        "parameters": {
+            "aspectRatio": aspect_ratio,
+            "durationSeconds": duration_seconds,
+            "generateAudio": generate_audio,
+            "enhancePrompt": settings.VIDEO_FACTORY_VEO_ENHANCE_PROMPT,
+        },
+    }
+    if quality and str(quality).strip().lower() not in {"auto", "default", "preview"}:
+        openai_payload["quality"] = str(quality)
+        rich_payload["quality"] = str(quality)
+        rich_payload["parameters"]["quality"] = str(quality)
+    if reference_image:
+        rich_payload["reference_image"] = reference_image
+
+    def _http_error_detail(exc: httpx.HTTPStatusError) -> str:
+        body = exc.response.text.strip()
+        return f"{exc}; response body: {body[:1000]}" if body else str(exc)
+
+    def _is_unified_video_model(value: str) -> bool:
+        model_name = value.lower()
+        return any(token in model_name for token in ("veo", "seedance", "kling", "jimeng", "grok-video", "video"))
+
+    def post_unified_video_create() -> dict[str, Any]:
+        if not _api_mode_allows_calls():
+            raise VideoFactoryProviderNotConfigured("Video factory API mode is disabled.")
+        if not settings.VIDEO_FACTORY_VEO_BASE_URL.strip() or not settings.VIDEO_FACTORY_VEO_API_KEY.strip() or not model.strip():
+            raise VideoFactoryProviderNotConfigured("veo provider is not configured.")
+        unified_payload: dict[str, Any] = {
+            "model": model,
+            "prompt": prompt,
+            "aspect_ratio": aspect_ratio,
+        }
+        if _is_unified_video_model(model):
+            unified_payload["enhance_prompt"] = settings.VIDEO_FACTORY_VEO_ENHANCE_PROMPT
+            unified_payload["generate_audio"] = generate_audio
+            if duration_seconds:
+                unified_payload["duration_seconds"] = duration_seconds
+            if negative_prompt:
+                unified_payload["negative_prompt"] = negative_prompt
+            if generate_audio and audio_prompt:
+                unified_payload["audio_prompt"] = audio_prompt
+            if subtitle_prompt:
+                unified_payload["subtitle_prompt"] = subtitle_prompt
+            if reference_image:
+                unified_payload["reference_image"] = reference_image
+            if quality and str(quality).strip().lower() not in {"auto", "default", "preview"}:
+                unified_payload["quality"] = str(quality)
+        if "veo" in model.lower():
+            unified_payload["veo_fl_close"] = True
+        endpoint = _join_url(settings.VIDEO_FACTORY_VEO_BASE_URL, "/v1/video/create")
+        headers = {
+            "Authorization": f"Bearer {settings.VIDEO_FACTORY_VEO_API_KEY}",
+            "Content-Type": "application/json",
+            "X-Client-Request-Id": str(uuid.uuid4()),
+        }
+        try:
+            response = _request_with_retries(
+                lambda: httpx.post(
+                    endpoint,
+                    headers=headers,
+                    json=unified_payload,
+                    timeout=_provider_timeout(settings.VIDEO_FACTORY_VEO_TIMEOUT_SECONDS),
+                    trust_env=False,
+                ),
+                attempts=1,
+            )
+        except httpx.HTTPStatusError as exc:
+            raise VideoFactoryProviderError(_http_error_detail(exc)) from exc
+        except httpx.HTTPError as exc:
+            raise VideoFactoryProviderError(str(exc)) from exc
+        try:
+            response_payload = response.json()
+        except ValueError as exc:
+            raise VideoFactoryProviderError("Provider response was not valid JSON.") from exc
+        if not isinstance(response_payload, dict):
+            raise VideoFactoryProviderError("Provider response JSON was not an object.")
+        item = response_payload.get("data") if isinstance(response_payload.get("data"), dict) else response_payload
+        operation = _first_text(
+            item.get("id") if isinstance(item, dict) else "",
+            item.get("task_id") if isinstance(item, dict) else "",
+            response_payload.get("id"),
+            response_payload.get("task_id"),
+        )
+        url = _extract_nested_video_url(response_payload)
+        return {
+            "operation": f"unified:{operation}" if operation else "",
+            "url": url or (f"pending://veo/{task_id}/{scene}.mp4" if operation else ""),
+            "status": (item.get("status") if isinstance(item, dict) else response_payload.get("status")) or "queued",
+            "model": model,
+            "provider": "unified-video-create",
+            "raw": response_payload,
+        }
+
+    def post_json_payload() -> dict[str, Any]:
+        payload = rich_payload if request_format in {"json-rich", "openai-rich", "rich"} else openai_payload
+        return _post_provider_json(
+            provider="veo",
+            base_url=settings.VIDEO_FACTORY_VEO_BASE_URL,
+            api_path=settings.VIDEO_FACTORY_VEO_API_PATH,
+            api_key=settings.VIDEO_FACTORY_VEO_API_KEY,
+            model=model,
+            payload=payload,
+            timeout=settings.VIDEO_FACTORY_VEO_TIMEOUT_SECONDS,
+        )
+
+    if request_format in {"legacy", "unified", "video-create", "create"}:
+        response_payload = post_unified_video_create()
+    elif request_format in {"multipart", "form", "form-data", "multipart-auto", "form-auto"}:
+        if not _api_mode_allows_calls():
+            raise VideoFactoryProviderNotConfigured("Video factory API mode is disabled.")
+        if not settings.VIDEO_FACTORY_VEO_BASE_URL.strip() or not settings.VIDEO_FACTORY_VEO_API_KEY.strip() or not model.strip():
+            raise VideoFactoryProviderNotConfigured("veo provider is not configured.")
+        endpoint = _join_url(settings.VIDEO_FACTORY_VEO_BASE_URL, settings.VIDEO_FACTORY_VEO_API_PATH)
+        headers = {
+            "Authorization": f"Bearer {settings.VIDEO_FACTORY_VEO_API_KEY}",
+            "X-Client-Request-Id": str(uuid.uuid4()),
+        }
+        form_data = {
+            "model": model,
+            "prompt": prompt,
+            "size": _video_size_for_aspect_ratio(aspect_ratio),
+            "duration": str(duration_seconds),
+            "aspect_ratio": aspect_ratio,
+            "duration_seconds": str(duration_seconds),
+            "generate_audio": "true" if generate_audio else "false",
+            "audio_prompt": audio_prompt,
+            "subtitle_prompt": subtitle_prompt,
+            "negative_prompt": negative_prompt,
+        }
+        if quality and str(quality).strip().lower() not in {"auto", "default", "preview"}:
+            form_data["quality"] = str(quality)
+        if reference_image:
+            form_data["reference_image"] = reference_image
+        multipart_fields = {
+            key: (None, value)
+            for key, value in form_data.items()
+            if value is not None and str(value).strip()
+        }
+        try:
+            response = _request_with_retries(
+                lambda: httpx.post(
+                    endpoint,
+                    headers=headers,
+                    files=multipart_fields,
+                    timeout=_provider_timeout(settings.VIDEO_FACTORY_VEO_TIMEOUT_SECONDS),
+                    trust_env=False,
+                )
+            )
+        except httpx.HTTPStatusError as exc:
+            body = exc.response.text.strip()
+            if any(
+                token in body.lower()
+                for token in (
+                    "invalid_json",
+                    "multipart",
+                    "nextpart",
+                    "form",
+                    "insufficient_user_quota",
+                    "model_not_found",
+                    "no available channel",
+                    "unsupported model",
+                    "invalid model",
+                )
+            ):
+                first_detail = _http_error_detail(exc)
+                if request_format in {"multipart-auto", "form-auto"}:
+                    try:
+                        response_payload = post_unified_video_create()
+                    except VideoFactoryProviderError as fallback_exc:
+                        raise VideoFactoryProviderError(
+                            f"{first_detail}; fallback /v1/video/create failed: {fallback_exc}"
+                        ) from fallback_exc
+                else:
+                    raise VideoFactoryProviderError(first_detail) from exc
+            else:
+                raise VideoFactoryProviderError(_http_error_detail(exc)) from exc
+        except httpx.HTTPError as exc:
+            raise VideoFactoryProviderError(str(exc)) from exc
+        else:
+            try:
+                response_payload = response.json()
+            except ValueError as exc:
+                raise VideoFactoryProviderError("Provider response was not valid JSON.") from exc
+            if not isinstance(response_payload, dict):
+                raise VideoFactoryProviderError("Provider response JSON was not an object.")
+    else:
+        response_payload = post_json_payload()
+
+    if not isinstance(response_payload, dict):
+        raise VideoFactoryProviderError("Provider response JSON was not an object.")
+
+    item: dict[str, Any] = response_payload
+    data = response_payload.get("data")
+    if isinstance(data, list) and data and isinstance(data[0], dict):
+        item = data[0]
+
+    video_b64 = _first_text(
+        item.get("video_base64"),
+        item.get("b64_json"),
+        item.get("base64"),
+        response_payload.get("video_base64"),
+    )
+    url = _first_text(
+        item.get("url"),
+        item.get("video_url"),
+        item.get("videoUrl"),
+        item.get("output_url"),
+        item.get("outputUrl"),
+        response_payload.get("url"),
+        response_payload.get("video_url"),
+    )
+    if not url:
+        url = _extract_nested_video_url(response_payload)
+    if video_b64:
+        url = _save_base64_media("veo-clips", task_id, scene, ".mp4", video_b64)
+
+    operation = _first_text(
+        item.get("operation"),
+        item.get("operation_id"),
+        item.get("operationId"),
+        item.get("task_id"),
+        item.get("taskId"),
+        item.get("id"),
+        response_payload.get("operation"),
+        response_payload.get("task_id"),
+        response_payload.get("taskId"),
+        response_payload.get("id"),
+    )
+    status = _first_text(item.get("status"), response_payload.get("status")) or ("completed" if url else "submitted")
+
+    return {
+        "scene": scene,
+        "provider": "veo",
+        "model": model,
+        "status": status,
+        "operation": operation,
+        "url": url or f"pending://veo/{task_id}/{scene}.mp4",
+        "generateAudio": generate_audio,
+        "responseSummary": _response_summary(response_payload),
+    }

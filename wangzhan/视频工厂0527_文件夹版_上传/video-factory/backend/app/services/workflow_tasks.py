@@ -1,0 +1,4931 @@
+from __future__ import annotations
+
+import json
+import math
+import os
+import re
+import secrets
+import hashlib
+import shutil
+import subprocess
+import time
+import uuid
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import httpx
+
+from app.config import get_settings
+from app.database import SessionLocal
+from app.models.horse import Horse
+from app.models.workflow_task import WorkflowTask
+from app.services.ai_engine import query_vectordb
+from app.services.video_factory_providers import (
+    VideoFactoryProviderError,
+    VideoFactoryProviderNotConfigured,
+    analyze_reference_media,
+    generate_keyframe_image,
+    generate_script_plan,
+    submit_veo_clip,
+    transcribe_media_segments,
+    wait_for_veo_clip,
+    video_factory_provider_status,
+)
+from app.services.workflow_runtime import sync_task_runtime
+from app.services.workflow_runtime import read_workflow_runtime
+
+settings = get_settings()
+DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data"))
+VIDEO_FACTORY_RAG_PATH = os.path.join(DATA_DIR, "video_factory_rag.json")
+LEGENDARY_HORSE_BASE_FILE = "legendary_horses_top5.json"
+LEGENDARY_HORSE_BATCH_GLOB = "legendary_horses_batch*.json"
+SERVER_DIR = Path(__file__).resolve().parents[2]
+GENERATED_DIR = SERVER_DIR / "generated"
+SUBTITLE_DIR = GENERATED_DIR / "subtitles"
+TEXT_DIR = GENERATED_DIR / "text"
+VIDEO_DIR = GENERATED_DIR / "videos"
+AUDIO_DIR = GENERATED_DIR / "audio"
+KEYFRAME_CACHE_DIR = GENERATED_DIR / "keyframe-cache"
+HORSE_LIBRARY_DIR = GENERATED_DIR / "horse-library"
+FFMPEG_BIN = settings.BAIQIPU_FFMPEG_BIN or "ffmpeg"
+DEFAULT_CHINESE_TTS_VOICE = "zh-CN-YunxiNeural"
+HORSE_NAME_ALIASES = {
+    "\u4e4c\u96ce": "\u4e4c\u9a93",
+    "\u4e4c\u693d": "\u4e4c\u9a93",
+    "\u70cf\u9a05": "\u4e4c\u9a93",
+    "\u9a93": "\u4e4c\u9a93",
+    "\u6c57\u8840\u9a6c": "\u6c57\u8840",
+    "\u6c57\u8840\u5b9d\u9a6c": "\u6c57\u8840",
+    "\u8d64\u5154\u9a6c": "\u8d64\u5154",
+    "\u7684\u5362\u9a6c": "\u7684\u5362",
+    "\u7edd\u5f71\u9a6c": "\u7edd\u5f71",
+}
+BASE_VIDEO_TEMPLATE_ID = "ink-war-scroll"
+BASE_VIDEO_TEMPLATE_NAME = "水墨古战场卷轴基础模板"
+BASE_VIDEO_TEMPLATE_SOURCE = "vedio/dec20191fecada3542e5dbbef9bc5ba2.mp4"
+BASE_VIDEO_TEMPLATE_VISUAL_STYLE = (
+    "水墨古战场卷轴动画，纸本留白，灰绿色烟尘，墨黑烽烟，红色战旗点缀，"
+    "远景士兵剪影，卷轴画框转场，骑马古代将领剪影，庄重史诗氛围"
+)
+BASE_VIDEO_TEMPLATE_PROMPT = (
+    "Style reference only, not a shot-for-shot template. Borrow only the Chinese ink-wash scroll feeling: "
+    "pale paper texture, gray-green smoke, black battle haze, restrained red banner accents, distant soldier "
+    "silhouettes, scroll-like camera movement, and solemn epic atmosphere. Create a new scene for the current "
+    "horse, owner, conflict, action, camera path, lighting, and ending frame. Do not recreate the exact "
+    "composition, rhythm, horse pose, battlefield layout, or sequence from the old sample video. Start directly "
+    "with visible imagery; no long black intro or black outro. No visible text, subtitles, logos, or watermark."
+)
+BASE_VIDEO_TEMPLATE_VARIATION_RULE = (
+    "基础样片只作为水墨卷轴画风参考，不能照搬旧视频。每次必须围绕当前马名、主人、故事冲突重新设计场景、"
+    "马的动作、人物关系、镜头路线、光影和结尾画面；避免复刻旧样片的构图、节奏、马匹姿态、战场布局和分镜顺序。"
+)
+BASE_VIDEO_TEMPLATE_CAMERA = "水墨画卷推进 / 战场横移 / 烟尘揭示 / 低角度骑马剪影"
+BASE_VIDEO_TEMPLATE_KEYFRAME = (
+    "用于 Veo 的 9:16 视频首尾帧，水墨古战场卷轴质感，主体清晰，马匹和主人完整可辨，"
+    "运动方向明确，灰绿烟尘、红色战旗、纸本留白、远景人群剪影，电影分镜构图，无文字无水印，"
+    "不照搬样片画面"
+)
+BASE_VIDEO_TEMPLATE_MOTION = (
+    "保持水墨卷轴动画质感：烟尘缓慢流动，旗帜轻微飘动，画卷式横移推进，"
+    "骑马剪影稳定自然，不要黑场开头或结尾"
+)
+BASE_TEMPLATE_LEGACY_VALUES = {
+    "国风史诗电影感",
+    "国风史诗电影概念图",
+    "电影感运动，主体稳定，马匹和人物动作自然连续。",
+    "每个镜头都要服务同一个故事线，避免跳戏。",
+}
+
+DEFAULT_WORKFLOW_NODES: list[dict[str, Any]] = [
+    {"id": "reference_input", "type": "reference_input", "label": "参考素材上传"},
+    {"id": "reference_analyze", "type": "reference_analyze", "label": "参考风格分析"},
+    {"id": "input", "type": "input", "label": "内容输入"},
+    {"id": "script", "type": "script", "label": "ChatGPT 剧本"},
+    {"id": "storyboard", "type": "storyboard", "label": "分镜拆解"},
+    {"id": "keyframe", "type": "keyframe", "label": "关键帧生成"},
+    {"id": "veo", "type": "veo", "label": "Veo 视频生成"},
+    {"id": "voice", "type": "voice", "label": "Veo 声音规划"},
+    {"id": "subtitle", "type": "subtitle", "label": "字幕规划"},
+    {"id": "compose", "type": "compose", "label": "视频合成"},
+    {"id": "output", "type": "output", "label": "成片输出"},
+    {"id": "xhs_publish", "type": "xhs_publish", "label": "小红书自动发布"},
+]
+
+
+def default_workflow_definition() -> dict[str, Any]:
+    return {
+        "name": "video-factory-default",
+        "mode": "frontend-prototype",
+        "nodes": list(DEFAULT_WORKFLOW_NODES),
+        "connections": [],
+    }
+
+
+def _safe_int(value: Any, fallback: int, *, minimum: int = 1, maximum: int = 999) -> int:
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        number = fallback
+    return max(minimum, min(maximum, number))
+
+
+def _safe_bool(value: Any, fallback: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return fallback
+    if isinstance(value, (int, float)):
+        return bool(value)
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on", "enabled", "enable", "是", "开", "开启"}:
+        return True
+    if text in {"0", "false", "no", "n", "off", "disabled", "disable", "否", "关", "关闭"}:
+        return False
+    return fallback
+
+
+def _safe_text(value: Any, fallback: str = "") -> str:
+    text = str(value or "").strip()
+    return text or fallback
+
+
+def _workflow_has_node(workflow_definition: dict[str, Any], node_id: str) -> bool:
+    for node in workflow_definition.get("nodes", []):
+        if not isinstance(node, dict):
+            continue
+        if str(node.get("id") or "").strip() == node_id:
+            return True
+    return False
+
+
+def _reference_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    value = payload.get("reference")
+    return value if isinstance(value, dict) else {}
+
+
+def _xhs_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    value = payload.get("xhs")
+    return value if isinstance(value, dict) else {}
+
+
+def _reference_flow_enabled(payload: dict[str, Any]) -> bool:
+    reference = _reference_payload(payload)
+    return _safe_bool(reference.get("enabled"), _safe_bool(payload.get("enableReferenceFlow"), False))
+
+
+def _xhs_publish_enabled(payload: dict[str, Any]) -> bool:
+    xhs = _xhs_payload(payload)
+    if "enabled" in xhs:
+        return _safe_bool(xhs.get("enabled"), False)
+    return _safe_bool(payload.get("enableXhsPublish"), False)
+
+
+def _build_execution_stages(task: WorkflowTask) -> list[list[str]]:
+    workflow_definition = task.workflow_definition if isinstance(task.workflow_definition, dict) else {}
+    payload = dict(task.input_payload or {})
+    stages: list[list[str]] = []
+
+    if _workflow_has_node(workflow_definition, "reference_input") and _workflow_has_node(workflow_definition, "reference_analyze"):
+        if _reference_flow_enabled(payload):
+            stages.append(["reference_input"])
+            stages.append(["reference_analyze"])
+
+    stages.append(["input"])
+
+    stages.extend(
+        [
+            ["script"],
+            ["storyboard"],
+            ["keyframe", "voice", "subtitle"],
+            ["veo"],
+            ["compose"],
+            ["output"],
+        ]
+    )
+
+    if _workflow_has_node(workflow_definition, "xhs_publish"):
+        stages.append(["xhs_publish"])
+    return stages
+
+
+def _reference_node_output(task: WorkflowTask) -> dict[str, Any]:
+    reference_output = _completed_node_output(task, "reference_analyze") or {}
+    return reference_output if isinstance(reference_output, dict) else {}
+
+
+def _reference_style_text(reference_output: dict[str, Any]) -> str:
+    if not isinstance(reference_output, dict):
+        return ""
+    fields: list[str] = []
+    summary = _safe_text(reference_output.get("summary"))
+    visual_style = _safe_text(reference_output.get("visualStyle"))
+    lighting = _safe_text(reference_output.get("lighting"))
+    camera_language = _safe_text(reference_output.get("cameraLanguage"))
+    motion = _safe_text(reference_output.get("motion"))
+    negative = _safe_text(reference_output.get("negative"))
+    palette = reference_output.get("colorPalette")
+    continuity_tips = reference_output.get("continuityTips")
+    if summary:
+        fields.append(f"参考总结: {summary}")
+    if visual_style:
+        fields.append(f"视觉风格: {visual_style}")
+    if lighting:
+        fields.append(f"光照: {lighting}")
+    if camera_language:
+        fields.append(f"镜头语言: {camera_language}")
+    if motion:
+        fields.append(f"运动节奏: {motion}")
+    if isinstance(palette, list) and palette:
+        fields.append(f"色彩: {' / '.join(str(item).strip() for item in palette if str(item).strip())}")
+    if isinstance(continuity_tips, list) and continuity_tips:
+        fields.append(
+            "连续性要求: "
+            + "；".join(str(item).strip() for item in continuity_tips if str(item).strip())
+        )
+    if negative:
+        fields.append(f"避免项: {negative}")
+    return " | ".join(item for item in fields if item).strip()
+
+
+def _append_guidance(base_text: str, extra_text: str, *, prefix: str) -> str:
+    base = _safe_text(base_text)
+    extra = _safe_text(extra_text)
+    if not extra:
+        return base
+    if not base:
+        return f"{prefix}{extra}"
+    return f"{base}\n{prefix}{extra}"
+
+
+def _estimate_narration_duration(text: Any, fallback_seconds: int) -> float:
+    """Estimate spoken duration so storyboard frames keep narration/video/subtitle aligned."""
+    normalized = "".join(str(text or "").split())
+    if not normalized:
+        return float(max(1, fallback_seconds))
+    cjk_count = sum(1 for char in normalized if "\u4e00" <= char <= "\u9fff")
+    latin_words = len(re.findall(r"[A-Za-z0-9]+", normalized))
+    # Mandarin short-video narration is usually around 4-5 Chinese chars/sec.
+    estimated = (cjk_count / 4.4) + (latin_words / 2.4)
+    lower = max(1.2, fallback_seconds * 0.55)
+    upper = max(lower + 0.5, fallback_seconds * 1.35)
+    return round(max(lower, min(upper, estimated or fallback_seconds)), 2)
+
+
+def _enhance_storyboard_prompt(
+    value: Any,
+    *,
+    kind: str,
+    scene: int,
+    planned_seconds: int,
+    visual_style: str,
+    narration: str,
+) -> str:
+    """Add Pixelle-style frame constraints without spending another model call."""
+    base = _safe_text(value)
+    role = "still keyframe" if kind == "image" else "video motion"
+    suffix = (
+        f" Pixelle-style {role} brief for scene {scene}, {planned_seconds}s, {visual_style}. "
+        "One scene equals one story beat. Show a concrete historical action, not a generic poster. "
+        "Keep the same horse, rider, costume, direction, lighting and color palette. "
+        "No visible text, no logo, no watermark, no split screen, no copied sample composition. "
+    )
+    if kind == "image":
+        suffix += (
+            "Compose a usable first/end reference frame: clear subject, stable anatomy, natural horse legs, "
+            "readable background depth, enough motion space for the next video shot. "
+        )
+    else:
+        suffix += (
+            "Describe actual movement: start pose, horse/rider action, camera move, emotional change, "
+            "and a clear ending pose that can connect to the next shot. Avoid frozen slideshow feeling. "
+        )
+    if narration:
+        suffix += f" Narration to match visually: {narration}"
+    text = f"{base} {suffix}".strip() if base else suffix.strip()
+    return text[:1800]
+
+
+def _build_storyboard_manifest(
+    shots: list[dict[str, Any]],
+    *,
+    title: str,
+    aspect: str,
+    visual_style: str,
+    default_seconds: int,
+) -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str, Any]]]:
+    """
+    Pixelle-Video inspired intermediate model, adapted for this backend.
+    It keeps narration, subtitle, prompt, timing and artifacts bound per frame.
+    """
+    normalized_shots: list[dict[str, Any]] = []
+    frames: list[dict[str, Any]] = []
+    subtitle_segments: list[dict[str, Any]] = []
+    cursor = 0.0
+
+    for index, raw_shot in enumerate(shots or []):
+        if not isinstance(raw_shot, dict):
+            continue
+        shot = dict(raw_shot)
+        scene = _safe_int(shot.get("scene"), index + 1, minimum=1, maximum=99)
+        planned_seconds = _safe_int(shot.get("seconds"), default_seconds, minimum=2, maximum=12)
+        narration = _safe_text(shot.get("narration") or shot.get("subtitle"))
+        subtitle = _safe_text(shot.get("subtitle") or narration)
+        image_prompt = _safe_text(shot.get("imagePrompt") or shot.get("image_prompt") or shot.get("visual") or shot.get("prompt"))
+        video_prompt = _safe_text(shot.get("videoPrompt") or shot.get("video_prompt") or shot.get("prompt") or image_prompt)
+        image_prompt = _enhance_storyboard_prompt(
+            image_prompt,
+            kind="image",
+            scene=scene,
+            planned_seconds=planned_seconds,
+            visual_style=visual_style,
+            narration=narration or subtitle,
+        )
+        video_prompt = _enhance_storyboard_prompt(
+            video_prompt,
+            kind="video",
+            scene=scene,
+            planned_seconds=planned_seconds,
+            visual_style=visual_style,
+            narration=narration or subtitle,
+        )
+        prompt = video_prompt or image_prompt
+        camera = _safe_text(shot.get("camera"), "cinematic slow camera move")
+        estimated_duration = _estimate_narration_duration(narration or subtitle, planned_seconds)
+        # Keep Veo duration stable, but record the narration estimate for compose/review.
+        frame_start = round(cursor, 2)
+        frame_end = round(cursor + planned_seconds, 2)
+        cursor = frame_end
+
+        shot.update(
+            {
+                "scene": scene,
+                "seconds": planned_seconds,
+                "camera": camera,
+                "prompt": prompt,
+                "visual": _safe_text(shot.get("visual") or image_prompt or prompt),
+                "imagePrompt": image_prompt or prompt,
+                "videoPrompt": video_prompt or prompt,
+                "narration": narration,
+                "subtitle": subtitle,
+                "frameIndex": index,
+                "start": frame_start,
+                "end": frame_end,
+                "estimatedNarrationDuration": estimated_duration,
+            }
+        )
+        normalized_shots.append(shot)
+        frames.append(
+            {
+                "index": index,
+                "scene": scene,
+                "narration": narration,
+                "subtitle": subtitle,
+                "imagePrompt": image_prompt or prompt,
+                "videoPrompt": video_prompt or prompt,
+                "camera": camera,
+                "qualityHints": [
+                    "one-story-beat",
+                    "reference-frame-ready",
+                    "motion-and-ending-pose",
+                    "no-sample-copy",
+                    "no-visible-text",
+                ],
+                "plannedDuration": planned_seconds,
+                "estimatedNarrationDuration": estimated_duration,
+                "timeline": {"start": frame_start, "end": frame_end},
+                "artifacts": {
+                    "audio": None,
+                    "keyframes": [],
+                    "videoSegment": None,
+                    "composedSegment": None,
+                },
+                "status": "planned",
+            }
+        )
+        if subtitle:
+            subtitle_segments.append(
+                {
+                    "scene": scene,
+                    "start": frame_start,
+                    "end": frame_end,
+                    "text": subtitle,
+                }
+            )
+
+    total_duration = round(cursor, 2)
+    manifest = {
+        "workflow": "pixelle-inspired-linear-storyboard",
+        "attribution": "Inspired by AIDC-AI/Pixelle-Video workflow structure (Apache-2.0); adapted implementation.",
+        "title": title,
+        "aspect": aspect,
+        "visualStyle": visual_style,
+        "frameCount": len(frames),
+        "plannedDuration": total_duration,
+        "frames": frames,
+        "rules": [
+            "Each frame binds narration, subtitle, visual prompt, camera movement and duration.",
+            "Generate or reuse frame artifacts per scene, then concatenate real video segments.",
+            "Use narration timing as a review signal so subtitles and voice do not drift from the clip.",
+        ],
+        "promptPlan": {
+            "narrations": [frame["narration"] for frame in frames],
+            "imagePrompts": [frame["imagePrompt"] for frame in frames],
+            "videoPrompts": [frame["videoPrompt"] for frame in frames],
+        },
+    }
+    return normalized_shots, manifest, subtitle_segments
+
+
+def _update_storyboard_manifest_artifacts(
+    manifest: dict[str, Any],
+    *,
+    keyframes: list[dict[str, Any]] | None = None,
+    clips: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    next_manifest = dict(manifest or {})
+    frames = [dict(frame) for frame in (next_manifest.get("frames") or []) if isinstance(frame, dict)]
+    if keyframes:
+        for frame in frames:
+            scene = _safe_int(frame.get("scene"), -1)
+            frame_keyframes = [
+                item
+                for item in keyframes
+                if isinstance(item, dict) and _safe_int(item.get("scene"), -2) == scene
+            ]
+            artifacts = dict(frame.get("artifacts") or {})
+            artifacts["keyframes"] = frame_keyframes
+            frame["artifacts"] = artifacts
+            roles = {str(item.get("frameRole") or item.get("role") or "").lower() for item in frame_keyframes}
+            valid_urls = [
+                str(item.get("imageUrl") or "").strip()
+                for item in frame_keyframes
+                if _is_real_media_url(item.get("imageUrl"))
+            ]
+            frame["keyframeStatus"] = {
+                "count": len(frame_keyframes),
+                "realImageCount": len(valid_urls),
+                "hasStartFrame": any("start" in role or "head" in role for role in roles) or bool(valid_urls),
+                "hasEndFrame": any("end" in role or "tail" in role for role in roles),
+            }
+    if clips:
+        for frame in frames:
+            scene = _safe_int(frame.get("scene"), -1)
+            clip = next(
+                (
+                    item
+                    for item in clips
+                    if isinstance(item, dict) and _safe_int(item.get("scene"), -2) == scene
+                ),
+                None,
+            )
+            if clip:
+                artifacts = dict(frame.get("artifacts") or {})
+                artifacts["videoSegment"] = clip.get("url")
+                frame["artifacts"] = artifacts
+                frame["status"] = "video-ready" if _is_real_media_url(clip.get("url")) else str(clip.get("status") or "pending")
+                frame["videoStatus"] = {
+                    "url": clip.get("url"),
+                    "isReal": _is_real_media_url(clip.get("url")),
+                    "providerError": clip.get("providerError") or clip.get("failReason") or "",
+                }
+    for frame in frames:
+        planned = float(frame.get("plannedDuration") or 0)
+        estimated = float(frame.get("estimatedNarrationDuration") or 0)
+        frame["timingStatus"] = {
+            "plannedDuration": planned,
+            "estimatedNarrationDuration": estimated,
+            "fitsNarration": not (planned and estimated and estimated > planned * 1.18),
+        }
+    next_manifest["frames"] = frames
+    return next_manifest
+
+
+def _build_workflow_review_report(
+    *,
+    video_url: Any,
+    source_clips: list[str],
+    target_clip_count: int,
+    subtitle_segments: list[dict[str, Any]],
+    composition_mode: Any,
+    warning: Any,
+    storyboard_manifest: dict[str, Any],
+) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+
+    def check(name: str, passed: bool, detail: Any = "") -> None:
+        checks.append({"name": name, "passed": bool(passed), "detail": str(detail or "")})
+
+    frames = [frame for frame in (storyboard_manifest.get("frames") or []) if isinstance(frame, dict)]
+    missing_keyframes = [
+        str(frame.get("scene") or index + 1)
+        for index, frame in enumerate(frames)
+        if not (frame.get("artifacts") or {}).get("keyframes")
+    ]
+    missing_video_segments = [
+        str(frame.get("scene") or index + 1)
+        for index, frame in enumerate(frames)
+        if not _is_real_media_url((frame.get("artifacts") or {}).get("videoSegment"))
+    ]
+    narration_timing_warnings = [
+        str(frame.get("scene") or index + 1)
+        for index, frame in enumerate(frames)
+        if isinstance(frame.get("timingStatus"), dict)
+        and frame["timingStatus"].get("fitsNarration") is False
+    ]
+    check("final_video_url_present", _is_real_media_url(video_url), video_url)
+    check("source_clips_present", bool(source_clips), len(source_clips))
+    check("requested_clip_count_reached", len(source_clips) >= max(1, target_clip_count), f"{len(source_clips)}/{target_clip_count}")
+    check("subtitle_segments_present", bool(subtitle_segments), len(subtitle_segments))
+    check("storyboard_frames_present", bool(frames), len(frames))
+    check("keyframes_bound_to_frames", not missing_keyframes, ",".join(missing_keyframes))
+    check("video_segments_bound_to_frames", not missing_video_segments, ",".join(missing_video_segments))
+    check("narration_duration_fits_frames", not narration_timing_warnings, ",".join(narration_timing_warnings))
+    check("no_compose_warning", not bool(warning), warning)
+    failed = [item for item in checks if not item["passed"]]
+    return {
+        "status": "passed" if not failed else "warning",
+        "workflow": "pixelle-inspired-review",
+        "compositionMode": composition_mode,
+        "checks": checks,
+        "failedChecks": [item["name"] for item in failed],
+        "summary": "All core output checks passed." if not failed else "Some output checks need attention.",
+    }
+
+
+def _absolute_generated_video_path(task_id: str, video_url: str) -> Path | None:
+    if not _is_real_media_url(video_url):
+        return None
+    if video_url.startswith("/generated/"):
+        return _resolve_local_generated_media(video_url)
+    if _is_public_provider_media_url(video_url):
+        try:
+            return _local_video_path_for_url(task_id, video_url)
+        except Exception:
+            return None
+    return None
+
+
+def _xhs_cookie_configured(xhs_fields: dict[str, Any]) -> tuple[bool, str]:
+    cookie_path = _safe_text(xhs_fields.get("cookiePath") or settings.XHS_COOKIE_PATH)
+    if not cookie_path:
+        return False, ""
+    candidate = Path(cookie_path).expanduser()
+    if candidate.exists() and candidate.is_file():
+        return True, str(candidate.resolve())
+    return False, str(candidate)
+
+
+def _xhs_endpoint(base_url: Any, api_path: Any) -> str:
+    base = _safe_text(base_url or settings.XHS_MCP_BASE_URL).rstrip("/")
+    path = _safe_text(api_path).lstrip("/")
+    return f"{base}/{path}" if path else base
+
+
+def _xhs_post(endpoint: str, payload: dict[str, Any]) -> tuple[str, str, dict[str, Any], str]:
+    summary: dict[str, Any] = {}
+    try:
+        response = httpx.post(
+            endpoint,
+            json=payload,
+            timeout=max(10.0, float(settings.XHS_MCP_TIMEOUT_SECONDS or 180.0)),
+            trust_env=False,
+        )
+        response.raise_for_status()
+        response_payload = response.json() if response.content else {}
+        if isinstance(response_payload, dict):
+            data = response_payload.get("data") if isinstance(response_payload.get("data"), dict) else {}
+            summary = {
+                "success": response_payload.get("success"),
+                "message": response_payload.get("message"),
+                "status": data.get("status"),
+                "postId": data.get("post_id") or data.get("postId") or response_payload.get("post_id"),
+                "comments": data.get("comments") if isinstance(data.get("comments"), list) else None,
+            }
+            if response_payload.get("success") is False:
+                return "failed", str(response_payload.get("message") or "小红书服务返回失败"), summary, ""
+        return "success", str(summary.get("message") or "请求成功"), summary, ""
+    except Exception as exc:
+        return "failed", f"请求失败: {exc}", summary, str(exc)
+
+
+def _xhs_post_id(summary: dict[str, Any]) -> str:
+    post_id = summary.get("postId")
+    if post_id:
+        return str(post_id)
+    data = summary.get("data")
+    if isinstance(data, dict):
+        return _safe_text(data.get("post_id") or data.get("postId"))
+    return ""
+
+
+def _publish_to_xhs(task: WorkflowTask, *, output_fields: dict[str, Any], xhs_fields: dict[str, Any]) -> dict[str, Any]:
+    compose_output = _completed_node_output(task, "compose") or {}
+    result_payload = task.result_payload if isinstance(task.result_payload, dict) else {}
+    video_url = _safe_text(result_payload.get("videoUrl") or compose_output.get("videoUrl"))
+    video_path = _absolute_generated_video_path(task.id, video_url)
+
+    cookie_ok, cookie_path = _xhs_cookie_configured(xhs_fields)
+    effective_enabled = _xhs_publish_enabled(dict(task.input_payload or {}))
+    if not effective_enabled:
+        return {
+            "enabled": False,
+            "status": "skipped",
+            "message": "小红书自动发布未开启",
+            "cookieConfigured": cookie_ok,
+            "cookiePath": cookie_path,
+        }
+    if not video_path:
+        return {
+            "enabled": True,
+            "status": "skipped",
+            "message": "成片还未生成本地视频文件，跳过自动发布",
+            "cookieConfigured": cookie_ok,
+            "cookiePath": cookie_path,
+            "videoUrl": video_url,
+        }
+    if not cookie_ok:
+        return {
+            "enabled": True,
+            "status": "skipped",
+            "message": "未配置可用 cookies 文件，跳过自动发布",
+            "cookieConfigured": False,
+            "cookiePath": cookie_path,
+            "videoPath": str(video_path),
+        }
+
+    title = _safe_text(
+        xhs_fields.get("title")
+        or output_fields.get("xhsTitle")
+        or task.title
+        or "视频工厂成片"
+    )
+    content = _safe_text(
+        xhs_fields.get("content")
+        or output_fields.get("xhsContent")
+        or f"{task.title}\n来自视频工厂自动生成。"
+    )
+    visibility = _safe_text(
+        xhs_fields.get("visibility")
+        or output_fields.get("xhsVisibility")
+        or settings.XHS_DEFAULT_VISIBILITY
+        or "公开可见"
+    )
+    tags_value = xhs_fields.get("tags") or output_fields.get("xhsTags") or []
+    if isinstance(tags_value, str):
+        tags = [item.strip() for item in re.split(r"[,，\s]+", tags_value) if item.strip()]
+    elif isinstance(tags_value, list):
+        tags = [str(item).strip() for item in tags_value if str(item).strip()]
+    else:
+        tags = []
+
+    base_url = xhs_fields.get("baseUrl") or settings.XHS_MCP_BASE_URL
+    publish_mode = _safe_text(xhs_fields.get("publishMode") or output_fields.get("xhsPublishMode") or "draft")
+    scheduled_at = _safe_text(xhs_fields.get("scheduledAt") or output_fields.get("xhsScheduledAt"))
+    rollback_on_fail = _safe_text(xhs_fields.get("rollbackOnFail") or "warn")
+    endpoint = _xhs_endpoint(base_url, xhs_fields.get("publishPath") or settings.XHS_MCP_PUBLISH_VIDEO_PATH)
+    payload = {
+        "title": title,
+        "content": content,
+        "video": str(video_path.resolve()),
+        "tags": tags,
+        "visibility": visibility,
+        "publishMode": publish_mode,
+        "scheduledAt": scheduled_at,
+        "cookiePath": cookie_path,
+    }
+    publish_status, publish_message, response_summary, error_message = _xhs_post(endpoint, payload)
+    status = "published" if publish_status == "success" else "failed"
+    message = "小红书发布成功" if publish_status == "success" else publish_message
+    post_id = _xhs_post_id(response_summary)
+
+    auto_comment_result: dict[str, Any] = {
+        "enabled": _safe_bool(xhs_fields.get("autoCommentEnabled"), False),
+        "status": "skipped",
+    }
+    if status == "published" and auto_comment_result["enabled"]:
+        auto_comment_endpoint = _xhs_endpoint(
+            base_url,
+            xhs_fields.get("autoCommentPath") or settings.XHS_MCP_AUTO_COMMENT_PATH,
+        )
+        comment_text = _safe_text(xhs_fields.get("autoCommentText") or settings.XHS_COMMENT_DEFAULT_TEXT)
+        if post_id and comment_text:
+            comment_payload = {
+                "postId": post_id,
+                "comment": comment_text,
+                "delaySeconds": _safe_int(xhs_fields.get("autoCommentDelaySeconds"), 0, minimum=0, maximum=3600),
+                "cookiePath": cookie_path,
+            }
+            comment_status, comment_message, comment_summary, comment_error = _xhs_post(
+                auto_comment_endpoint,
+                comment_payload,
+            )
+            auto_comment_result = {
+                "enabled": True,
+                "status": comment_status,
+                "message": comment_message,
+                "endpoint": auto_comment_endpoint,
+                "response": comment_summary,
+                "error": comment_error or None,
+            }
+        else:
+            auto_comment_result = {
+                "enabled": True,
+                "status": "skipped",
+                "message": "缺少 postId 或评论内容，已跳过自动评论。",
+            }
+
+    comments_result: dict[str, Any] = {
+        "enabled": _safe_bool(xhs_fields.get("collectCommentsEnabled"), False),
+        "status": "skipped",
+        "count": 0,
+    }
+    if status == "published" and comments_result["enabled"]:
+        comments_endpoint = _xhs_endpoint(
+            base_url,
+            xhs_fields.get("collectCommentsPath") or settings.XHS_MCP_FETCH_COMMENTS_PATH,
+        )
+        if post_id:
+            comments_payload = {
+                "postId": post_id,
+                "limit": _safe_int(
+                    xhs_fields.get("collectCommentsLimit"),
+                    settings.XHS_COMMENT_DEFAULT_LIMIT,
+                    minimum=1,
+                    maximum=200,
+                ),
+                "includeReplies": _safe_bool(xhs_fields.get("collectCommentsIncludeReplies"), False),
+                "cookiePath": cookie_path,
+            }
+            collect_status, collect_message, collect_summary, collect_error = _xhs_post(
+                comments_endpoint,
+                comments_payload,
+            )
+            comments = collect_summary.get("comments") if isinstance(collect_summary.get("comments"), list) else []
+            comments_result = {
+                "enabled": True,
+                "status": collect_status,
+                "message": collect_message,
+                "endpoint": comments_endpoint,
+                "count": len(comments),
+                "comments": comments[:20],
+                "response": collect_summary,
+                "error": collect_error or None,
+            }
+        else:
+            comments_result = {
+                "enabled": True,
+                "status": "skipped",
+                "message": "缺少 postId，已跳过评论采集。",
+                "count": 0,
+            }
+
+    return {
+        "enabled": True,
+        "status": status,
+        "message": message,
+        "cookieConfigured": True,
+        "cookiePath": cookie_path,
+        "endpoint": endpoint,
+        "request": {
+            "title": title,
+            "contentLength": len(content),
+            "tags": tags,
+            "visibility": visibility,
+            "publishMode": publish_mode,
+            "scheduledAt": scheduled_at,
+        },
+        "videoUrl": video_url,
+        "videoPath": str(video_path.resolve()),
+        "response": response_summary,
+        "postId": post_id,
+        "publishMode": publish_mode,
+        "scheduledAt": scheduled_at,
+        "rollbackOnFail": rollback_on_fail,
+        "rollbackHint": "发布失败时请先在小红书创作后台检查是否产生草稿；如已产生，请按 postId/标题人工删除。"
+        if status == "failed" and rollback_on_fail != "off"
+        else "",
+        "autoComment": auto_comment_result,
+        "commentsCollection": comments_result,
+        "error": error_message or None,
+    }
+
+
+def _workflow_node_meta(task: WorkflowTask, node_id: str) -> dict[str, str]:
+    for node in (task.workflow_definition or {}).get("nodes", []):
+        if not isinstance(node, dict) or str(node.get("id") or "").strip() != node_id:
+            continue
+        return {
+            "label": str(node.get("label") or node_id),
+            "type": str(node.get("type") or node_id),
+        }
+    for node in DEFAULT_WORKFLOW_NODES:
+        if node["id"] == node_id:
+            return {"label": str(node["label"]), "type": str(node["type"])}
+    return {"label": node_id, "type": "custom"}
+
+
+def _as_text_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if value is None:
+        return []
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def _normalize_horse_name(value: Any) -> str:
+    name = str(value or "").strip()
+    if not name:
+        return ""
+    return HORSE_NAME_ALIASES.get(name, name)
+
+
+def _media_base_prefix() -> str:
+    base = str(settings.VIDEO_FACTORY_MEDIA_BASE_URL or "/generated").strip()
+    if not base:
+        base = "/generated"
+    if not base.startswith("/"):
+        base = f"/{base}"
+    return base.rstrip("/")
+
+
+def _horse_library_image_url(file_name: str) -> str:
+    safe = re.sub(r"[^a-zA-Z0-9._-]+", "_", str(file_name or "").strip()) or "horse.png"
+    return f"{_media_base_prefix()}/horse-library/{safe}"
+
+
+def _legendary_horse_profile_paths() -> tuple[Path, ...]:
+    data_root = Path(DATA_DIR)
+    candidate_paths: list[Path] = [data_root / LEGENDARY_HORSE_BASE_FILE]
+    candidate_paths.extend(sorted(data_root.glob(LEGENDARY_HORSE_BATCH_GLOB)))
+    resolved: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidate_paths:
+        key = str(candidate.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
+        resolved.append(candidate)
+    return tuple(resolved)
+
+
+def _load_legendary_horse_profiles() -> tuple[dict[str, Any], ...]:
+    merged: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for profile_path in _legendary_horse_profile_paths():
+        try:
+            with open(profile_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(data, list):
+            continue
+        default_priority = "top5" if profile_path.name == LEGENDARY_HORSE_BASE_FILE else profile_path.stem
+        for index, item in enumerate(data, start=1):
+            if not isinstance(item, dict):
+                continue
+            horse_id = str(item.get("id") or "").strip()
+            dedupe_key = horse_id or f"{profile_path.name}#{index}"
+            if dedupe_key in seen_ids:
+                continue
+            seen_ids.add(dedupe_key)
+            normalized = dict(item)
+            normalized.setdefault("priority", default_priority)
+            merged.append(normalized)
+    return tuple(merged)
+
+
+def _load_legendary_horse_docs() -> tuple[dict[str, Any], ...]:
+    docs: list[dict[str, Any]] = []
+    for index, profile in enumerate(_load_legendary_horse_profiles(), start=1):
+        horse_id = str(profile.get("id") or f"legendary-{index}").strip()
+        name = str(profile.get("name") or "").strip()
+        if not name:
+            continue
+        aliases = _as_text_list(profile.get("aliases"))
+        for alias_name, canonical_name in HORSE_NAME_ALIASES.items():
+            if canonical_name == name and alias_name not in aliases:
+                aliases.append(alias_name)
+        story = str(profile.get("story") or "").strip()
+        horse_life_story = str(profile.get("horse_life_story") or "").strip()
+        owner_life_story = str(profile.get("owner_life_story") or "").strip()
+        full_story = str(profile.get("full_story") or "").strip()
+        text = " ".join(
+            part
+            for part in [name, story, horse_life_story, owner_life_story, full_story]
+            if part
+        ).strip()
+        image_url = str(profile.get("image_url") or "").strip()
+        if not image_url:
+            image_url = _horse_library_image_url(str(profile.get("image_file") or f"{horse_id}.png"))
+        metadata = {
+            "sequence": index,
+            "name": name,
+            "aliases": aliases,
+            "figure": str(profile.get("figure") or profile.get("owner") or "").strip(),
+            "source": str(profile.get("historical_source") or "").strip(),
+            "source_type": str(profile.get("source_type") or "史料整理").strip(),
+            "story": story,
+            "labels": _as_text_list(profile.get("labels") or profile.get("traits")),
+            "hook": str(profile.get("hook") or "").strip(),
+            "conflict": str(profile.get("conflict") or "").strip(),
+            "emotional_arc": str(profile.get("emotional_arc") or "").strip(),
+            "visual_keywords": _as_text_list(profile.get("visual_keywords")),
+            "shot_beats": _as_text_list(profile.get("shot_beats")),
+            "video_angles": _as_text_list(profile.get("video_angles")),
+            "prompt_guidance": str(profile.get("prompt_guidance") or "").strip(),
+            "avoid": str(profile.get("avoid") or "").strip(),
+            "owner_life_story": owner_life_story,
+            "horse_life_story": horse_life_story,
+            "full_story": full_story,
+            "image_url": image_url,
+            "priority": str(profile.get("priority") or "top5").strip() or "top5",
+        }
+        docs.append(
+            {
+                "id": f"vf-rag-top5-{horse_id}",
+                "text": text,
+                "metadata": metadata,
+            }
+        )
+    return tuple(docs)
+
+
+def _preferred_thumbnail_url(*, horse_name: str, references: list[dict[str, Any]] | None = None) -> str:
+    candidates: list[str] = []
+    for reference in references or []:
+        if not isinstance(reference, dict):
+            continue
+        for key in ("imageUrl", "image_url", "thumbnailUrl", "thumbnail"):
+            value = str(reference.get(key) or "").strip()
+            if value:
+                candidates.append(value)
+        metadata = reference.get("metadata")
+        if isinstance(metadata, dict):
+            value = str(metadata.get("image_url") or metadata.get("imageUrl") or "").strip()
+            if value:
+                candidates.append(value)
+    normalized_horse = _normalize_horse_name(horse_name)
+    for profile in _load_legendary_horse_profiles():
+        if _normalize_horse_name(profile.get("name")) != normalized_horse:
+            continue
+        image_file = str(profile.get("image_file") or "").strip()
+        if image_file:
+            candidates.append(_horse_library_image_url(image_file))
+        image_url = str(profile.get("image_url") or "").strip()
+        if image_url:
+            candidates.append(image_url)
+        break
+    for item in candidates:
+        if item.startswith("/generated/") or item.startswith("/assets/") or item.startswith("/images/") or item.startswith("http://") or item.startswith("https://"):
+            return item
+    fallback_map = {
+        "\u8d64\u5154": "chitu",
+        "\u4e4c\u9a93": "wuzhui",
+        "\u7684\u5362": "dilu",
+        "\u7edd\u5f71": "jueying",
+        "\u6c57\u8840": "hanxue",
+    }
+    fallback_key = fallback_map.get(normalized_horse, "chitu")
+    return f"/images/{fallback_key}.png"
+
+
+def _video_rag_tokens(text: str) -> list[str]:
+    if not text:
+        return []
+
+    tokens: list[str] = []
+    lowered = text.lower()
+    tokens.extend(token for token in re.findall(r"[a-z0-9]+", lowered) if token)
+    for chunk in re.findall(r"[\u4e00-\u9fff]+", text):
+        if not chunk:
+            continue
+        tokens.append(chunk)
+        tokens.extend(list(chunk))
+        tokens.extend(chunk[index : index + 2] for index in range(len(chunk) - 1))
+        if len(chunk) >= 3:
+            tokens.extend(chunk[index : index + 3] for index in range(len(chunk) - 2))
+    return [token for token in tokens if token.strip()]
+
+
+def _video_rag_embed(text: str) -> dict[str, int]:
+    return dict(Counter(_video_rag_tokens(text)))
+
+
+def _video_rag_cosine(a: dict[str, int], b: dict[str, int]) -> float:
+    if not a or not b:
+        return 0
+    common_keys = set(a.keys()) & set(b.keys())
+    numerator = sum(a[key] * b[key] for key in common_keys)
+    denominator = math.sqrt(sum(value * value for value in a.values())) * math.sqrt(sum(value * value for value in b.values()))
+    return numerator / denominator if denominator else 0
+
+
+def _load_video_factory_rag_docs() -> tuple[dict[str, Any], ...]:
+    docs: list[dict[str, Any]] = list(_load_legendary_horse_docs())
+    seen_ids = {str(item.get("id") or "") for item in docs if isinstance(item, dict)}
+    try:
+        with open(VIDEO_FACTORY_RAG_PATH, "r", encoding="utf-8") as file:
+            data = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return tuple(docs)
+    if not isinstance(data, list):
+        return tuple(docs)
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        item_id = str(item.get("id") or "")
+        if item_id and item_id in seen_ids:
+            continue
+        docs.append(item)
+    return tuple(docs)
+
+
+def _video_factory_doc_text(doc: dict[str, Any]) -> str:
+    metadata = doc.get("metadata") if isinstance(doc.get("metadata"), dict) else {}
+    parts: list[str] = [str(doc.get("text") or "")]
+    for key in (
+        "name",
+        "figure",
+        "source",
+        "source_type",
+        "story",
+        "hook",
+        "conflict",
+        "emotional_arc",
+        "prompt_guidance",
+        "avoid",
+    ):
+        parts.append(str(metadata.get(key) or ""))
+    for key in ("aliases", "labels", "visual_keywords", "shot_beats", "video_angles"):
+        parts.extend(_as_text_list(metadata.get(key)))
+    return " ".join(part for part in parts if part)
+
+
+def _score_video_factory_doc(query: str, horse: str, topic: str, brief: str, doc: dict[str, Any]) -> float:
+    metadata = doc.get("metadata") if isinstance(doc.get("metadata"), dict) else {}
+    name = str(metadata.get("name") or "").strip()
+    normalized_horse = _normalize_horse_name(horse)
+    normalized_name = _normalize_horse_name(name)
+    figure = str(metadata.get("figure") or "").strip()
+    aliases = _as_text_list(metadata.get("aliases"))
+    labels = _as_text_list(metadata.get("labels"))
+    visual_keywords = _as_text_list(metadata.get("visual_keywords"))
+    intent_text = f"{topic} {brief}".strip()
+    query_embedding = _video_rag_embed(query)
+    doc_embedding = _video_rag_embed(_video_factory_doc_text(doc))
+    score = _video_rag_cosine(query_embedding, doc_embedding)
+
+    if name and name in intent_text:
+        score += 1.5
+    elif normalized_horse and normalized_name and (
+        normalized_horse == normalized_name
+        or normalized_horse in normalized_name
+        or normalized_name in normalized_horse
+    ):
+        score += 0.32
+    elif name and name in query:
+        score += 0.8
+    if str(metadata.get("priority") or "").strip().lower() == "top5":
+        score += 0.45
+    for figure_part in re.split(r"[、/（）()，,\s]+", figure):
+        if len(figure_part) >= 2 and figure_part in intent_text:
+            score += 0.9
+            break
+    for alias in aliases:
+        if alias and alias in intent_text:
+            score += 1.2
+        elif alias and (alias in query or (horse and horse in alias)):
+            score += 0.35
+    for label in labels:
+        if label and label in query:
+            score += 0.08
+    for keyword in visual_keywords:
+        if keyword and keyword in intent_text:
+            score += 0.25
+    return score
+
+
+def _query_video_factory_rag(horse: str, topic: str, brief: str, top_k: int) -> list[dict[str, Any]]:
+    horse = _normalize_horse_name(horse)
+    query = " ".join(part for part in [horse, topic, brief] if part).strip()
+    if not query:
+        return []
+
+    scored_docs: list[tuple[float, dict[str, Any]]] = []
+    for doc in _load_video_factory_rag_docs():
+        score = _score_video_factory_doc(query, horse, topic, brief, doc)
+        if score >= 0.2:
+            scored_docs.append((score, doc))
+    scored_docs.sort(key=lambda item: item[0], reverse=True)
+
+    return [
+        {
+            "score": score,
+            "id": doc.get("id"),
+            "text": doc.get("text", ""),
+            "metadata": doc.get("metadata", {}),
+        }
+        for score, doc in scored_docs[:top_k]
+    ]
+
+
+def _build_rag_references(horse: str, topic: str, brief: str) -> list[dict[str, Any]]:
+    horse = _normalize_horse_name(horse)
+    query = " ".join(part for part in [horse, topic, brief] if part)
+    if not query.strip():
+        return []
+
+    desired_hits = max(3, settings.RAG_TOP_K)
+    try:
+        hits = _query_video_factory_rag(horse, topic, brief, top_k=desired_hits)
+    except Exception:
+        hits = []
+    if not hits:
+        try:
+            hits = query_vectordb(query, top_k=desired_hits)
+        except Exception:
+            hits = []
+
+    references: list[dict[str, Any]] = []
+    for hit in hits:
+        metadata = hit.get("metadata") or {}
+        references.append(
+            {
+                "id": hit.get("id"),
+                "score": round(float(hit.get("score") or 0), 4),
+                "name": str(metadata.get("name") or hit.get("id") or "").strip(),
+                "figure": str(metadata.get("figure") or "").strip(),
+                "source": str(metadata.get("source") or "知识库").strip(),
+                "story": str(metadata.get("story") or hit.get("text") or "").strip(),
+                "labels": _as_text_list(metadata.get("labels")),
+                "text": str(hit.get("text") or "").strip(),
+                "sourceType": str(metadata.get("source_type") or "").strip(),
+                "hook": str(metadata.get("hook") or "").strip(),
+                "conflict": str(metadata.get("conflict") or "").strip(),
+                "emotionalArc": str(metadata.get("emotional_arc") or "").strip(),
+                "visualKeywords": _as_text_list(metadata.get("visual_keywords")),
+                "shotBeats": _as_text_list(metadata.get("shot_beats")),
+                "videoAngles": _as_text_list(metadata.get("video_angles")),
+                "promptGuidance": str(metadata.get("prompt_guidance") or "").strip(),
+                "avoid": str(metadata.get("avoid") or "").strip(),
+                "aliases": _as_text_list(metadata.get("aliases")),
+                "imageUrl": str(metadata.get("image_url") or metadata.get("imageUrl") or "").strip(),
+                "ownerLifeStory": str(metadata.get("owner_life_story") or "").strip(),
+                "horseLifeStory": str(metadata.get("horse_life_story") or "").strip(),
+                "fullStory": str(metadata.get("full_story") or "").strip(),
+            }
+        )
+    return references
+
+
+def _primary_rag_reference(horse: str, topic: str, references: list[dict[str, Any]]) -> dict[str, Any]:
+    horse = _normalize_horse_name(horse)
+    for reference in references:
+        name = _normalize_horse_name(reference.get("name"))
+        if horse and name and (name == horse or horse in name or name in horse):
+            return reference
+    for reference in references:
+        if reference.get("name") and str(reference.get("name")) in topic:
+            return reference
+    if references:
+        return references[0]
+    return {
+        "id": None,
+        "score": 0,
+        "name": horse,
+        "figure": "related historical figure",
+        "source": "video-factory-input",
+        "story": topic or f"{horse} short video",
+        "labels": ["legendary horse", "storytelling", "short video"],
+        "text": topic or f"{horse} short video",
+        "imageUrl": _preferred_thumbnail_url(horse_name=horse, references=references),
+    }
+
+def _completed_node_output(task: WorkflowTask, node_id: str) -> dict[str, Any] | None:
+    for state in task.node_states or []:
+        if not isinstance(state, dict):
+            continue
+        if state.get("node_id") == node_id and state.get("status") == "completed":
+            output = state.get("output")
+            return dict(output) if isinstance(output, dict) else {}
+    return None
+
+
+def _normalize_duration_for_veo(seconds: Any) -> int:
+    number = _safe_int(seconds, 8, minimum=4, maximum=8)
+    if number <= 4:
+        return 4
+    if number <= 6:
+        return 6
+    return 8
+
+
+def _provider_message(exc: Exception) -> str:
+    return f"{exc.__class__.__name__}: {exc}"
+
+
+def _canvas_text(value: Any, fallback: str = "") -> str:
+    text = str(value or "").strip()
+    return text or fallback
+
+
+def _template_default_text(value: Any, template_value: str) -> str:
+    text = str(value or "").strip()
+    if not text or text in BASE_TEMPLATE_LEGACY_VALUES:
+        return template_value
+    return text
+
+
+def _canvas_model(value: Any, fallback: Any, *, legacy: set[str] | None = None) -> str:
+    text = str(value or "").strip()
+    if text and text not in (legacy or set()):
+        return text
+    return str(fallback or text or "").strip()
+
+
+def _image_api_size(fields: dict[str, Any], aspect: str) -> str:
+    explicit = str(fields.get("apiSize") or fields.get("size") or "").strip()
+    if re.fullmatch(r"\d+x\d+", explicit):
+        return explicit
+    by_aspect = {
+        "9:16": settings.VIDEO_FACTORY_IMAGE_SIZE or "1024x1792",
+        "16:9": "1792x1024",
+        "1:1": "1024x1024",
+    }
+    return by_aspect.get(str(fields.get("imageSize") or aspect or "9:16").strip(), settings.VIDEO_FACTORY_IMAGE_SIZE)
+
+
+def _sanitize_veo_public_prompt(prompt: str) -> str:
+    text = str(prompt or "")
+    replacements = {
+        "Lu Bu": "an ancient armored warlord silhouette",
+        "Lü Bu": "an ancient armored warlord silhouette",
+        "Lv Bu": "an ancient armored warlord silhouette",
+        "Guan Yu": "a loyal ancient general silhouette with a long polearm",
+        "Liu Bei": "a noble ancient commander silhouette",
+        "Cao Cao": "a powerful ancient strategist silhouette",
+        "关羽": "忠义古代将领剪影",
+        "吕布": "古代战将剪影",
+        "刘备": "古代仁厚统帅剪影",
+        "曹操": "古代谋略家剪影",
+        "项羽": "古代英雄剪影",
+        "刘邦": "古代统帅剪影",
+    }
+    for source, target in replacements.items():
+        text = re.sub(re.escape(source), target, text, flags=re.IGNORECASE)
+    guard = (
+        " Avoid depicting or naming real, historical, public, or prominent people. "
+        "Use fictionalized ancient character silhouettes only, with no identifiable face likeness."
+    )
+    return f"{text} {guard}".strip()
+
+
+def _is_real_media_url(value: Any) -> bool:
+    text = str(value or "").strip()
+    return bool(text) and not text.startswith(("pending://", "mock://"))
+
+
+def _is_public_provider_media_url(value: Any) -> bool:
+    text = str(value or "").strip().lower()
+    return text.startswith(("http://", "https://", "/generated/"))
+
+
+def _provider_media_url(value: Any) -> str | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.lower().startswith(("http://", "https://")):
+        return text
+    if text.startswith("/generated/"):
+        base = str(settings.APP_PUBLIC_BASE_URL or "").strip().rstrip("/")
+        if base:
+            return f"{base}{text}"
+    return None
+
+
+def _ensure_workflow_media_dirs() -> None:
+    SUBTITLE_DIR.mkdir(parents=True, exist_ok=True)
+    TEXT_DIR.mkdir(parents=True, exist_ok=True)
+    VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+    AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _safe_artifact_name(value: Any, fallback: str) -> str:
+    text = str(value or "").strip()
+    safe = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in text).strip("_")
+    return safe or fallback
+
+
+def _seconds_to_srt_timestamp(value: Any) -> str:
+    try:
+        seconds_float = float(value)
+    except (TypeError, ValueError):
+        seconds_float = 0.0
+    total_milliseconds = max(0, int(round(seconds_float * 1000)))
+    milliseconds = total_milliseconds % 1000
+    total_seconds = total_milliseconds // 1000
+    seconds = total_seconds % 60
+    total_minutes = total_seconds // 60
+    minutes = total_minutes % 60
+    hours = total_minutes // 60
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{milliseconds:03d}"
+
+
+def _split_subtitle_text(text: str, *, line_limit: int = 18, max_lines: int = 1) -> list[str]:
+    stripped = "".join(str(text or "").split())
+    if not stripped:
+        return []
+    max_chars = max(8, line_limit * max_lines)
+    pieces = [piece for piece in re.findall(r"[^。！？!?；;，,、]+[。！？!?；;，,、]?", stripped) if piece]
+    if not pieces:
+        pieces = [stripped]
+
+    chunks: list[str] = []
+    current = ""
+    for piece in pieces:
+        while len(piece) > max_chars:
+            if current:
+                chunks.append(current)
+                current = ""
+            chunks.append(piece[:max_chars])
+            piece = piece[max_chars:]
+        if not current:
+            current = piece
+        elif len(current) + len(piece) <= max_chars:
+            current += piece
+        else:
+            chunks.append(current)
+            current = piece
+    if current:
+        chunks.append(current)
+    normalized_chunks: list[str] = []
+    punctuation = "，,。！？!?；;、"
+    for chunk in chunks:
+        if len(chunk) <= 2 and normalized_chunks and all(char in punctuation for char in chunk):
+            normalized_chunks[-1] += chunk
+        else:
+            normalized_chunks.append(chunk)
+    return normalized_chunks
+
+
+def _normalize_subtitle_segments(raw_segments: Any, duration_seconds: int) -> list[dict[str, Any]]:
+    if not isinstance(raw_segments, list):
+        return []
+
+    segments: list[dict[str, Any]] = []
+    last_end = 0.0
+    fallback_step = max(1.5, float(duration_seconds or 8) / max(1, len(raw_segments)))
+    for index, raw in enumerate(raw_segments):
+        if not isinstance(raw, dict):
+            continue
+        text = str(raw.get("text") or raw.get("subtitle") or "").strip()
+        if not text:
+            continue
+        try:
+            start = float(raw.get("start_seconds", raw.get("start", index * fallback_step)))
+        except (TypeError, ValueError):
+            start = index * fallback_step
+        try:
+            end = float(raw.get("end_seconds", raw.get("end", start + fallback_step - 0.08)))
+        except (TypeError, ValueError):
+            end = start + fallback_step - 0.08
+        start = max(0.0, start)
+        end = max(start + 0.8, end)
+        if segments and start < last_end:
+            start = last_end + 0.04
+            end = max(start + 0.8, end)
+        chunks = _split_subtitle_text(text)
+        if not chunks:
+            continue
+        duration = max(0.8, end - start)
+        chunk_step = duration / len(chunks)
+        for chunk_index, chunk in enumerate(chunks):
+            chunk_start = start + chunk_step * chunk_index
+            chunk_end = end if chunk_index == len(chunks) - 1 else start + chunk_step * (chunk_index + 1) - 0.04
+            segments.append(
+                {
+                    "scene": raw.get("scene") or index + 1,
+                    "start": round(chunk_start, 2),
+                    "end": round(max(chunk_start + 0.72, chunk_end), 2),
+                    "text": chunk,
+                }
+            )
+        last_end = max(float(segment.get("end") or 0) for segment in segments) if segments else end
+    return segments
+
+
+def _write_workflow_srt(task_id: str, segments: list[dict[str, Any]]) -> str | None:
+    if not segments:
+        return None
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    path = SUBTITLE_DIR / f"{safe_task_id}.srt"
+    lines: list[str] = []
+    for index, segment in enumerate(segments, start=1):
+        lines.extend(
+            [
+                str(index),
+                f"{_seconds_to_srt_timestamp(segment.get('start'))} --> {_seconds_to_srt_timestamp(segment.get('end'))}",
+                str(segment.get("text") or "").strip(),
+                "",
+            ]
+        )
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return f"/generated/subtitles/{path.name}"
+
+
+def _fallback_segments_from_transcript(text: str, duration_seconds: int) -> list[dict[str, Any]]:
+    chunks = _split_subtitle_text(text, line_limit=18, max_lines=1)
+    if not chunks:
+        return []
+    duration = max(1.0, float(duration_seconds or 8))
+    step = duration / len(chunks)
+    fallback_segments = []
+    for index, chunk in enumerate(chunks):
+        start = round(index * step, 2)
+        end = round(duration if index == len(chunks) - 1 else max(start + 0.72, (index + 1) * step - 0.04), 2)
+        fallback_segments.append({"scene": index + 1, "start": start, "end": end, "text": chunk})
+    return fallback_segments
+
+
+def _align_subtitles_with_asr(
+    *,
+    task_id: str,
+    media_path: Path | None,
+    seed_segments: list[dict[str, Any]],
+    voiceover_text: str,
+    duration_seconds: int,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    if not media_path or not media_path.exists():
+        return seed_segments, {"status": "skipped", "reason": "missing_media"}
+    if not settings.VIDEO_FACTORY_ASR_ENABLED:
+        return seed_segments, {"status": "skipped", "reason": "asr_disabled"}
+
+    max_chars = max(80, int(settings.VIDEO_FACTORY_ASR_MAX_TEXT_CHARS or 500))
+    asr_prompt = _normalize_chinese_voiceover_text(voiceover_text)[:max_chars]
+    try:
+        asr_result = transcribe_media_segments(
+            media_path=media_path,
+            model=settings.VIDEO_FACTORY_ASR_MODEL,
+            language=settings.VIDEO_FACTORY_ASR_LANGUAGE,
+            prompt=asr_prompt,
+        )
+    except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+        return seed_segments, {"status": "fallback", "reason": _provider_message(exc)}
+    except Exception as exc:
+        return seed_segments, {"status": "fallback", "reason": str(exc)}
+
+    raw_segments = asr_result.get("segments")
+    normalized = _normalize_subtitle_segments(raw_segments, duration_seconds)
+    if not normalized:
+        transcript = str(asr_result.get("text") or "").strip()
+        normalized = _fallback_segments_from_transcript(transcript, duration_seconds)
+    if not normalized:
+        return seed_segments, {
+            "status": "fallback",
+            "reason": "asr_empty",
+            "provider": asr_result.get("provider"),
+            "model": asr_result.get("model"),
+        }
+    transcript_preview = _compact_for_provider(asr_result.get("text") or "", 160)
+    return normalized, {
+        "status": "aligned",
+        "provider": asr_result.get("provider"),
+        "model": asr_result.get("model"),
+        "language": asr_result.get("language"),
+        "segmentCount": len(normalized),
+        "rawSegmentCount": len(raw_segments) if isinstance(raw_segments, list) else 0,
+        "transcriptPreview": transcript_preview,
+        "taskId": task_id,
+    }
+
+
+def _resolve_local_generated_media(value: str) -> Path | None:
+    if not value.startswith("/generated/"):
+        return None
+    relative = value.removeprefix("/generated/").lstrip("/\\")
+    path = (GENERATED_DIR / relative).resolve()
+    root = GENERATED_DIR.resolve()
+    if not str(path).startswith(str(root)) or not path.exists() or not path.is_file():
+        return None
+    return path
+
+
+def _generated_url_for_path(path: Path) -> str | None:
+    resolved = path.resolve()
+    root = GENERATED_DIR.resolve()
+    if not str(resolved).startswith(str(root)):
+        return None
+    relative = resolved.relative_to(root).as_posix()
+    return f"/generated/{relative}"
+
+
+def _ffprobe_bin() -> str:
+    ffmpeg_path = Path(str(FFMPEG_BIN or "ffmpeg"))
+    name = ffmpeg_path.name.lower()
+    if name in {"ffmpeg", "ffmpeg.exe"}:
+        return str(ffmpeg_path.with_name("ffprobe.exe" if name.endswith(".exe") else "ffprobe"))
+    return "ffprobe"
+
+
+def _probe_media_duration_seconds(path: Path) -> float | None:
+    if not path.exists() or not path.is_file():
+        return None
+    command = [
+        _ffprobe_bin(),
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        str(path),
+    ]
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return None
+    if process.returncode != 0:
+        return None
+    try:
+        return float(str(process.stdout or "").strip())
+    except ValueError:
+        return None
+
+
+def _trim_generated_video_to_duration(video_url: str, duration_seconds: int) -> tuple[str, str | None]:
+    target_seconds = _safe_int(duration_seconds, 8, minimum=4, maximum=180)
+    input_path = _resolve_local_generated_media(str(video_url or ""))
+    if not input_path:
+        return video_url, None
+    current_duration = _probe_media_duration_seconds(input_path)
+    if current_duration is None or current_duration <= target_seconds + 0.8:
+        return video_url, None
+    output_path = input_path.with_name(f"{input_path.stem}_trim_{target_seconds}s.mp4")
+    command = [
+        FFMPEG_BIN,
+        "-y",
+        "-i",
+        str(input_path),
+        "-t",
+        f"{target_seconds:.2f}",
+        "-map",
+        "0:v:0",
+        "-map",
+        "0:a?",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "18",
+        "-c:a",
+        "aac",
+        "-movflags",
+        "+faststart",
+        str(output_path),
+    ]
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return video_url, f"FFmpeg not found while trimming final video: {FFMPEG_BIN}"
+    if process.returncode != 0 or not output_path.exists() or output_path.stat().st_size <= 0:
+        error_text = (process.stderr or process.stdout or "").strip()
+        return video_url, (error_text[:500] if error_text else "Final video trim failed.")
+    return _generated_url_for_path(output_path) or video_url, f"Final video was trimmed from {current_duration:.1f}s to {target_seconds}s."
+
+
+def _keyframe_cache_key(*, prompt: str, image_size: str, model: str, style_anchor: str) -> str:
+    raw = json.dumps(
+        {
+            "prompt": _compact_for_provider(prompt, 1800),
+            "imageSize": image_size,
+            "model": model,
+            "styleAnchor": style_anchor,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+
+
+def _keyframe_cache_path(cache_key: str) -> Path:
+    return KEYFRAME_CACHE_DIR / f"{_safe_artifact_name(cache_key, 'keyframe')}.png"
+
+
+def _read_cached_keyframe(cache_key: str) -> str | None:
+    path = _keyframe_cache_path(cache_key)
+    if path.exists() and path.is_file() and path.stat().st_size > 0:
+        return _generated_url_for_path(path)
+    return None
+
+
+def _cache_keyframe_from_url(cache_key: str, image_url: str) -> str | None:
+    source = _resolve_local_generated_media(str(image_url or ""))
+    if not source:
+        return None
+    KEYFRAME_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    target = _keyframe_cache_path(cache_key)
+    if target.exists() and target.stat().st_size > 0:
+        return _generated_url_for_path(target)
+    try:
+        shutil.copyfile(source, target)
+    except OSError:
+        return None
+    return _generated_url_for_path(target)
+
+
+def _keyframe_prompt_for_shot(
+    *,
+    shot: dict[str, Any],
+    keyframe_prompt_style: str,
+    consistency: str,
+    story: str,
+    keyframe_custom_prompt: str,
+) -> str:
+    base_prompt = _safe_text(shot.get("imagePrompt") or shot.get("image_prompt") or shot.get("visual") or shot.get("prompt"))
+    prompt = (
+        f"{base_prompt}，{keyframe_prompt_style}，"
+        f"{consistency}，"
+        f"故事锚点：{story}，基础模板：{BASE_VIDEO_TEMPLATE_PROMPT}"
+    )
+    if keyframe_custom_prompt:
+        prompt = f"{prompt}，画布补充：{keyframe_custom_prompt}"
+    return prompt
+
+
+def _clone_anchor_keyframe(
+    anchor: dict[str, Any],
+    scene: int,
+    prompt: str,
+    *,
+    frame_role: str = "scene-reference-frame",
+) -> dict[str, Any]:
+    cloned = dict(anchor)
+    cloned.update(
+        {
+            "scene": scene,
+            "prompt": prompt,
+            "role": "veo-reference-frame",
+            "frameRole": frame_role,
+            "status": cloned.get("status") or "completed",
+            "reusedFromScene": anchor.get("scene"),
+            "reusedFromRole": anchor.get("frameRole") or anchor.get("role"),
+            "cacheMode": cloned.get("cacheMode") or "style-anchor-reuse",
+        }
+    )
+    return cloned
+
+
+def _download_remote_video(task_id: str, url: str) -> Path:
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    suffix = uuid.uuid5(uuid.NAMESPACE_URL, url).hex[:8]
+    path = VIDEO_DIR / f"{safe_task_id}_veo_source_{suffix}.mp4"
+    if path.exists() and path.stat().st_size > 0:
+        return path
+    with httpx.stream("GET", url, timeout=300.0, follow_redirects=True, trust_env=False) as response:
+        response.raise_for_status()
+        with path.open("wb") as file:
+            for chunk in response.iter_bytes(chunk_size=1024 * 1024):
+                if chunk:
+                    file.write(chunk)
+    return path
+
+
+def _local_video_path_for_url(task_id: str, video_url: str) -> Path | None:
+    if video_url.startswith("/generated/"):
+        return _resolve_local_generated_media(video_url)
+    if _is_public_provider_media_url(video_url):
+        return _download_remote_video(task_id, video_url)
+    return None
+
+
+def _base_template_video_path() -> Path | None:
+    candidates: list[Path] = []
+    for root in [SERVER_DIR, *SERVER_DIR.parents, Path.cwd(), *Path.cwd().parents]:
+        candidates.append(root / BASE_VIDEO_TEMPLATE_SOURCE)
+    candidates.append(Path(BASE_VIDEO_TEMPLATE_SOURCE))
+    seen: set[str] = set()
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            continue
+        key = str(resolved).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        if resolved.exists() and resolved.is_file():
+            return resolved
+    return None
+
+
+def _placeholder_video_path(task_id: str) -> Path | None:
+    template_path = _base_template_video_path()
+    if not template_path:
+        return None
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    output_path = VIDEO_DIR / f"{safe_task_id}_template_fallback.mp4"
+    if output_path.exists() and output_path.stat().st_size > 0:
+        return output_path
+    try:
+        shutil.copyfile(template_path, output_path)
+    except OSError:
+        return template_path
+    return output_path
+
+
+def _local_motion_video_from_image(
+    *,
+    task_id: str,
+    image_url: str,
+    scene: int,
+    duration_seconds: int,
+    aspect: str,
+) -> Path | None:
+    image_path = _resolve_local_generated_media(str(image_url or ""))
+    if not image_path:
+        return None
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    output_path = VIDEO_DIR / f"{safe_task_id}_local_motion_{scene}.mp4"
+    width, height = (720, 1280) if str(aspect or "9:16") == "9:16" else ((1280, 720) if str(aspect) == "16:9" else (1080, 1080))
+    frames = max(1, _safe_int(duration_seconds, 8, minimum=4, maximum=12) * 30)
+    progress_expr = f"on/{frames}"
+    zoom_expr = f"min(1.24,1+0.24*{progress_expr})"
+    x_expr = f"(iw-iw/zoom)*(0.16+0.68*{progress_expr})"
+    y_expr = f"(ih-ih/zoom)*(0.48+0.10*sin({progress_expr}*6.28318))"
+    vf = (
+        f"scale={width * 2}:{height * 2}:force_original_aspect_ratio=increase,"
+        f"crop={width * 2}:{height * 2},"
+        f"zoompan=z='{zoom_expr}':x='{x_expr}':y='{y_expr}':"
+        f"d={frames}:s={width}x{height}:fps=30,"
+        "eq=contrast=1.05:saturation=1.06:brightness='0.012*sin(2*PI*t/5)',"
+        "noise=alls=3:allf=t+u,"
+        "unsharp=5:5:0.45:3:3:0.25,"
+        "format=yuv420p"
+    )
+    command = [
+        FFMPEG_BIN,
+        "-y",
+        "-loop",
+        "1",
+        "-i",
+        str(image_path),
+        "-t",
+        str(_safe_int(duration_seconds, 8, minimum=4, maximum=12)),
+        "-vf",
+        vf,
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "18",
+        "-movflags",
+        "+faststart",
+        str(output_path),
+    ]
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return None
+    if process.returncode != 0 or not output_path.exists() or output_path.stat().st_size <= 0:
+        return None
+    return output_path
+
+
+def _fallback_clip_paths_from_keyframes(
+    *,
+    task_id: str,
+    storyboard_manifest: dict[str, Any] | None,
+    target_count: int,
+    duration_seconds: int,
+    aspect: str,
+) -> list[Path]:
+    frames = storyboard_manifest.get("frames") if isinstance(storyboard_manifest, dict) else []
+    paths: list[Path] = []
+    if not isinstance(frames, list):
+        return paths
+    per_clip_seconds = max(4, min(12, int(round((duration_seconds or 8) / max(1, target_count or len(frames) or 1)))))
+    for index, frame in enumerate(frames[: max(1, target_count)]):
+        if not isinstance(frame, dict):
+            continue
+        artifacts = frame.get("artifacts") if isinstance(frame.get("artifacts"), dict) else {}
+        keyframes = artifacts.get("keyframes") if isinstance(artifacts.get("keyframes"), list) else []
+        image_url = ""
+        for item in keyframes:
+            if isinstance(item, dict):
+                image_url = str(item.get("imageUrl") or item.get("url") or "").strip()
+                if image_url:
+                    break
+        if not image_url:
+            continue
+        scene = _safe_int(frame.get("scene"), index + 1, minimum=1, maximum=99)
+        motion_path = _local_motion_video_from_image(
+            task_id=task_id,
+            image_url=image_url,
+            scene=scene,
+            duration_seconds=per_clip_seconds,
+            aspect=aspect,
+        )
+        if motion_path:
+            paths.append(motion_path)
+    return paths
+
+
+def _pad_clip_paths_for_long_video(
+    task_id: str,
+    clip_paths: list[Path],
+    target_count: int,
+    *,
+    storyboard_manifest: dict[str, Any] | None = None,
+    duration_seconds: int = 8,
+    aspect: str = "9:16",
+) -> tuple[list[Path], str | None]:
+    usable_paths = [path for path in clip_paths if path and path.exists() and path.is_file()]
+    target_count = max(1, int(target_count or len(usable_paths) or 1))
+    if not usable_paths:
+        keyframe_fallbacks = _fallback_clip_paths_from_keyframes(
+            task_id=task_id,
+            storyboard_manifest=storyboard_manifest,
+            target_count=target_count,
+            duration_seconds=duration_seconds,
+            aspect=aspect,
+        )
+        if keyframe_fallbacks:
+            usable_paths = keyframe_fallbacks
+            warning = "All video model clips failed; used generated keyframes to build a local motion preview."
+        else:
+            fallback = _placeholder_video_path(task_id)
+            if fallback:
+                usable_paths = [fallback]
+                warning = "All video model clips failed; used base template video as last fallback."
+            else:
+                return [], "All video model clips failed and no keyframe/template fallback video was found."
+    else:
+        warning = None
+    if len(usable_paths) >= target_count:
+        return usable_paths, warning
+    padded = list(usable_paths)
+    index = 0
+    while len(padded) < target_count and usable_paths:
+        padded.append(usable_paths[index % len(usable_paths)])
+        index += 1
+    pad_warning = f"Some Veo clips failed; repeated successful clips to reach {target_count} segments."
+    return padded, _join_warnings(warning, pad_warning)
+
+
+def _join_warnings(*parts: Any) -> str | None:
+    values = [str(part).strip() for part in parts if str(part or "").strip()]
+    return "; ".join(values) if values else None
+
+
+def _concat_workflow_clips(task_id: str, clip_paths: list[Path]) -> tuple[Path | None, str | None]:
+    usable_paths = [path for path in clip_paths if path and path.exists() and path.is_file()]
+    if not usable_paths:
+        return None, None
+    if len(usable_paths) == 1:
+        return usable_paths[0], None
+
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    list_path = TEXT_DIR / f"{safe_task_id}_concat.txt"
+    output_path = VIDEO_DIR / f"{safe_task_id}_concat.mp4"
+
+    def concat_path(path: Path) -> str:
+        return path.resolve().as_posix().replace("'", "'\\''")
+
+    list_path.write_text(
+        "\n".join(f"file '{concat_path(path)}'" for path in usable_paths),
+        encoding="utf-8",
+    )
+
+    command = [
+        FFMPEG_BIN,
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        str(list_path),
+        "-c",
+        "copy",
+        "-movflags",
+        "+faststart",
+        str(output_path),
+    ]
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return usable_paths[0], f"找不到 FFmpeg 命令：{FFMPEG_BIN}。已回退到首个片段。"
+    if process.returncode == 0 and output_path.exists() and output_path.stat().st_size > 0:
+        return output_path, None
+
+    fallback_path = VIDEO_DIR / f"{safe_task_id}_concat_reencoded.mp4"
+    command = [
+        FFMPEG_BIN,
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        str(list_path),
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "18",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "160k",
+        "-movflags",
+        "+faststart",
+        str(fallback_path),
+    ]
+    process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    if process.returncode != 0:
+        error_text = (process.stderr or process.stdout or "").strip()
+        return usable_paths[0], (error_text[:800] if error_text else "FFmpeg 多片段拼接失败，已回退到首个片段。")
+    return fallback_path, None
+
+
+def _find_subtitle_font() -> Path | None:
+    candidates = [
+        Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
+        Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"),
+        Path("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"),
+        Path("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"),
+        Path("/usr/share/fonts/truetype/arphic/uming.ttc"),
+        Path(r"C:\Windows\Fonts\msyhbd.ttc"),
+        Path(r"C:\Windows\Fonts\msyh.ttc"),
+        Path(r"C:\Windows\Fonts\simhei.ttf"),
+        Path(r"C:\Windows\Fonts\simsun.ttc"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _ffmpeg_filter_path(path: Path) -> str:
+    return path.resolve().as_posix().replace(":", "\\:")
+
+
+def _chunk_subtitle_text(text: str, limit: int = 18, max_lines: int = 1) -> str:
+    stripped = "".join(str(text or "").split())
+    if not stripped:
+        return ""
+    lines = [stripped[index : index + limit] for index in range(0, len(stripped), limit)]
+    return "\n".join(lines[:max_lines])
+
+
+def _normalize_chinese_voice_name(value: Any) -> str:
+    text = str(value or "").strip()
+    if text.startswith("zh-CN-") and text.endswith("Neural"):
+        return text
+    if "女" in text or "温柔" in text or "晓晓" in text or "xiaoxiao" in text.lower():
+        return "zh-CN-XiaoxiaoNeural"
+    if "男" in text or "沉稳" in text or "热血" in text or "yunxi" in text.lower():
+        return "zh-CN-YunxiNeural"
+    return DEFAULT_CHINESE_TTS_VOICE
+
+
+def _normalize_chinese_voiceover_text(text: Any) -> str:
+    value = re.sub(r"\s+", "", str(text or "")).strip()
+    value = re.sub(r"[A-Za-z0-9_./\\:;|<>{}\[\]()`~@#$%^&*+=]+", "", value)
+    value = re.sub(r"[，,。！？!?；;：:、]{2,}", "，", value)
+    return value.strip("，,。！？!?；;：:、 ")
+
+
+def _powershell_literal(value: Any) -> str:
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def _build_windows_sapi_tts_track(
+    *,
+    task_id: str,
+    clean_text: str,
+    voice_name: str,
+    speed_value: float,
+) -> tuple[Path | None, dict[str, Any]]:
+    if os.name != "nt":
+        return None, {"configured": False, "reason": "local_sapi_unavailable"}
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    digest = hashlib.sha256(f"windows-sapi:{voice_name}:{speed_value}:{clean_text}".encode("utf-8")).hexdigest()[:16]
+    text_path = TEXT_DIR / f"{safe_task_id}_zh_voice_{digest}.txt"
+    raw_path = AUDIO_DIR / f"{safe_task_id}_zh_voice_{digest}_sapi.wav"
+    text_path.write_text(clean_text, encoding="utf-8-sig")
+    rate = max(-4, min(4, int(round((speed_value - 1.0) * 10))))
+    command_text = f"""
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Speech
+$text = Get-Content -LiteralPath {_powershell_literal(text_path)} -Raw -Encoding UTF8
+$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+try {{
+  $voice = $synth.GetInstalledVoices() | Where-Object {{ $_.VoiceInfo.Culture.Name -eq 'zh-CN' }} | Select-Object -First 1
+  if ($voice) {{ $synth.SelectVoice($voice.VoiceInfo.Name) }}
+}} catch {{}}
+$synth.Rate = {rate}
+$synth.Volume = 100
+$synth.SetOutputToWaveFile({_powershell_literal(raw_path)})
+$synth.Speak($text)
+$synth.Dispose()
+"""
+    try:
+        process = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command_text],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            timeout=120,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        return None, {
+            "configured": False,
+            "reason": f"本地中文配音不可用：{exc}",
+            "voice": voice_name,
+            "text": clean_text,
+        }
+    if process.returncode != 0 or not raw_path.exists() or raw_path.stat().st_size <= 1000:
+        error_text = (process.stderr or process.stdout or "").strip()
+        return None, {
+            "configured": False,
+            "reason": f"本地中文配音生成失败：{error_text[:500] if error_text else 'empty_audio'}",
+            "voice": voice_name,
+            "text": clean_text,
+        }
+    return raw_path, {
+        "configured": True,
+        "provider": "windows-sapi",
+        "voice": "Microsoft Huihui Desktop",
+        "audioUrl": _generated_url_for_path(raw_path),
+        "text": clean_text,
+        "speed": speed_value,
+        "warning": "未配置云端 TTS，已使用本机中文语音合成旁白。",
+    }
+
+
+def _build_chinese_tts_track(task_id: str, text: str, voice: str, speed: Any = "1.0") -> tuple[Path | None, dict[str, Any]]:
+    clean_text = _normalize_chinese_voiceover_text(text)
+    if not clean_text:
+        return None, {"configured": False, "reason": "empty_voiceover"}
+    try:
+        speed_value = float(speed or 1.0)
+    except (TypeError, ValueError):
+        speed_value = 1.0
+    speed_value = max(0.75, min(1.3, speed_value))
+    voice_name = _normalize_chinese_voice_name(voice)
+    settings_now = get_settings()
+    if not settings_now.AZURE_TTS_KEY or not settings_now.AZURE_TTS_REGION:
+        sapi_path, sapi_payload = _build_windows_sapi_tts_track(
+            task_id=task_id,
+            clean_text=clean_text,
+            voice_name=voice_name,
+            speed_value=speed_value,
+        )
+        if sapi_path:
+            return sapi_path, sapi_payload
+        return None, {
+            "configured": False,
+            "reason": sapi_payload.get("reason") or "AZURE_TTS_KEY/AZURE_TTS_REGION 未配置，且本地中文配音不可用。",
+            "voice": voice_name,
+            "text": clean_text,
+        }
+    try:
+        from app.services import tts as tts_service
+
+        audio_bytes = tts_service.synthesize_text(
+            clean_text,
+            voice=voice_name,
+            output_format="audio-24khz-48kbitrate-mono-mp3",
+        )
+    except Exception as exc:
+        sapi_path, sapi_payload = _build_windows_sapi_tts_track(
+            task_id=task_id,
+            clean_text=clean_text,
+            voice_name=voice_name,
+            speed_value=speed_value,
+        )
+        if sapi_path:
+            sapi_payload["warning"] = f"云端中文 TTS 失败，已使用本地中文配音：{exc}"
+            return sapi_path, sapi_payload
+        return None, {
+            "configured": True,
+            "reason": f"中文 TTS 生成失败，已退回 Veo 原生音频：{exc}",
+            "voice": voice_name,
+            "text": clean_text,
+        }
+
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    digest = hashlib.sha256(f"{voice_name}:{speed_value}:{clean_text}".encode("utf-8")).hexdigest()[:16]
+    raw_path = AUDIO_DIR / f"{safe_task_id}_zh_voice_{digest}.mp3"
+    raw_path.write_bytes(audio_bytes)
+    if abs(speed_value - 1.0) < 0.01:
+        return raw_path, {
+            "configured": True,
+            "voice": voice_name,
+            "audioUrl": _generated_url_for_path(raw_path),
+            "text": clean_text,
+            "speed": speed_value,
+        }
+
+    adjusted_path = AUDIO_DIR / f"{safe_task_id}_zh_voice_{digest}_{speed_value:.2f}.mp3"
+    command = [
+        FFMPEG_BIN,
+        "-y",
+        "-i",
+        str(raw_path),
+        "-filter:a",
+        f"atempo={speed_value:.3f}",
+        "-vn",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        "96k",
+        str(adjusted_path),
+    ]
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return raw_path, {
+            "configured": True,
+            "voice": voice_name,
+            "audioUrl": _generated_url_for_path(raw_path),
+            "text": clean_text,
+            "speed": speed_value,
+            "warning": f"找不到 FFmpeg 命令：{FFMPEG_BIN}，语速调整未应用。",
+        }
+    if process.returncode == 0 and adjusted_path.exists() and adjusted_path.stat().st_size > 0:
+        return adjusted_path, {
+            "configured": True,
+            "voice": voice_name,
+            "audioUrl": _generated_url_for_path(adjusted_path),
+            "text": clean_text,
+            "speed": speed_value,
+        }
+    return raw_path, {
+        "configured": True,
+        "voice": voice_name,
+        "audioUrl": _generated_url_for_path(raw_path),
+        "text": clean_text,
+        "speed": speed_value,
+        "warning": "语速调整失败，已使用原始中文 TTS 音轨。",
+    }
+
+
+def _mix_chinese_voice_track(
+    *,
+    task_id: str,
+    input_path: Path,
+    tts_path: Path,
+    ducking: str,
+) -> tuple[str | None, str | None]:
+    if not tts_path or not tts_path.exists():
+        return None, None
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    output_path = VIDEO_DIR / f"{safe_task_id}_final_zh_voice.mp4"
+    # The user-facing guarantee is Mandarin narration. Replace the original
+    # clip audio so foreign speech or silent Veo audio cannot leak through.
+    filter_complex = "[1:a]volume=1.0,apad[aout]"
+    command = [
+        FFMPEG_BIN,
+        "-y",
+        "-i",
+        str(input_path),
+        "-i",
+        str(tts_path),
+        "-filter_complex",
+        filter_complex,
+        "-map",
+        "0:v:0",
+        "-map",
+        "[aout]",
+        "-c:v",
+        "copy",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "160k",
+        "-shortest",
+        "-movflags",
+        "+faststart",
+        str(output_path),
+    ]
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return None, f"找不到 FFmpeg 命令：{FFMPEG_BIN}，中文 TTS 音轨未合成。"
+    if process.returncode != 0:
+        error_text = (process.stderr or process.stdout or "").strip()
+        return None, (error_text[:800] if error_text else "中文 TTS 音轨合成失败。")
+    return f"/generated/videos/{output_path.name}", None
+
+
+def _compact_for_provider(text: Any, limit: int = 1200) -> str:
+    compact = re.sub(r"\s+", " ", str(text or "")).strip()
+    if len(compact) <= limit:
+        return compact
+    return compact[: max(0, limit - 1)].rstrip("，,。；; ") + "。"
+
+
+def _scene_audio_prompt(shot: dict[str, Any], fallback_audio_prompt: str) -> str:
+    narration = str(shot.get("narration") or shot.get("subtitle") or "").strip()
+    audio = str(shot.get("audio") or "").strip()
+    parts = [
+        "为当前片段生成同步电影感音频。旁白必须是普通话简体中文口语，不要英语、不要拼音、不要沉默。",
+        "只朗读当前片段旁白，不要朗读整条视频文案；朗读一次即可，语气自然像短视频口播。",
+        f"当前片段旁白，必须逐字用中文朗读：{narration}" if narration else "",
+        f"当前片段音效：{audio}" if audio else "",
+        "马蹄、风声、鼓点服务画面，不要盖过中文旁白。",
+    ]
+    text = " ".join(part for part in parts if part)
+    if not narration and not audio:
+        text = fallback_audio_prompt
+    return _compact_for_provider(text, 900)
+
+
+def _write_drawtext_segment_file(task_id: str, index: int, text: str) -> Path:
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    path = TEXT_DIR / f"{safe_task_id}_subtitle_{index}.txt"
+    path.write_text(_chunk_subtitle_text(text), encoding="utf-8")
+    return path
+
+
+def _burn_workflow_subtitles(
+    *,
+    task_id: str,
+    input_path: Path,
+    segments: list[dict[str, Any]],
+    style: str,
+) -> tuple[str | None, str | None]:
+    if not segments:
+        return None, None
+    font_path = _find_subtitle_font()
+    if not font_path:
+        return None, "没有找到可用于中文的系统字体，已保留 SRT 文件。"
+
+    _ensure_workflow_media_dirs()
+    safe_task_id = _safe_artifact_name(task_id, "workflow")
+    output_path = VIDEO_DIR / f"{safe_task_id}_final.mp4"
+    style_key = str(style or "").strip().lower()
+    if "clean" in style_key or "简洁" in style_key:
+        font_size = 36
+        box_color = "black@0.42"
+        font_color = "white"
+        y = "h-text_h-(h*0.10)"
+    else:
+        font_size = 38
+        box_color = "black@0.50"
+        font_color = "0xFFE08A"
+        y = "h-text_h-(h*0.11)"
+
+    filters: list[str] = []
+    for index, segment in enumerate(segments, start=1):
+        text_file = _write_drawtext_segment_file(task_id, index, str(segment.get("text") or ""))
+        start = max(0.0, float(segment.get("start") or 0))
+        end = max(start + 0.8, float(segment.get("end") or start + 2.0))
+        filters.append(
+            ":".join(
+                [
+                    f"drawtext=fontfile='{_ffmpeg_filter_path(font_path)}'",
+                    f"textfile='{_ffmpeg_filter_path(text_file)}'",
+                    "reload=0",
+                    f"fontcolor={font_color}",
+                    f"fontsize={font_size}",
+                    "line_spacing=6",
+                    "x=(w-text_w)/2",
+                    f"y={y}",
+                    "borderw=2",
+                    "bordercolor=black@0.82",
+                    "shadowcolor=black@0.80",
+                    "shadowx=2",
+                    "shadowy=3",
+                    "box=1",
+                    f"boxcolor={box_color}",
+                    "boxborderw=12",
+                    f"enable='between(t,{start:.2f},{end:.2f})'",
+                ]
+            )
+        )
+
+    command = [
+        FFMPEG_BIN,
+        "-y",
+        "-i",
+        str(input_path),
+        "-vf",
+        ",".join(filters),
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "18",
+        "-c:a",
+        "copy",
+        "-movflags",
+        "+faststart",
+        str(output_path),
+    ]
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return None, f"找不到 FFmpeg 命令：{FFMPEG_BIN}。已保留原视频和 SRT 文件。"
+    if process.returncode != 0:
+        error_text = (process.stderr or process.stdout or "").strip()
+        return None, (error_text[:800] if error_text else "FFmpeg 字幕合成失败。")
+    return f"/generated/videos/{output_path.name}", None
+
+
+def _compose_workflow_video(
+    *,
+    task_id: str,
+    source_video_url: str,
+    source_clips: list[str],
+    segments: list[dict[str, Any]],
+    subtitle_style: str,
+    voiceover_text: str,
+    voice_fields: dict[str, Any],
+    compose_fields: dict[str, Any],
+    provider_status: dict[str, Any],
+    horse: str,
+    target_clip_count: int = 1,
+    duration_seconds: int = 180,
+    aspect_ratio: str = "9:16",
+    storyboard_manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    seed_segments = _normalize_subtitle_segments(segments, duration_seconds=duration_seconds)
+    local_input_path: Path | None = None
+    local_clip_paths: list[Path] = []
+    compose_warning: str | None = None
+    final_video_url = ""
+    burned_subtitles = False
+    tts_path: Path | None = None
+    tts_payload: dict[str, Any] = {}
+    primary_source_video_url = source_video_url
+    source_urls = [url for url in source_clips if _is_real_media_url(url)]
+    if source_video_url and source_video_url not in source_urls:
+        source_urls.insert(0, source_video_url)
+    for clip_url in source_urls:
+        try:
+            clip_path = _local_video_path_for_url(task_id, clip_url)
+            if clip_path:
+                local_clip_paths.append(clip_path)
+        except Exception as exc:
+            compose_warning = f"下载 Veo 片段失败，已跳过该片段：{exc}"
+    local_clip_paths, pad_warning = _pad_clip_paths_for_long_video(
+        task_id,
+        local_clip_paths,
+        target_clip_count,
+        storyboard_manifest=storyboard_manifest,
+        duration_seconds=duration_seconds,
+        aspect=aspect_ratio,
+    )
+    compose_warning = _join_warnings(compose_warning, pad_warning)
+    local_source_urls = [
+        url
+        for path in local_clip_paths
+        for url in [_generated_url_for_path(path)]
+        if url
+    ]
+    if not source_urls and local_source_urls:
+        source_urls = local_source_urls
+    if local_clip_paths:
+        local_input_path, concat_warning = _concat_workflow_clips(task_id, local_clip_paths)
+        compose_warning = _join_warnings(compose_warning, concat_warning)
+    if source_video_url and not local_input_path:
+        try:
+            local_input_path = _local_video_path_for_url(task_id, source_video_url)
+        except Exception as exc:
+            compose_warning = f"下载 Veo 源视频失败，已回退到原始视频地址：{exc}"
+
+    subtitle_source_path: Path | None = local_input_path
+    mixed_video_url = ""
+    tts_path, tts_payload = _build_chinese_tts_track(
+        task_id,
+        voiceover_text,
+        voice_fields.get("voice") or DEFAULT_CHINESE_TTS_VOICE,
+        voice_fields.get("speed") or "1.0",
+    )
+    if tts_path:
+        audio_input_path = subtitle_source_path
+        if audio_input_path and audio_input_path.exists():
+            mixed_video_url, mix_error = _mix_chinese_voice_track(
+                task_id=task_id,
+                input_path=audio_input_path,
+                tts_path=tts_path,
+                ducking=str(compose_fields.get("ducking") or ""),
+            )
+            if mixed_video_url:
+                subtitle_source_path = _resolve_local_generated_media(mixed_video_url) or subtitle_source_path
+            compose_warning = _join_warnings(compose_warning, mix_error, tts_payload.get("warning"))
+    else:
+        compose_warning = _join_warnings(compose_warning, tts_payload.get("reason"))
+
+    normalized_segments = seed_segments
+    aligned_segments, asr_payload = _align_subtitles_with_asr(
+        task_id=task_id,
+        media_path=subtitle_source_path,
+        seed_segments=seed_segments,
+        voiceover_text=voiceover_text,
+        duration_seconds=duration_seconds,
+    )
+    if aligned_segments:
+        normalized_segments = aligned_segments
+    srt_url = _write_workflow_srt(task_id, normalized_segments)
+
+    if subtitle_source_path and subtitle_source_path.exists() and normalized_segments:
+        burned_video_url, burn_error = _burn_workflow_subtitles(
+            task_id=task_id,
+            input_path=subtitle_source_path,
+            segments=normalized_segments,
+            style=subtitle_style,
+        )
+        if burned_video_url:
+            final_video_url = burned_video_url
+            burned_subtitles = True
+        compose_warning = _join_warnings(compose_warning, burn_error)
+
+    if not final_video_url:
+        final_video_url = (
+            mixed_video_url
+            or (_generated_url_for_path(local_input_path) if local_input_path else None)
+            or (source_urls[0] if source_urls else source_video_url)
+        )
+    if final_video_url:
+        final_video_url, trim_warning = _trim_generated_video_to_duration(final_video_url, duration_seconds)
+        compose_warning = _join_warnings(compose_warning, trim_warning)
+
+    safe_horse = str(horse or "").strip()
+    if burned_subtitles:
+        if str(asr_payload.get("status") or "") == "aligned":
+            composition_mode = "backend-asr-aligned-subtitle-burn"
+        else:
+            composition_mode = "backend-multiclip-subtitle-burn" if len(local_clip_paths) > 1 else "backend-subtitle-burn"
+    elif str(final_video_url or "").startswith("/generated/"):
+        composition_mode = "veo-multiclip-local-copy-with-srt" if len(local_clip_paths) > 1 else "veo-local-copy-with-srt"
+    else:
+        composition_mode = "veo-pass-through-with-srt"
+    next_storyboard_manifest = _update_storyboard_manifest_artifacts(
+        storyboard_manifest or {},
+        clips=[{"scene": index + 1, "url": url} for index, url in enumerate(source_urls)],
+    )
+    review_report = _build_workflow_review_report(
+        video_url=final_video_url,
+        source_clips=source_urls,
+        target_clip_count=target_clip_count,
+        subtitle_segments=normalized_segments,
+        composition_mode=composition_mode,
+        warning=compose_warning,
+        storyboard_manifest=next_storyboard_manifest,
+    )
+    return {
+        "engine": compose_fields.get("engine") or "FFmpeg / 网站后端",
+        "transition": compose_fields.get("transition") or "单段 Veo 成片",
+        "videoUrl": final_video_url or f"pending://final/{task_id}.mp4",
+        "sourceClips": source_clips,
+        "targetClipCount": target_clip_count,
+        "sourceVideoUrl": primary_source_video_url or (source_urls[0] if source_urls else ""),
+        "clipCount": len(source_urls),
+        "localClipCount": len(local_clip_paths),
+        "subtitleUrl": srt_url,
+        "subtitleSegments": normalized_segments,
+        "seedSubtitleSegments": seed_segments,
+        "asrPayload": asr_payload,
+        "compositionMode": composition_mode,
+        "thumbnailUrl": _preferred_thumbnail_url(horse_name=safe_horse),
+        "audioMix": compose_fields.get("ducking") or "中文旁白优先",
+        "voiceoverText": _normalize_chinese_voiceover_text(voiceover_text),
+        "ttsPayload": tts_payload,
+        "providerStatus": provider_status,
+        "warning": compose_warning,
+        "storyboardManifest": next_storyboard_manifest,
+        "reviewReport": review_report,
+        "note": "Veo 负责生成无字幕干净视频；后端生成 SRT，并优先用中文 TTS 音轨覆盖/混合成片，未配置 TTS 时退回 Veo 原生中文配音提示。",
+    }
+
+
+def _collect_provider_errors(task: WorkflowTask) -> list[str]:
+    errors: list[str] = []
+    for state in task.node_states or []:
+        if not isinstance(state, dict):
+            continue
+        node_id = str(state.get("node_id") or "node")
+        output = state.get("output") if isinstance(state.get("output"), dict) else {}
+        if output.get("providerError"):
+            errors.append(f"{node_id}: {output['providerError']}")
+        for key in ("images", "clips"):
+            items = output.get(key) if isinstance(output.get(key), list) else []
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                scene = item.get("scene") or "?"
+                detail = item.get("providerError") or item.get("failReason")
+                if detail:
+                    errors.append(f"{node_id}[{scene}]: {detail}")
+    return errors
+
+
+def _task_is_cancelled(task_id: str) -> bool:
+    session = SessionLocal()
+    try:
+        task = session.query(WorkflowTask).filter(WorkflowTask.id == task_id).first()
+        return bool(task and str(task.status or "").lower() in {"cancelled", "canceled"})
+    finally:
+        session.close()
+
+
+def _sync_detached_node_event(
+    task_id: str,
+    event: str,
+    event_payload: dict[str, Any],
+    *,
+    current_node: str = "veo",
+) -> None:
+    session = SessionLocal()
+    try:
+        task = session.query(WorkflowTask).filter(WorkflowTask.id == task_id).first()
+        if task:
+            task.current_node = current_node
+            sync_task_runtime(task, event=event, event_payload=event_payload)
+    finally:
+        session.close()
+
+
+def _veo_clip_checkpoint_key(
+    *,
+    shot: dict[str, Any],
+    aspect: str,
+    model: str,
+    quality: Any,
+    shot_seconds: int,
+) -> str:
+    raw = json.dumps(
+        {
+            "scene": _safe_int(shot.get("scene"), 1, minimum=1, maximum=99),
+            "prompt": _compact_for_provider(str(shot.get("prompt") or shot.get("visual") or ""), 1200),
+            "narration": _compact_for_provider(str(shot.get("narration") or shot.get("subtitle") or ""), 400),
+            "seconds": _safe_int(shot.get("seconds"), shot_seconds, minimum=2, maximum=12),
+            "aspect": str(aspect or "9:16"),
+            "model": str(model or ""),
+            "quality": str(quality or "auto"),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:28]
+
+
+def _read_veo_checkpoint(task: WorkflowTask | SimpleNamespace) -> dict[str, Any]:
+    payload = getattr(task, "input_payload", None)
+    if not isinstance(payload, dict):
+        return {}
+    checkpoint = payload.get("veoCheckpoint")
+    return checkpoint if isinstance(checkpoint, dict) else {}
+
+
+def _has_real_clip_url(clip: dict[str, Any]) -> bool:
+    url = str(clip.get("url") or "").strip()
+    return bool(url and not url.startswith("pending://"))
+
+
+def _is_usable_checkpoint_url(url: str) -> bool:
+    value = str(url or "").strip()
+    if not _is_real_media_url(value):
+        return False
+    if value.startswith("/generated/"):
+        return _resolve_local_generated_media(value) is not None
+    return True
+
+
+def _should_retry_veo_without_audio(clip: dict[str, Any], generate_audio: bool) -> bool:
+    if not generate_audio or _has_real_clip_url(clip):
+        return False
+    status = str(clip.get("status") or "").upper()
+    reason = " ".join(
+        str(value or "")
+        for value in (
+            clip.get("failReason"),
+            clip.get("providerError"),
+            (clip.get("pollResult") or {}).get("failReason") if isinstance(clip.get("pollResult"), dict) else "",
+        )
+    ).upper()
+    if status in {"CANCELLED", "CANCELED"} or "CANCEL" in reason:
+        return False
+    if "PROMINENT_PEOPLE" in reason:
+        return False
+    return status in {"FAILURE", "FAILED", "ERROR"} or "AUDIO" in reason or "生成过程中出现异常" in reason
+
+
+def _should_retry_veo_safe_visual(clip: dict[str, Any]) -> bool:
+    if _has_real_clip_url(clip):
+        return False
+    status = str(clip.get("status") or "").upper()
+    reason = " ".join(
+        str(value or "")
+        for value in (
+            clip.get("failReason"),
+            clip.get("providerError"),
+            (clip.get("pollResult") or {}).get("failReason") if isinstance(clip.get("pollResult"), dict) else "",
+        )
+    ).upper()
+    if status in {"CANCELLED", "CANCELED"} or "CANCEL" in reason:
+        return False
+    if "PROMINENT_PEOPLE" in reason:
+        return False
+    return status in {"FAILURE", "FAILED", "ERROR"} or "生成过程中出现异常" in reason
+
+
+def _safe_veo_visual_retry_prompt() -> str:
+    return _compact_for_provider(
+        "Vertical 9:16 Chinese ink wash historical battlefield scroll animation, pale paper texture, "
+        "gray green smoke, black battle haze, red banners, distant soldier silhouettes, mounted ancient "
+        "general silhouette, solemn epic atmosphere, slow scroll movement, cinematic lighting. "
+        "No visible text, no subtitles, no logo, no watermark, no title card, no black intro, no black outro.",
+        900,
+    )
+
+
+def _split_model_list(value: Any) -> list[str]:
+    models: list[str] = []
+    for item in str(value or "").replace("\n", ",").replace(";", ",").split(","):
+        text = item.strip()
+        if text and text not in models:
+            models.append(text)
+    return models
+
+
+def _veo_model_candidates(primary_model: str | None) -> list[str]:
+    candidates: list[str] = []
+    primary = str(primary_model or "").strip()
+    if primary:
+        candidates.append(primary)
+    raw_candidates = [
+        *_split_model_list(getattr(settings, "VIDEO_FACTORY_VEO_FALLBACK_MODELS", "")),
+        "veo_3_1-4K",
+        "veo_3_1",
+        "veo_3_1-portrait",
+        "veo_3_1-landscape",
+        "veo_3_1-fast-components-4K",
+        "veo_3_1-fast-components",
+        "veo_3_1-components-4K",
+        "veo_3_1-components",
+        "veo_3_1-fast-4K",
+        "veo_3_1-fast",
+        *_split_model_list(getattr(settings, "VIDEO_FACTORY_AGENT_VIDEO_FALLBACK_MODELS", "")),
+    ]
+    for item in raw_candidates:
+        if item and "veo" not in item.lower():
+            continue
+        if item and item not in candidates:
+            candidates.append(item)
+    return candidates
+
+
+def _veo_failure_text(clip: dict[str, Any]) -> str:
+    values = [
+        clip.get("providerError"),
+        clip.get("failReason"),
+    ]
+    poll_result = clip.get("pollResult")
+    if isinstance(poll_result, dict):
+        values.extend([poll_result.get("failReason"), poll_result.get("error"), poll_result.get("message")])
+    raw = clip.get("raw") or clip.get("responseSummary")
+    if isinstance(raw, dict):
+        values.extend([raw.get("error"), raw.get("message")])
+    return " ".join(str(value or "") for value in values if value)
+
+
+def _should_try_next_veo_model(clip: dict[str, Any]) -> bool:
+    text = _veo_failure_text(clip).lower()
+    if not text:
+        return False
+    return any(
+        token in text
+        for token in (
+            "model_not_found",
+            "no available channel",
+            "unsupported model",
+            "model not found",
+            "does not exist",
+            "invalid model",
+            "503",
+            "official load",
+            "overloaded",
+            "capacity",
+            "please try",
+            "重新生成",
+            "负载",
+            "启动失败",
+        )
+    )
+
+
+def _submit_and_poll_veo_clip(
+    *,
+    task_id: str,
+    scene: int,
+    prompt: str,
+    aspect: str,
+    generate_audio: bool,
+    scene_audio_prompt: str,
+    subtitle_prompt: str,
+    negative_prompt: str,
+    reference_image: str | None,
+    model: str | None,
+    quality: Any,
+    shot: dict[str, Any],
+    shot_seconds: int,
+) -> dict[str, Any]:
+    clip = submit_veo_clip(
+        task_id=task_id,
+        scene=scene,
+        prompt=prompt,
+        duration_seconds=_normalize_duration_for_veo(shot.get("seconds") or shot_seconds),
+        aspect_ratio=aspect,
+        generate_audio=generate_audio,
+        audio_prompt=scene_audio_prompt if generate_audio else "",
+        subtitle_prompt=subtitle_prompt,
+        negative_prompt=negative_prompt,
+        reference_image=reference_image,
+        model=model,
+        quality=quality,
+    )
+    operation_id = str(clip.get("operation") or "").strip()
+    if settings.VIDEO_FACTORY_VEO_WAIT_FOR_COMPLETION and operation_id:
+        poll_result = wait_for_veo_clip(
+            operation_id,
+            should_cancel=lambda: _task_is_cancelled(task_id),
+        )
+        clip["pollResult"] = poll_result
+        clip["status"] = poll_result.get("status") or clip.get("status")
+        if poll_result.get("url"):
+            clip["url"] = poll_result["url"]
+        if poll_result.get("failReason"):
+            clip["failReason"] = poll_result["failReason"]
+    return clip
+
+
+def _run_veo_clip_request(
+    *,
+    task_id: str,
+    shot: dict[str, Any],
+    clip: dict[str, Any],
+    prompt: str,
+    aspect: str,
+    generate_audio: bool,
+    scene_audio_prompt: str,
+    subtitle_prompt: str,
+    negative_prompt: str,
+    reference_image: str | None,
+    model: str | None,
+    quality: Any,
+    shot_seconds: int,
+) -> dict[str, Any]:
+    scene = _safe_int(shot.get("scene"), _safe_int(clip.get("scene"), 1), minimum=1, maximum=99)
+    _sync_detached_node_event(
+        task_id,
+        "veo-clip-started",
+        {"nodeId": "veo", "scene": scene, "parallel": True},
+    )
+    model_attempts: list[dict[str, Any]] = []
+    candidate_models = _veo_model_candidates(model)
+    for candidate_index, candidate_model in enumerate(candidate_models):
+        attempt_clip: dict[str, Any] = {}
+        try:
+            attempt_clip = _submit_and_poll_veo_clip(
+                task_id=task_id,
+                scene=scene,
+                prompt=prompt,
+                aspect=aspect,
+                generate_audio=generate_audio,
+                scene_audio_prompt=scene_audio_prompt,
+                subtitle_prompt=subtitle_prompt,
+                negative_prompt=negative_prompt,
+                reference_image=reference_image,
+                model=candidate_model,
+                quality=quality,
+                shot=shot,
+                shot_seconds=shot_seconds,
+            )
+            attempt_clip["modelTried"] = candidate_model
+        except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+            attempt_clip = {
+                "scene": scene,
+                "status": "provider_error",
+                "url": f"pending://veo/{task_id}/{scene}.mp4",
+                "providerError": _provider_message(exc),
+                "modelTried": candidate_model,
+            }
+        operation_id = str(attempt_clip.get("operation") or "").strip()
+        _sync_detached_node_event(
+            task_id,
+            "veo-clip-submitted",
+            {
+                "nodeId": "veo",
+                "scene": scene,
+                "operation": operation_id,
+                "status": attempt_clip.get("status"),
+                "model": candidate_model,
+                "parallel": True,
+            },
+        )
+        model_attempts.append(
+            {
+                "model": candidate_model,
+                "status": attempt_clip.get("status"),
+                "operation": attempt_clip.get("operation"),
+                "hasUrl": _has_real_clip_url(attempt_clip),
+                "reason": attempt_clip.get("providerError") or attempt_clip.get("failReason"),
+            }
+        )
+        next_clip = dict(clip)
+        next_clip.update(attempt_clip)
+        next_clip["modelAttempts"] = model_attempts
+        if _has_real_clip_url(next_clip) or not _should_try_next_veo_model(next_clip) or candidate_index >= len(candidate_models) - 1:
+            clip = next_clip
+            break
+        _sync_detached_node_event(
+            task_id,
+            "veo-clip-model-fallback",
+            {
+                "nodeId": "veo",
+                "scene": scene,
+                "fromModel": candidate_model,
+                "reason": next_clip.get("providerError") or next_clip.get("failReason"),
+                "parallel": True,
+            },
+        )
+
+    if _should_retry_veo_without_audio(clip, generate_audio):
+        _sync_detached_node_event(
+            task_id,
+            "veo-clip-retry-without-audio",
+            {
+                "nodeId": "veo",
+                "scene": scene,
+                "previousStatus": clip.get("status"),
+                "previousReason": clip.get("failReason") or clip.get("providerError"),
+                "parallel": True,
+            },
+        )
+        retry_clip = dict(clip)
+        retry_clip.update(
+            {
+                "status": "retrying_without_audio",
+                "operation": f"site_veo_retry_pending_{task_id}_{scene}",
+                "url": f"pending://veo/{task_id}/{scene}-retry.mp4",
+                "generateAudio": False,
+                "audioFallback": "retried_without_veo_audio",
+                "firstAttempt": {
+                    "status": clip.get("status"),
+                    "operation": clip.get("operation"),
+                    "failReason": clip.get("failReason"),
+                    "providerError": clip.get("providerError"),
+                    "pollResult": clip.get("pollResult"),
+                },
+            }
+        )
+        retry_clip.pop("failReason", None)
+        retry_clip.pop("providerError", None)
+        retry_clip.pop("pollResult", None)
+        try:
+            retry_clip.update(
+                _submit_and_poll_veo_clip(
+                    task_id=task_id,
+                    scene=scene,
+                    prompt=prompt,
+                    aspect=aspect,
+                    generate_audio=False,
+                    scene_audio_prompt="",
+                    subtitle_prompt=subtitle_prompt,
+                    negative_prompt=negative_prompt,
+                    reference_image=reference_image,
+                    model=str(clip.get("modelTried") or model or ""),
+                    quality=quality,
+                    shot=shot,
+                    shot_seconds=shot_seconds,
+                )
+            )
+            retry_operation_id = str(retry_clip.get("operation") or "").strip()
+            _sync_detached_node_event(
+                task_id,
+                "veo-clip-retry-submitted",
+                {
+                    "nodeId": "veo",
+                    "scene": scene,
+                    "operation": retry_operation_id,
+                    "status": retry_clip.get("status"),
+                    "parallel": True,
+                },
+            )
+            clip = retry_clip
+        except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+            retry_clip["providerError"] = _provider_message(exc)
+            clip = retry_clip
+
+    if _should_retry_veo_safe_visual(clip):
+        _sync_detached_node_event(
+            task_id,
+            "veo-clip-retry-safe-visual",
+            {
+                "nodeId": "veo",
+                "scene": scene,
+                "previousStatus": clip.get("status"),
+                "previousReason": clip.get("failReason") or clip.get("providerError"),
+                "parallel": True,
+            },
+        )
+        safe_clip = dict(clip)
+        safe_clip.update(
+            {
+                "status": "retrying_safe_visual",
+                "operation": f"site_veo_safe_retry_pending_{task_id}_{scene}",
+                "url": f"pending://veo/{task_id}/{scene}-safe-retry.mp4",
+                "generateAudio": False,
+                "audioFallback": "safe_visual_without_veo_audio",
+                "visualFallback": "safe_text_only_retry",
+                "previousAttempt": {
+                    "status": clip.get("status"),
+                    "operation": clip.get("operation"),
+                    "failReason": clip.get("failReason"),
+                    "providerError": clip.get("providerError"),
+                    "pollResult": clip.get("pollResult"),
+                },
+            }
+        )
+        safe_clip.pop("failReason", None)
+        safe_clip.pop("providerError", None)
+        safe_clip.pop("pollResult", None)
+        try:
+            safe_clip.update(
+                _submit_and_poll_veo_clip(
+                    task_id=task_id,
+                    scene=scene,
+                    prompt=_safe_veo_visual_retry_prompt(),
+                    aspect=aspect,
+                    generate_audio=False,
+                    scene_audio_prompt="",
+                    subtitle_prompt=subtitle_prompt,
+                    negative_prompt=negative_prompt,
+                    reference_image=None,
+                    model=str(clip.get("modelTried") or model or ""),
+                    quality=quality,
+                    shot=shot,
+                    shot_seconds=shot_seconds,
+                )
+            )
+            safe_operation_id = str(safe_clip.get("operation") or "").strip()
+            _sync_detached_node_event(
+                task_id,
+                "veo-clip-safe-retry-submitted",
+                {
+                    "nodeId": "veo",
+                    "scene": scene,
+                    "operation": safe_operation_id,
+                    "status": safe_clip.get("status"),
+                    "parallel": True,
+                },
+            )
+            clip = safe_clip
+        except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+            safe_clip["providerError"] = _provider_message(exc)
+            clip = safe_clip
+
+    has_real_url = _has_real_clip_url(clip)
+    has_failure = bool(clip.get("providerError") or clip.get("failReason"))
+    _sync_detached_node_event(
+        task_id,
+        "veo-clip-completed" if has_real_url else "veo-clip-failed" if has_failure else "veo-clip-submitted",
+        {
+            "nodeId": "veo",
+            "scene": scene,
+            "status": clip.get("status"),
+            "hasUrl": has_real_url,
+            "parallel": True,
+        },
+    )
+    return clip
+
+
+def _backfill_missing_veo_clips(
+    *,
+    task_id: str,
+    clips: list[dict[str, Any]],
+    clip_jobs: list[dict[str, Any]],
+    successful_clip_count: int,
+    max_clips: int,
+    aspect: str,
+    subtitle_prompt: str,
+    negative_prompt: str,
+    model: str | None,
+    quality: Any,
+    shot_seconds: int,
+) -> list[dict[str, Any]]:
+    if successful_clip_count >= max_clips or not clip_jobs:
+        return clips
+    next_clips = list(clips)
+    missing_indexes = [
+        index
+        for index, clip in enumerate(next_clips)
+        if index < len(clip_jobs) and not _has_real_clip_url(clip)
+    ]
+    for index in missing_indexes:
+        if sum(1 for item in next_clips if _has_real_clip_url(item)) >= max_clips:
+            break
+        job = clip_jobs[index]
+        shot = job["shot"]
+        scene = _safe_int(shot.get("scene"), index + 1, minimum=1, maximum=99)
+        _sync_detached_node_event(
+            task_id,
+            "veo-clip-backfill-started",
+            {
+                "nodeId": "veo",
+                "scene": scene,
+                "reason": "missing-long-video-segment",
+                "parallel": False,
+            },
+        )
+        previous_clip = next_clips[index]
+        backfill_clip = dict(previous_clip)
+        backfill_clip.update(
+            {
+                "scene": scene,
+                "status": "backfilling_safe_visual",
+                "operation": f"site_veo_backfill_pending_{task_id}_{scene}",
+                "url": f"pending://veo/{task_id}/{scene}-backfill.mp4",
+                "generateAudio": False,
+                "audioFallback": "backfill_without_veo_audio",
+                "visualFallback": "safe_backfill_text_only",
+                "previousAttempt": {
+                    "status": previous_clip.get("status"),
+                    "operation": previous_clip.get("operation"),
+                    "failReason": previous_clip.get("failReason"),
+                    "providerError": previous_clip.get("providerError"),
+                    "pollResult": previous_clip.get("pollResult"),
+                },
+            }
+        )
+        backfill_clip.pop("failReason", None)
+        backfill_clip.pop("providerError", None)
+        backfill_clip.pop("pollResult", None)
+        try:
+            backfill_clip.update(
+                _submit_and_poll_veo_clip(
+                    task_id=task_id,
+                    scene=scene,
+                    prompt=_safe_veo_visual_retry_prompt(),
+                    aspect=aspect,
+                    generate_audio=False,
+                    scene_audio_prompt="",
+                    subtitle_prompt=subtitle_prompt,
+                    negative_prompt=negative_prompt,
+                    reference_image=None,
+                    model=model,
+                    quality=quality,
+                    shot=shot,
+                    shot_seconds=shot_seconds,
+                )
+            )
+            operation_id = str(backfill_clip.get("operation") or "").strip()
+            _sync_detached_node_event(
+                task_id,
+                "veo-clip-backfill-submitted",
+                {
+                    "nodeId": "veo",
+                    "scene": scene,
+                    "operation": operation_id,
+                    "status": backfill_clip.get("status"),
+                    "parallel": False,
+                },
+            )
+        except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+            backfill_clip["providerError"] = _provider_message(exc)
+        next_clips[index] = backfill_clip
+        _sync_detached_node_event(
+            task_id,
+            "veo-clip-backfill-completed" if _has_real_clip_url(backfill_clip) else "veo-clip-backfill-failed",
+            {
+                "nodeId": "veo",
+                "scene": scene,
+                "status": backfill_clip.get("status"),
+                "hasUrl": _has_real_clip_url(backfill_clip),
+                "parallel": False,
+            },
+        )
+    return next_clips
+
+
+def _site_workflow_output(
+    task: WorkflowTask,
+    node_id: str,
+    *,
+    allow_provider_calls: bool = True,
+) -> dict[str, Any]:
+    payload = dict(task.input_payload or {})
+    horse = _normalize_horse_name(str(payload.get("horse_name") or payload.get("horse") or task.horse_name or "赤兔").strip() or "赤兔")
+    topic = str(payload.get("topic") or task.title or f"{horse}短视频").strip()
+    brief = str(payload.get("brief") or "").strip()
+    duration = _safe_int(payload.get("duration") or task.duration, task.duration or 30, minimum=8, maximum=180)
+    aspect = str(payload.get("aspect_ratio") or task.aspect_ratio or "9:16")
+    script_fields = payload.get("script") if isinstance(payload.get("script"), dict) else {}
+    storyboard_fields = payload.get("storyboard") if isinstance(payload.get("storyboard"), dict) else {}
+    keyframe_fields = payload.get("keyframe") if isinstance(payload.get("keyframe"), dict) else {}
+    veo_fields = payload.get("veo") if isinstance(payload.get("veo"), dict) else {}
+    voice_fields = payload.get("voice") if isinstance(payload.get("voice"), dict) else {}
+    subtitle_fields = payload.get("subtitle") if isinstance(payload.get("subtitle"), dict) else {}
+    compose_fields = payload.get("compose") if isinstance(payload.get("compose"), dict) else {}
+    output_fields = payload.get("output") if isinstance(payload.get("output"), dict) else {}
+    reference_fields = _reference_payload(payload)
+    xhs_fields = _xhs_payload(payload)
+    reference_enabled = _reference_flow_enabled(payload)
+    provider_status = video_factory_provider_status()
+    gpt_model = _canvas_model(
+        script_fields.get("model"),
+        provider_status["gpt"].get("model"),
+        legacy=set()
+        if str(script_fields.get("__modelLocked") or "") == "1"
+        else {"gpt-5.4-mini", "gpt-mini", "gpt-mini-high"},
+    )
+    image_model = _canvas_model(
+        keyframe_fields.get("provider") or keyframe_fields.get("model"),
+        provider_status["image"].get("model"),
+        legacy=set()
+        if str(keyframe_fields.get("__modelLocked") or "") == "1"
+        else {"图片生成 AI", "图像生成 AI", "image-ai"},
+    )
+    veo_model = _canvas_model(
+        veo_fields.get("model"),
+        provider_status["veo"].get("model"),
+        legacy=set()
+        if str(veo_fields.get("__modelLocked") or "") == "1"
+        else {"veo-3.0-generate-001", "veo-3.0", "veo-3"},
+    )
+    reference_model = _canvas_model(
+        reference_fields.get("model"),
+        provider_status["gpt"].get("model"),
+    )
+    shot_count = _safe_int(storyboard_fields.get("shotCount"), 5, minimum=1, maximum=8)
+    shot_seconds = _safe_int(storyboard_fields.get("shotSeconds"), max(4, duration // shot_count), minimum=2, maximum=12)
+    rag_references = _build_rag_references(horse, topic, brief)
+    primary_reference = _primary_rag_reference(horse, topic, rag_references)
+    horse_label = str(primary_reference.get("name") or horse)
+    labels = _as_text_list(primary_reference.get("labels")) or ["名马精神", "国风叙事", "短视频传播"]
+    label_text = "、".join(labels[:4])
+    figure = str(primary_reference.get("figure") or "相关历史人物")
+    source = str(primary_reference.get("source") or "知识库")
+    source_type = str(primary_reference.get("sourceType") or "通用知识库")
+    story = str(primary_reference.get("story") or topic)
+    template_id = str(payload.get("baseTemplate") or payload.get("template") or BASE_VIDEO_TEMPLATE_ID).strip() or BASE_VIDEO_TEMPLATE_ID
+    template_name = BASE_VIDEO_TEMPLATE_NAME if template_id == BASE_VIDEO_TEMPLATE_ID else template_id
+    template_prompt = BASE_VIDEO_TEMPLATE_PROMPT if template_id == BASE_VIDEO_TEMPLATE_ID else ""
+    visual_style = _template_default_text(storyboard_fields.get("visualStyle"), BASE_VIDEO_TEMPLATE_VISUAL_STYLE)
+    reference_output = _reference_node_output(task) if reference_enabled else {}
+    reference_style_text = _reference_style_text(reference_output) if reference_enabled else ""
+    script_custom_prompt = _canvas_text(script_fields.get("customPrompt") or script_fields.get("prompt"))
+    script_custom_prompt = _append_guidance(script_custom_prompt, reference_style_text, prefix="参考风格要求：")
+    storyboard_guidance = _template_default_text(
+        storyboard_fields.get("promptGuidance") or storyboard_fields.get("customPrompt"),
+        f"{BASE_VIDEO_TEMPLATE_PROMPT} 每个镜头都要服务同一条故事线，避免跳戏。",
+    )
+    storyboard_guidance = _append_guidance(storyboard_guidance, reference_style_text, prefix="参考风格要求：")
+    storyboard_guidance = _append_guidance(storyboard_guidance, BASE_VIDEO_TEMPLATE_VARIATION_RULE, prefix="基础样片使用规则：")
+    keyframe_custom_prompt = _template_default_text(
+        keyframe_fields.get("customPrompt") or keyframe_fields.get("promptGuidance"),
+        BASE_VIDEO_TEMPLATE_KEYFRAME,
+    )
+    keyframe_custom_prompt = _append_guidance(keyframe_custom_prompt, reference_style_text, prefix="参考风格要求：")
+    keyframe_custom_prompt = _append_guidance(keyframe_custom_prompt, BASE_VIDEO_TEMPLATE_VARIATION_RULE, prefix="基础样片使用规则：")
+    keyframe_prompt_style = _template_default_text(keyframe_fields.get("promptStyle"), BASE_VIDEO_TEMPLATE_KEYFRAME)
+    keyframe_prompt_style = _append_guidance(keyframe_prompt_style, reference_style_text, prefix="参考风格要求：")
+    keyframe_prompt_style = _append_guidance(keyframe_prompt_style, BASE_VIDEO_TEMPLATE_VARIATION_RULE, prefix="基础样片使用规则：")
+    veo_motion_prompt = _template_default_text(
+        veo_fields.get("motionPrompt") or veo_fields.get("customPrompt"),
+        BASE_VIDEO_TEMPLATE_MOTION,
+    )
+    veo_motion_prompt = _append_guidance(veo_motion_prompt, reference_style_text, prefix="参考风格要求：")
+    veo_motion_prompt = _append_guidance(veo_motion_prompt, BASE_VIDEO_TEMPLATE_VARIATION_RULE, prefix="基础样片使用规则：")
+    hook = str(primary_reference.get("hook") or f"{horse_label}的故事要在第一秒给观众一个清晰记忆点。")
+    conflict = str(primary_reference.get("conflict") or f"围绕{story}制造人物、战场与命运之间的张力。")
+    emotional_arc = str(primary_reference.get("emotionalArc") or "开场钩子 -> 冲突推进 -> 情绪抬升 -> 海报式定格")
+    visual_keywords = _as_text_list(primary_reference.get("visualKeywords")) or [horse_label, figure, *labels[:3], visual_style]
+    shot_beats = _as_text_list(primary_reference.get("shotBeats"))
+    video_angles = _as_text_list(primary_reference.get("videoAngles"))
+    prompt_guidance = str(
+        primary_reference.get("promptGuidance")
+        or f"提示词持续强调{horse_label}、{figure}、{label_text}和{visual_style}。"
+    )
+    avoid = str(primary_reference.get("avoid") or "避免偏离命中的名马故事和人物关系。")
+    prompt_seed = {
+        "query": " ".join(part for part in [horse, topic, brief] if part),
+        "primaryHorse": horse_label,
+        "source": source,
+        "sourceType": source_type,
+        "figure": figure,
+        "storyAnchor": story,
+        "hook": hook,
+        "conflict": conflict,
+        "emotionalArc": emotional_arc,
+        "labels": labels[:5],
+        "visualKeywords": visual_keywords[:10],
+        "shotBeats": shot_beats[:8],
+        "videoAngles": video_angles[:5],
+        "promptGuidance": prompt_guidance,
+        "avoid": avoid,
+        "continuityRules": [
+            f"所有镜头围绕“{story}”展开，避免偏离知识库命中的名马故事。",
+            f"人物关系优先保持为：{figure} 与 {horse_label}。",
+            f"画面气质持续强化：{label_text}。",
+            f"视频工厂提示词约束：{prompt_guidance}",
+            f"负向约束：{avoid}",
+        ],
+        "canvasNodeModels": {
+            "gpt": gpt_model,
+            "image": image_model,
+            "veo": veo_model,
+        },
+        "canvasPromptControls": {
+            "script": script_custom_prompt,
+            "storyboard": storyboard_guidance,
+            "keyframe": keyframe_custom_prompt,
+            "veo": veo_motion_prompt,
+        },
+        "baseVideoTemplate": {
+            "id": template_id,
+            "name": template_name,
+            "source": BASE_VIDEO_TEMPLATE_SOURCE,
+            "visualStyle": visual_style,
+            "prompt": template_prompt,
+        },
+        "referenceFlow": {
+            "enabled": reference_enabled,
+            "model": reference_model,
+            "styleSummary": reference_style_text,
+            "analysis": reference_output if isinstance(reference_output, dict) else {},
+        },
+        "pipelineModel": "pixelle-inspired-storyboard-frames",
+    }
+
+    voiceover = (
+        f"{hook}知识库里与这个主题最接近的线索指向{source}：{story}。"
+        f"这条视频的冲突要抓住：{conflict}。核心不是堆砌典故，而是让{label_text}在开场几秒内被观众看见。"
+    )
+    base_scene_focuses = [
+        f"以“{story}”做开场钩子",
+        f"交代{figure}与{horse_label}的关系",
+        f"把{label_text}转成可见动作",
+        "用战场或史料意象推进情绪",
+        "收束到百骑谱式国风海报感",
+        "补一镜来源感强的细节特写",
+        "用低角度强化名马精神",
+        "以余韵镜头留下传播记忆点",
+    ]
+    scene_focuses = (shot_beats + base_scene_focuses)[:8]
+    shots = [
+        {
+            "scene": index + 1,
+            "seconds": shot_seconds,
+            "camera": ["低角度登场", "战场横移", "人物并肩", "高速冲锋", "片尾定格", "月下回望", "甲光掠影", "烟尘收束"][index],
+            "prompt": (
+                f"{horse_label}，{visual_style}，"
+                f"第 {index + 1} 镜，{storyboard_fields.get('camera') or '推镜 / 低角度 / 战场横移'}，"
+                f"{scene_focuses[index]}，知识库来源：{source}，来源类型：{source_type}，"
+                f"气质标签：{label_text}，视觉关键词：{'、'.join(visual_keywords[:6])}，提示词约束：{prompt_guidance}"
+            ),
+            "imagePrompt": (
+                f"{horse_label}, {visual_style}, scene {index + 1}, {scene_focuses[index]}, "
+                f"clear cinematic keyframe, same horse and rider, stable composition, no text"
+            ),
+            "videoPrompt": (
+                f"{horse_label}, {visual_style}, scene {index + 1}, {scene_focuses[index]}, "
+                f"slow readable camera movement, visible action beat, same horse and rider continuity, natural ending pose"
+            ),
+            "ragAnchor": scene_focuses[index],
+        }
+        for index in range(shot_count)
+    ]
+    soundscape = (
+        voice_fields.get("soundscape")
+        or f"低沉史诗氛围，清晰马蹄声、风声、战场远景声，旁白情绪为{voice_fields.get('emotion') or '庄重 / 热血'}。"
+    )
+    narration_mode = voice_fields.get("mode") or "Veo 原生音频优先"
+    subtitle_mode = subtitle_fields.get("mode") or "仅站内 SRT"
+    fallback_narration_parts = _split_subtitle_text(voiceover, line_limit=24, max_lines=1)
+    if len(fallback_narration_parts) < len(shots):
+        fallback_narration_parts = [
+            f"{hook}",
+            f"{source}：{story}",
+            f"{conflict}",
+            f"让{label_text}被观众看见。",
+            f"{horse_label}的故事，收束成命运的回响。",
+        ][: len(shots)]
+    for index, shot in enumerate(shots):
+        shot["narration"] = str(shot.get("narration") or fallback_narration_parts[index % len(fallback_narration_parts)]).strip()
+        shot["subtitle"] = str(shot.get("subtitle") or shot["narration"]).strip()
+    caption_lines = [str(shot.get("subtitle") or shot.get("narration") or "").strip() for shot in shots]
+    veo_audio_prompt = (
+        f"生成与画面同步的电影感音频。音景：{soundscape} "
+        f"旁白必须是普通话简体中文口语，像真人短视频解说，不能出现英语、拼音、外语口音或无声片段。每个 Veo 片段只朗读该片段自己的旁白，不要朗读整条视频文案。整片文案参考：{voiceover} "
+        "马蹄、风声、战场氛围要服务叙事，不要盖过旁白。"
+    )
+    veo_caption_prompt = (
+        "Do not render any visible text, captions, subtitles, logos, labels, UI, title cards, "
+        "Chinese characters, English letters, numbers, or watermark-like marks inside the video. "
+        "The website backend will add real subtitles later with SRT/FFmpeg."
+    )
+    subtitle_segments = [
+        {
+            "start": index * shot_seconds,
+            "end": (index + 1) * shot_seconds,
+            "text": caption_lines[index],
+        }
+        for index in range(len(caption_lines))
+    ]
+    prompt_seed["audioDirective"] = veo_audio_prompt
+    prompt_seed["subtitleDirective"] = veo_caption_prompt
+    script_output = _completed_node_output(task, "script") or {}
+    provider_plan = script_output.get("providerPlan") if isinstance(script_output.get("providerPlan"), dict) else None
+    if provider_plan:
+        provider_voiceover = str(provider_plan.get("voiceover") or "").strip()
+        if provider_voiceover:
+            voiceover = provider_voiceover
+        provider_shots = provider_plan.get("shots") if isinstance(provider_plan.get("shots"), list) else []
+        if provider_shots:
+            shots = [
+                {
+                    "scene": _safe_int(shot.get("scene"), index + 1, minimum=1, maximum=99),
+                    "seconds": _safe_int(shot.get("seconds"), shot_seconds, minimum=2, maximum=12),
+                    "camera": str(shot.get("camera") or "电影感镜头").strip(),
+                    "prompt": str(shot.get("prompt") or shot.get("visual") or "").strip(),
+                    "visual": str(shot.get("visual") or shot.get("prompt") or "").strip(),
+                    "imagePrompt": str(shot.get("imagePrompt") or shot.get("image_prompt") or shot.get("visual") or shot.get("prompt") or "").strip(),
+                    "videoPrompt": str(shot.get("videoPrompt") or shot.get("video_prompt") or shot.get("prompt") or shot.get("visual") or "").strip(),
+                    "narration": str(shot.get("narration") or "").strip(),
+                    "subtitle": str(shot.get("subtitle") or "").strip(),
+                    "audio": str(shot.get("audio") or "").strip(),
+                    "ragAnchor": str(shot.get("subtitle") or shot.get("visual") or scene_focuses[index % len(scene_focuses)]).strip(),
+                }
+                for index, shot in enumerate(provider_shots)
+                if isinstance(shot, dict)
+            ] or shots
+            shot_count = len(shots)
+            provider_narration_parts = _split_subtitle_text(voiceover, line_limit=24, max_lines=1)
+            if len(provider_narration_parts) < len(shots):
+                provider_narration_parts = fallback_narration_parts
+            for index, shot in enumerate(shots):
+                shot["narration"] = str(shot.get("narration") or provider_narration_parts[index % len(provider_narration_parts)]).strip()
+                shot["subtitle"] = str(shot.get("subtitle") or shot["narration"]).strip()
+            caption_lines = [str(shot.get("subtitle") or shot.get("narration") or "").strip() for shot in shots]
+            subtitle_segments = [
+                {
+                    "start": index * _safe_int(shot.get("seconds"), shot_seconds, minimum=2, maximum=12),
+                    "end": (index + 1) * _safe_int(shot.get("seconds"), shot_seconds, minimum=2, maximum=12),
+                    "text": caption_lines[index],
+                }
+                for index, shot in enumerate(shots)
+            ]
+        veo_guidance = str(provider_plan.get("veoPromptGuidance") or "").strip()
+        if veo_guidance:
+            prompt_seed["providerVeoPromptGuidance"] = veo_guidance
+
+    narration_parts = _split_subtitle_text(voiceover, line_limit=24, max_lines=1)
+    if len(narration_parts) < len(shots):
+        narration_parts = fallback_narration_parts
+    for index, shot in enumerate(shots):
+        shot["narration"] = str(shot.get("narration") or narration_parts[index % len(narration_parts)]).strip()
+        shot["subtitle"] = str(shot.get("subtitle") or shot["narration"]).strip()
+    caption_lines = [str(shot.get("subtitle") or shot.get("narration") or "").strip() for shot in shots]
+    subtitle_segments = [
+        {
+            "start": index * _safe_int(shot.get("seconds"), shot_seconds, minimum=2, maximum=12),
+            "end": (index + 1) * _safe_int(shot.get("seconds"), shot_seconds, minimum=2, maximum=12),
+            "text": caption_lines[index],
+        }
+        for index, shot in enumerate(shots)
+    ]
+    shots, storyboard_manifest, subtitle_segments = _build_storyboard_manifest(
+        shots,
+        title=topic,
+        aspect=aspect,
+        visual_style=visual_style,
+        default_seconds=shot_seconds,
+    )
+    caption_lines = [str(shot.get("subtitle") or shot.get("narration") or "").strip() for shot in shots]
+    veo_audio_prompt = (
+        f"生成与画面同步的电影感音频。音景：{soundscape} "
+        f"旁白必须是普通话简体中文口语，像真人短视频解说，不能出现英语、拼音、外语口音或无声片段。每个 Veo 片段只朗读该片段自己的旁白，不要朗读整条视频文案。整片文案参考：{voiceover} "
+        "马蹄、风声、战场氛围要服务叙事，不要盖过旁白。"
+    )
+    veo_caption_prompt = (
+        "Do not render any visible text, captions, subtitles, logos, labels, UI, title cards, "
+        "Chinese characters, English letters, numbers, or watermark-like marks inside the video. "
+        "The website backend will add real subtitles later with SRT/FFmpeg."
+    )
+    prompt_seed["audioDirective"] = veo_audio_prompt
+    prompt_seed["subtitleDirective"] = veo_caption_prompt
+    if reference_style_text:
+        prompt_seed["referenceStyle"] = reference_style_text
+
+    reference_media_url = _safe_text(
+        reference_fields.get("mediaUrl")
+        or reference_fields.get("url")
+        or reference_fields.get("referenceUrl")
+    )
+    reference_local_path = _safe_text(
+        reference_fields.get("localPath")
+        or reference_fields.get("path")
+        or reference_fields.get("filePath")
+    )
+    reference_media_type = _safe_text(reference_fields.get("mediaType"), "unknown")
+
+    if node_id == "reference_input":
+        has_media = bool(reference_media_url or reference_local_path)
+        return {
+            "enabled": reference_enabled,
+            "status": "ready" if (reference_enabled and has_media) else "skipped",
+            "hasMedia": has_media,
+            "mediaUrl": reference_media_url,
+            "localPath": reference_local_path,
+            "mediaType": reference_media_type,
+            "model": reference_model,
+            "note": "上传参考图片/视频后，会先进行风格分析，再进入主工作流。"
+            if reference_enabled
+            else "未启用参考素材工作流",
+        }
+
+    if node_id == "reference_analyze":
+        if not reference_enabled:
+            return {
+                "enabled": False,
+                "status": "skipped",
+                "message": "参考素材工作流未开启",
+            }
+        if not reference_media_url and not reference_local_path:
+            return {
+                "enabled": True,
+                "status": "skipped",
+                "message": "未提供参考素材，跳过风格分析",
+                "model": reference_model,
+            }
+        analysis = analyze_reference_media(
+            task_id=task.id,
+            media_url=reference_media_url,
+            local_path=reference_local_path,
+            media_type=reference_media_type,
+            model=reference_model,
+        )
+        if not isinstance(analysis, dict):
+            analysis = {
+                "analysisMode": "fallback",
+                "summary": "参考素材分析返回格式异常，已回退默认风格。",
+            }
+        analysis["enabled"] = True
+        analysis["status"] = "completed"
+        analysis["mediaUrl"] = reference_media_url
+        analysis["localPath"] = reference_local_path
+        analysis["mediaType"] = reference_media_type
+        analysis["model"] = analysis.get("model") or reference_model
+        return analysis
+
+    if node_id == "input":
+        return {
+            "topic": topic,
+            "horse": horse,
+        "duration": duration,
+        "aspect": aspect,
+        "brief": brief,
+        "baseTemplate": {
+            "id": template_id,
+            "name": template_name,
+            "source": BASE_VIDEO_TEMPLATE_SOURCE,
+        },
+        }
+    if node_id == "script":
+        provider_attempt: dict[str, Any] | None = None
+        if allow_provider_calls and provider_status["gpt"]["configured"]:
+            try:
+                provider_attempt = generate_script_plan(
+                    {
+                        "topic": topic,
+                        "horse": horse,
+                        "brief": brief,
+                        "duration": duration,
+                        "aspect": aspect,
+                        "shot_count": shot_count,
+                        "shot_seconds": shot_seconds,
+                        "model": gpt_model,
+                        "temperature": script_fields.get("temperature"),
+                        "script_style": script_fields.get("style") or "情绪叙事",
+                        "custom_prompt": script_custom_prompt,
+                        "storyboard_guidance": storyboard_guidance,
+                        "camera": storyboard_fields.get("camera"),
+                        "prompt_language": storyboard_fields.get("promptLanguage"),
+                        "visual_style": visual_style,
+                        "rag_references": rag_references,
+                        "prompt_seed": prompt_seed,
+                    }
+                )
+                provider_voiceover = str(provider_attempt.get("voiceover") or "").strip()
+                if provider_voiceover:
+                    voiceover = provider_voiceover
+            except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+                provider_attempt = {
+                    "generationMode": "fallback",
+                    "provider": "gpt",
+                    "error": _provider_message(exc),
+                }
+        return {
+            "title": topic,
+            "voiceover": voiceover,
+            "scriptStyle": script_fields.get("style") or "情绪叙事",
+            "scenesExpected": shot_count,
+            "model": (provider_attempt or {}).get("model") or gpt_model,
+            "execution": "site-workflow-provider-ready" if provider_attempt and not provider_attempt.get("error") else "site-workflow-video-rag-placeholder",
+            "providerStatus": provider_status["gpt"],
+            "canvasParameters": {
+                "model": gpt_model,
+                "temperature": script_fields.get("temperature"),
+                "customPrompt": script_custom_prompt,
+            },
+            "providerPlan": provider_attempt if provider_attempt and not provider_attempt.get("error") else None,
+            "providerError": (provider_attempt or {}).get("error"),
+            "ragMatched": bool(rag_references),
+            "ragReferences": rag_references,
+            "promptSeed": prompt_seed,
+            "storyboardManifest": storyboard_manifest,
+            "nextPrompt": (
+                f"请基于知识库故事“{story}”生成短视频分镜，开场钩子为“{hook}”，"
+                f"情绪弧线按“{emotional_arc}”推进，持续强化{label_text}。"
+                f"画面优先使用这些视觉关键词：{'、'.join(visual_keywords[:8])}。"
+                f"请保持{figure}与{horse_label}的关系准确；{avoid}"
+            ),
+        }
+    if node_id == "storyboard":
+        return {
+            "shots": shots,
+            "promptLanguage": storyboard_fields.get("promptLanguage") or "中文提示词",
+            "canvasParameters": {
+                "shotCount": shot_count,
+                "shotSeconds": shot_seconds,
+                "camera": storyboard_fields.get("camera"),
+                "visualStyle": visual_style,
+                "promptGuidance": storyboard_guidance,
+                "baseTemplate": template_name,
+            },
+            "generationMode": "provider" if provider_plan else "rag-placeholder",
+            "providerPlanId": provider_plan.get("provider") if provider_plan else None,
+            "ragReferences": rag_references,
+            "promptSeed": prompt_seed,
+            "storyboardManifest": storyboard_manifest,
+        }
+    if node_id == "keyframe":
+        raw_reference_mode = str(keyframe_fields.get("referenceMode") or "").strip()
+        lower_reference_mode = raw_reference_mode.lower()
+        if "每个分镜" in raw_reference_mode or "per-shot" in lower_reference_mode:
+            normalized_reference_mode = "每个分镜 1 张关键帧"
+        elif "主视觉" in raw_reference_mode or "master" in lower_reference_mode:
+            normalized_reference_mode = "主视觉统一参考图"
+        elif "锚点" in raw_reference_mode or "anchor" in lower_reference_mode:
+            normalized_reference_mode = "1 张风格锚点图复用"
+        else:
+            normalized_reference_mode = "首尾关键帧"
+        is_head_tail_mode = (
+            normalized_reference_mode == "首尾关键帧"
+            or "首尾" in raw_reference_mode
+            or "head" in lower_reference_mode
+            or ("start" in lower_reference_mode and "end" in lower_reference_mode)
+        )
+        requested_frame_count = _safe_int(keyframe_fields.get("frameCount"), 1 if shot_count > 1 else shot_count, minimum=1, maximum=shot_count)
+        if normalized_reference_mode == "每个分镜 1 张关键帧":
+            requested_frame_count = shot_count
+        elif normalized_reference_mode == "主视觉统一参考图":
+            requested_frame_count = 1
+        frame_count = requested_frame_count
+        selected_shots = shots[:frame_count]
+        images: list[dict[str, Any]] = []
+        image_size = _image_api_size(keyframe_fields, aspect)
+        consistency = keyframe_fields.get("consistency") or "统一马匹、人物、服饰和色调"
+        head_tail_quality_rules = (
+            "这是用于 Veo 视频生成的首尾参考帧，不是普通插画。"
+            "必须画成可直接作为视频第一帧或最后一帧的 9:16 电影分镜：主体清晰、全身或半身关系明确、构图稳定、运动方向明确、无文字、无水印、无分屏、无拼贴、无边框。"
+            "画面必须像真实故事讲解中的一帧：能看出人物正在经历某个历史事件，而不是空泛海报或静态概念图。"
+            "同一条视频内必须保持同一匹马、同一主人、同一甲胄服饰、同一时代场景、同一光线色调。"
+            "首帧要像镜头刚开始的画面，留出运动空间；尾帧要像该镜头真实结束瞬间，动作有收束，并能自然衔接下一镜。"
+        )
+
+        def build_frame_prompt(*, shot: dict[str, Any], frame_role: str, continuity_hint: str = "") -> str:
+            prompt = _keyframe_prompt_for_shot(
+                shot=shot,
+                keyframe_prompt_style=keyframe_prompt_style,
+                consistency=consistency,
+                story=story,
+                keyframe_custom_prompt=keyframe_custom_prompt,
+            )
+            prompt = f"{prompt}，首尾帧质量要求：{head_tail_quality_rules}"
+            if frame_role == "scene-start-frame":
+                prompt = f"{prompt}，镜头定位：该分镜首帧，必须是视频真实开头画面，主体在画面内稳定出现，马匹和主人已经清楚可辨，镜头有继续推进的空间。"
+            elif frame_role == "scene-end-frame":
+                prompt = f"{prompt}，镜头定位：该分镜尾帧，必须是视频真实结束画面，动作完成但画面不黑场，马匹、主人、战场方向和光线仍然完整保留，方便下一镜首帧直接复用或接近复用。"
+            if continuity_hint:
+                prompt = f"{prompt}，连续性要求：{continuity_hint}"
+            return _compact_for_provider(prompt, 1800)
+
+        if is_head_tail_mode:
+            frame_specs: list[dict[str, Any]] = []
+            previous_scene = None
+            for index, shot in enumerate(shots):
+                scene = _safe_int(shot.get("scene"), index + 1, minimum=1, maximum=99)
+                next_shot = shots[index + 1] if index + 1 < len(shots) else None
+                next_scene = _safe_int(next_shot.get("scene"), index + 2, minimum=1, maximum=99) if isinstance(next_shot, dict) else None
+                next_camera = str(next_shot.get("camera") or next_shot.get("visual") or next_shot.get("prompt") or "").strip() if isinstance(next_shot, dict) else ""
+                end_continuity_hint = (
+                    f"尾帧必须能作为场景 {next_scene} 的首帧参考：保留同一匹马、同一主人、同一运动方向、同一光线色调；下一镜头方向参考：{next_camera}。"
+                    if next_scene
+                    else "这是最后一个分镜尾帧，要形成完整收束：主体清楚、动作结束、画面不黑场，适合作为成片末尾定格。"
+                )
+                start_id = f"{scene}-start"
+                end_id = f"{scene}-end"
+                if index == 0:
+                    frame_specs.append(
+                        {
+                            "id": start_id,
+                            "scene": scene,
+                            "shot": shot,
+                            "frameRole": "scene-start-frame",
+                            "generate": True,
+                            "sequenceId": index * 2 + 1,
+                            "continuityHint": "",
+                        }
+                    )
+                else:
+                    frame_specs.append(
+                        {
+                            "id": start_id,
+                            "scene": scene,
+                            "shot": shot,
+                            "frameRole": "scene-start-frame",
+                            "generate": False,
+                            "reuseFromSpecId": f"{previous_scene}-end",
+                            "continuityHint": f"与场景 {previous_scene} 尾帧在人物、马匹、机位和光线上保持连续，再推进本镜头。",
+                        }
+                    )
+                frame_specs.append(
+                    {
+                        "id": end_id,
+                        "scene": scene,
+                        "shot": shot,
+                        "frameRole": "scene-end-frame",
+                        "generate": True,
+                        "sequenceId": index * 2 + 2,
+                        "continuityHint": end_continuity_hint,
+                    }
+                )
+                previous_scene = scene
+
+            def build_head_tail_image_payload(spec: dict[str, Any]) -> dict[str, Any]:
+                shot = spec["shot"]
+                scene = _safe_int(spec.get("scene"), _safe_int(shot.get("scene"), 1), minimum=1, maximum=99)
+                frame_role = str(spec.get("frameRole") or "scene-reference-frame")
+                sequence_id = _safe_int(spec.get("sequenceId"), scene, minimum=1, maximum=999)
+                prompt = build_frame_prompt(
+                    shot=shot,
+                    frame_role=frame_role,
+                    continuity_hint=str(spec.get("continuityHint") or ""),
+                )
+                cache_key = _keyframe_cache_key(
+                    prompt=prompt,
+                    image_size=image_size or "",
+                    model=image_model or "",
+                    style_anchor=f"{template_id}:{horse_label}:{visual_style}:{keyframe_prompt_style}:{keyframe_custom_prompt}:{consistency}:{frame_role}",
+                )
+                image_payload = {
+                    "scene": scene,
+                    "prompt": prompt,
+                    "imageUrl": f"pending://keyframes/{task.id}/{scene}-{frame_role}.png",
+                    "role": "veo-reference-frame",
+                    "frameRole": frame_role,
+                    "status": "pending",
+                    "cacheKey": cache_key,
+                }
+                cached_url = _read_cached_keyframe(cache_key)
+                if cached_url:
+                    image_payload.update(
+                        {
+                            "imageUrl": cached_url,
+                            "provider": "image-cache",
+                            "model": image_model,
+                            "status": "completed",
+                            "cacheMode": "hit",
+                        }
+                    )
+                    return image_payload
+                if allow_provider_calls and provider_status["image"]["configured"]:
+                    try:
+                        generated = generate_keyframe_image(
+                            task_id=task.id,
+                            scene=sequence_id,
+                            prompt=prompt,
+                            size=image_size,
+                            model=image_model,
+                        )
+                        cached_generated_url = _cache_keyframe_from_url(cache_key, str(generated.get("imageUrl") or ""))
+                        if cached_generated_url:
+                            generated["cacheUrl"] = cached_generated_url
+                            generated["cacheMode"] = "stored"
+                        image_payload.update(generated)
+                        image_payload["scene"] = scene
+                        image_payload["frameRole"] = frame_role
+                    except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+                        image_payload["providerError"] = _provider_message(exc)
+                return image_payload
+
+            generated_specs = [spec for spec in frame_specs if spec.get("generate")]
+            generated_results: dict[str, dict[str, Any]] = {}
+            if allow_provider_calls and provider_status["image"]["configured"] and len(generated_specs) > 1:
+                with ThreadPoolExecutor(max_workers=min(len(generated_specs), 3), thread_name_prefix=f"keyframe-{task.id[:8]}") as executor:
+                    future_to_spec = {
+                        executor.submit(build_head_tail_image_payload, spec): spec
+                        for spec in generated_specs
+                    }
+                    for future in as_completed(future_to_spec):
+                        spec = future_to_spec[future]
+                        spec_id = str(spec["id"])
+                        try:
+                            generated_results[spec_id] = future.result()
+                        except Exception as exc:
+                            generated_results[spec_id] = {
+                                "scene": spec["scene"],
+                                "prompt": build_frame_prompt(
+                                    shot=spec["shot"],
+                                    frame_role=str(spec.get("frameRole") or "scene-reference-frame"),
+                                    continuity_hint=str(spec.get("continuityHint") or ""),
+                                ),
+                                "imageUrl": f"pending://keyframes/{task.id}/{spec['scene']}-{spec.get('frameRole')}.png",
+                                "role": "veo-reference-frame",
+                                "frameRole": spec.get("frameRole") or "scene-reference-frame",
+                                "status": "pending",
+                                "providerError": _provider_message(exc),
+                            }
+            else:
+                for spec in generated_specs:
+                    generated_results[str(spec["id"])] = build_head_tail_image_payload(spec)
+
+            images = []
+            images_by_spec_id: dict[str, dict[str, Any]] = {}
+            for spec in frame_specs:
+                spec_id = str(spec["id"])
+                if spec.get("generate"):
+                    payload = generated_results.get(spec_id)
+                    if not isinstance(payload, dict):
+                        payload = {
+                            "scene": spec["scene"],
+                            "prompt": build_frame_prompt(
+                                shot=spec["shot"],
+                                frame_role=str(spec.get("frameRole") or "scene-reference-frame"),
+                                continuity_hint=str(spec.get("continuityHint") or ""),
+                            ),
+                            "imageUrl": f"pending://keyframes/{task.id}/{spec['scene']}-{spec.get('frameRole')}.png",
+                            "role": "veo-reference-frame",
+                            "frameRole": spec.get("frameRole") or "scene-reference-frame",
+                            "status": "pending",
+                        }
+                else:
+                    anchor = images_by_spec_id.get(str(spec.get("reuseFromSpecId") or ""))
+                    if isinstance(anchor, dict):
+                        payload = _clone_anchor_keyframe(
+                            anchor,
+                            _safe_int(spec.get("scene"), 1),
+                            build_frame_prompt(
+                                shot=spec["shot"],
+                                frame_role=str(spec.get("frameRole") or "scene-reference-frame"),
+                                continuity_hint=str(spec.get("continuityHint") or ""),
+                            ),
+                            frame_role=str(spec.get("frameRole") or "scene-reference-frame"),
+                        )
+                    else:
+                        payload = {
+                            "scene": spec["scene"],
+                            "prompt": build_frame_prompt(
+                                shot=spec["shot"],
+                                frame_role=str(spec.get("frameRole") or "scene-reference-frame"),
+                                continuity_hint=str(spec.get("continuityHint") or ""),
+                            ),
+                            "imageUrl": f"pending://keyframes/{task.id}/{spec['scene']}-{spec.get('frameRole')}.png",
+                            "role": "veo-reference-frame",
+                            "frameRole": spec.get("frameRole") or "scene-reference-frame",
+                            "status": "pending",
+                            "providerError": "上一分镜尾帧不可用，当前首帧无法复用。",
+                        }
+                if isinstance(payload, dict):
+                    payload["role"] = payload.get("role") or "veo-reference-frame"
+                    payload["frameRole"] = payload.get("frameRole") or spec.get("frameRole")
+                    images.append(payload)
+                    images_by_spec_id[spec_id] = payload
+
+            requested_frame_count = len(frame_specs)
+            return {
+                "provider": image_model or keyframe_fields.get("provider") or "图片生成 AI",
+                "referenceMode": "首尾关键帧",
+                "imageSize": keyframe_fields.get("imageSize") or aspect,
+                "apiSize": image_size,
+                "promptStyle": keyframe_prompt_style,
+                "images": images,
+                "requestedFrameCount": requested_frame_count,
+                "generatedFrameCount": len(images),
+                "cacheHits": sum(1 for image in images if image.get("cacheMode") == "hit"),
+                "reusedFrameCount": sum(1 for image in images if image.get("reusedFromScene")),
+                "providerStatus": provider_status["image"],
+                "canvasParameters": {
+                    "model": image_model,
+                    "apiSize": image_size,
+                    "customPrompt": keyframe_custom_prompt,
+                    "baseTemplate": template_name,
+                    "frameCount": requested_frame_count,
+                    "cache": "enabled",
+                    "mode": "scene-start-end",
+                },
+                "note": "关键帧默认改为首尾帧：单分镜生成 1 套首尾帧，多分镜按分镜生成多套首尾帧，并复用上一镜尾帧作为下一镜首帧。",
+                "ragReferences": rag_references,
+                "storyboardManifest": _update_storyboard_manifest_artifacts(storyboard_manifest, keyframes=images),
+            }
+
+        def build_image_payload(shot: dict[str, Any]) -> dict[str, Any]:
+            prompt = build_frame_prompt(shot=shot, frame_role="scene-reference-frame")
+            cache_key = _keyframe_cache_key(
+                prompt="style-anchor" if frame_count == 1 and len(shots) > 1 else prompt,
+                image_size=image_size or "",
+                model=image_model or "",
+                style_anchor=f"{template_id}:{horse_label}:{visual_style}:{keyframe_prompt_style}:{keyframe_custom_prompt}:{consistency}",
+            )
+            image_payload = {
+                "scene": shot["scene"],
+                "prompt": prompt,
+                "imageUrl": f"pending://keyframes/{task.id}/{shot['scene']}.png",
+                "role": "veo-reference-frame",
+                "frameRole": "scene-reference-frame",
+                "status": "pending",
+                "cacheKey": cache_key,
+            }
+            cached_url = _read_cached_keyframe(cache_key)
+            if cached_url:
+                image_payload.update(
+                    {
+                        "imageUrl": cached_url,
+                        "provider": "image-cache",
+                        "model": image_model,
+                        "status": "completed",
+                        "cacheMode": "hit",
+                    }
+                )
+                return image_payload
+            if allow_provider_calls and provider_status["image"]["configured"]:
+                try:
+                    generated = generate_keyframe_image(
+                        task_id=task.id,
+                        scene=shot["scene"],
+                        prompt=prompt,
+                        size=image_size,
+                        model=image_model,
+                    )
+                    cached_generated_url = _cache_keyframe_from_url(cache_key, str(generated.get("imageUrl") or ""))
+                    if cached_generated_url:
+                        generated["cacheUrl"] = cached_generated_url
+                        generated["cacheMode"] = "stored"
+                    image_payload.update(generated)
+                    image_payload["frameRole"] = "scene-reference-frame"
+                except (VideoFactoryProviderNotConfigured, VideoFactoryProviderError) as exc:
+                    image_payload["providerError"] = _provider_message(exc)
+            return image_payload
+
+        if allow_provider_calls and provider_status["image"]["configured"] and len(selected_shots) > 1:
+            with ThreadPoolExecutor(max_workers=min(len(selected_shots), 3), thread_name_prefix=f"keyframe-{task.id[:8]}") as executor:
+                future_to_index = {
+                    executor.submit(build_image_payload, shot): index
+                    for index, shot in enumerate(selected_shots)
+                }
+                results: list[dict[str, Any] | None] = [None] * len(selected_shots)
+                for future in as_completed(future_to_index):
+                    index = future_to_index[future]
+                    try:
+                        results[index] = future.result()
+                    except Exception as exc:
+                        shot = selected_shots[index]
+                        prompt = build_frame_prompt(shot=shot, frame_role="scene-reference-frame")
+                        results[index] = {
+                            "scene": shot["scene"],
+                            "prompt": prompt,
+                            "imageUrl": f"pending://keyframes/{task.id}/{shot['scene']}.png",
+                            "role": "veo-reference-frame",
+                            "frameRole": "scene-reference-frame",
+                            "status": "pending",
+                            "providerError": _provider_message(exc),
+                        }
+                images = [item for item in results if isinstance(item, dict)]
+        else:
+            images = [build_image_payload(shot) for shot in selected_shots]
+
+        if frame_count == 1 and len(shots) > 1 and images:
+            anchor = images[0]
+            for shot in shots[1:]:
+                prompt = build_frame_prompt(shot=shot, frame_role="scene-reference-frame")
+                images.append(
+                    _clone_anchor_keyframe(
+                        anchor,
+                        _safe_int(shot.get("scene"), len(images) + 1),
+                        prompt,
+                        frame_role="scene-reference-frame",
+                    )
+                )
+        for image in images:
+            if isinstance(image, dict):
+                image["role"] = image.get("role") or "veo-reference-frame"
+                image["frameRole"] = image.get("frameRole") or "scene-reference-frame"
+        return {
+            "provider": image_model or keyframe_fields.get("provider") or "图片生成 AI",
+            "referenceMode": keyframe_fields.get("referenceMode") or ("1 张风格锚点图复用" if frame_count == 1 and len(shots) > 1 else "每个分镜 1 张关键帧"),
+            "imageSize": keyframe_fields.get("imageSize") or aspect,
+            "referenceMode": normalized_reference_mode,
+            "apiSize": image_size,
+            "promptStyle": keyframe_prompt_style,
+            "images": images,
+            "requestedFrameCount": requested_frame_count,
+            "generatedFrameCount": frame_count,
+            "generatedFrameCount": len(images),
+            "cacheHits": sum(1 for image in images if image.get("cacheMode") == "hit"),
+            "reusedFrameCount": sum(1 for image in images if image.get("reusedFromScene")),
+            "providerStatus": provider_status["image"],
+            "canvasParameters": {
+                "model": image_model,
+                "apiSize": image_size,
+                "customPrompt": keyframe_custom_prompt,
+                "baseTemplate": template_name,
+                "frameCount": frame_count,
+                "cache": "enabled",
+            },
+            "note": "已接入图片生成中转 API 骨架；未配置或调用失败时保留 pending 参考图。",
+            "ragReferences": rag_references,
+            "storyboardManifest": _update_storyboard_manifest_artifacts(storyboard_manifest, keyframes=images),
+        }
+    if node_id == "veo":
+        keyframe_output = _completed_node_output(task, "keyframe") or _site_workflow_output(
+            task,
+            "keyframe",
+            allow_provider_calls=False,
+        )
+        keyframes = keyframe_output.get("images", []) if isinstance(keyframe_output.get("images"), list) else []
+        manifest_base = (
+            keyframe_output.get("storyboardManifest")
+            if isinstance(keyframe_output.get("storyboardManifest"), dict)
+            else storyboard_manifest
+        )
+        veo_generate_audio = str(veo_fields.get("generateAudio") or "是") != "否" and settings.VIDEO_FACTORY_VEO_GENERATE_AUDIO
+        veo_negative_prompt = str(
+            (provider_plan.get("negativePrompt") if provider_plan else "") or veo_fields.get("negativePrompt") or ""
+        ).strip()
+        text_negative_prompt = (
+            "visible text, captions, subtitles, Chinese characters, English letters, numbers, "
+            "garbled text, watermark, logo, UI overlay, modern objects, random scene cuts, "
+            "deformed horse legs, extra limbs, broken hands, warped faces, duplicate riders, "
+            "flickering identity, black frames, frozen poster shot, slideshow feeling, copied sample composition"
+        )
+        veo_negative_prompt = f"{veo_negative_prompt}, {text_negative_prompt}" if veo_negative_prompt else text_negative_prompt
+        clips: list[dict[str, Any]] = []
+        requested_clips = _safe_int(
+            veo_fields.get("parallel") or storyboard_fields.get("shotCount") or shot_count,
+            shot_count,
+            minimum=1,
+            maximum=max(1, len(shots)),
+        )
+        env_clip_limit = _safe_int(settings.VIDEO_FACTORY_VEO_MAX_CLIPS_PER_TASK, 1, minimum=1, maximum=max(1, len(shots)))
+        max_clips = min(requested_clips, env_clip_limit, len(shots))
+        def _keyframe_role_of(item: dict[str, Any]) -> str:
+            role_text = str(item.get("frameRole") or item.get("role") or "").strip().lower()
+            if "start" in role_text or "head" in role_text:
+                return "start"
+            if "end" in role_text or "tail" in role_text:
+                return "end"
+            return "single"
+
+        def _pick_scene_keyframe(scene_id: int, preferred_roles: set[str] | None = None) -> str:
+            preferred = preferred_roles or set()
+            for item in keyframes:
+                if not isinstance(item, dict):
+                    continue
+                if _safe_int(item.get("scene"), -1) != scene_id:
+                    continue
+                if preferred and _keyframe_role_of(item) not in preferred:
+                    continue
+                url = str(item.get("imageUrl") or "").strip()
+                if url:
+                    return url
+            if preferred:
+                for item in keyframes:
+                    if not isinstance(item, dict):
+                        continue
+                    if _safe_int(item.get("scene"), -1) != scene_id:
+                        continue
+                    url = str(item.get("imageUrl") or "").strip()
+                    if url:
+                        return url
+            return ""
+
+        keyframe_scene_urls = {
+            _safe_int(item.get("scene"), -1): str(item.get("imageUrl") or "").strip()
+            for item in keyframes
+            if isinstance(item, dict) and _safe_int(item.get("scene"), -1) > 0 and str(item.get("imageUrl") or "").strip()
+        }
+        anchor_reference_image = next(
+            (
+                str(item.get("imageUrl") or "").strip()
+                for item in keyframes
+                if isinstance(item, dict) and str(item.get("imageUrl") or "").strip()
+            ),
+            None,
+        )
+        ordered_shots = sorted(
+            shots,
+            key=lambda shot: 0 if _safe_int(shot.get("scene"), -1) in keyframe_scene_urls else 1,
+        )
+        checkpoint_data = _read_veo_checkpoint(task)
+        checkpoint_clip_map = checkpoint_data.get("clips") if isinstance(checkpoint_data.get("clips"), dict) else {}
+        checkpoint_hits = 0
+        checkpoint_keys: list[str] = []
+        clip_jobs: list[dict[str, Any]] = []
+        for shot in ordered_shots[:max_clips]:
+            scene = _safe_int(shot.get("scene"), len(clip_jobs) + 1, minimum=1, maximum=99)
+            checkpoint_key = _veo_clip_checkpoint_key(
+                shot=shot,
+                aspect=aspect,
+                model=veo_model,
+                quality=veo_fields.get("quality"),
+                shot_seconds=shot_seconds,
+            )
+            checkpoint_keys.append(checkpoint_key)
+            checkpoint_url = str(checkpoint_clip_map.get(checkpoint_key) or "").strip()
+            resume_from_checkpoint = _is_usable_checkpoint_url(checkpoint_url)
+            start_reference_image = _pick_scene_keyframe(scene, {"start"}) or _pick_scene_keyframe(scene) or anchor_reference_image
+            end_reference_image = _pick_scene_keyframe(scene, {"end"}) or start_reference_image
+            provider_reference_image = _provider_media_url(start_reference_image)
+            provider_end_reference_image = _provider_media_url(end_reference_image)
+            shot_prompt = str(shot.get("videoPrompt") or shot.get("video_prompt") or shot.get("prompt") or shot.get("visual") or "").strip()
+            scene_audio_prompt = _scene_audio_prompt(shot, veo_audio_prompt)
+            prompt = (
+                f"{shot_prompt} "
+                f"Maintain visual continuity for {horse_label}, {figure}, and {label_text}. "
+                f"Style reference rule: {template_prompt}. Variation rule: {BASE_VIDEO_TEMPLATE_VARIATION_RULE}. "
+                "Storytelling rule: this must feel like a real narrated historical story scene, not a random art demo; show one clear event beat with visible cause, action, and emotional consequence. "
+                "Quality rule: use the supplied start frame as the true first visual frame, keep horse anatomy and rider proportions natural, keep the same horse, rider, armor, battlefield direction, lighting and color palette through the whole clip, make camera motion slow and readable, avoid flicker, warped faces, extra limbs, broken horse legs, black frames, text overlays, watermarks, collage layouts, and do not copy the old sample shot composition one-to-one. "
+                f"Current clip narration: {shot.get('narration') or shot.get('subtitle') or ''}. "
+                "Audio is required: read the current clip narration exactly once in natural Mandarin Chinese, casual spoken Simplified Chinese, no English, no pinyin, no silence. "
+                f"Audio direction: {scene_audio_prompt}. "
+                f"Text rule: {veo_caption_prompt}"
+            ).strip()
+            if veo_motion_prompt:
+                prompt = f"{prompt} Motion guidance: {veo_motion_prompt}"
+            if provider_end_reference_image:
+                prompt = (
+                    f"{prompt} End-frame target: keep the last moment close to this continuity frame: "
+                    f"{provider_end_reference_image}."
+                )
+            prompt = _sanitize_veo_public_prompt(prompt)
+            prompt = _compact_for_provider(prompt, 1600)
+            clip = {
+                "scene": scene,
+                "operation": f"site_veo_pending_{task.id}_{scene}" if not resume_from_checkpoint else f"checkpoint://veo/{task.id}/{scene}",
+                "url": checkpoint_url if resume_from_checkpoint else f"pending://veo/{task.id}/{scene}.mp4",
+                "prompt": prompt,
+                "referenceImage": start_reference_image,
+                "endReferenceImage": end_reference_image,
+                "providerReferenceImage": provider_reference_image,
+                "providerEndReferenceImage": provider_end_reference_image,
+                "referenceMode": "start-end-frames" if provider_reference_image and provider_end_reference_image else "public-image" if provider_reference_image else "text-only",
+                "generateAudio": veo_generate_audio,
+                "status": "completed_from_checkpoint" if resume_from_checkpoint else "pending",
+                "checkpointKey": checkpoint_key,
+                "resumeFromCheckpoint": resume_from_checkpoint,
+            }
+            if resume_from_checkpoint:
+                checkpoint_hits += 1
+            clip_jobs.append(
+                {
+                    "shot": shot,
+                    "clip": clip,
+                    "prompt": prompt,
+                    "scene_audio_prompt": scene_audio_prompt,
+                    "provider_reference_image": provider_reference_image,
+                    "provider_end_reference_image": provider_end_reference_image,
+                    "skip_provider_call": resume_from_checkpoint,
+                }
+            )
+
+        runnable_job_count = sum(1 for job in clip_jobs if not job.get("skip_provider_call"))
+        parallel_workers = max(1, min(runnable_job_count, env_clip_limit, 3)) if runnable_job_count else 0
+        if allow_provider_calls and provider_status["veo"]["configured"] and clip_jobs and runnable_job_count > 0:
+            with ThreadPoolExecutor(max_workers=parallel_workers, thread_name_prefix=f"veo-{task.id[:8]}") as executor:
+                future_to_index = {
+                    executor.submit(
+                        _run_veo_clip_request,
+                        task_id=task.id,
+                        shot=job["shot"],
+                        clip=job["clip"],
+                        prompt=job["prompt"],
+                        aspect=aspect,
+                        generate_audio=veo_generate_audio,
+                        scene_audio_prompt=job["scene_audio_prompt"],
+                        subtitle_prompt=veo_caption_prompt,
+                        negative_prompt=veo_negative_prompt,
+                        reference_image=job["provider_reference_image"],
+                        model=veo_model,
+                        quality=veo_fields.get("quality"),
+                        shot_seconds=shot_seconds,
+                    ): index
+                    for index, job in enumerate(clip_jobs)
+                    if not job.get("skip_provider_call")
+                }
+                results: list[dict[str, Any] | None] = [dict(job["clip"]) for job in clip_jobs]
+                for future in as_completed(future_to_index):
+                    result_index = future_to_index[future]
+                    try:
+                        results[result_index] = future.result()
+                    except Exception as exc:
+                        failed_clip = dict(clip_jobs[result_index]["clip"])
+                        failed_clip["providerError"] = _provider_message(exc)
+                        results[result_index] = failed_clip
+                clips = [clip for clip in results if isinstance(clip, dict)]
+        else:
+            clips = [dict(job["clip"]) for job in clip_jobs]
+
+        successful_clip_count = sum(
+            1
+            for clip in clips
+            if clip.get("url") and not str(clip.get("url")).startswith("pending://")
+        )
+        if allow_provider_calls and provider_status["veo"]["configured"] and max_clips > 1 and successful_clip_count < max_clips:
+            clips = _backfill_missing_veo_clips(
+                task_id=task.id,
+                clips=clips,
+                clip_jobs=clip_jobs,
+                successful_clip_count=successful_clip_count,
+                max_clips=max_clips,
+                aspect=aspect,
+                subtitle_prompt=veo_caption_prompt,
+                negative_prompt=veo_negative_prompt,
+                model=veo_model,
+                quality=veo_fields.get("quality"),
+                shot_seconds=shot_seconds,
+            )
+
+        skipped_count = max(0, len(shots) - len(clips))
+        successful_clip_count = sum(
+            1
+            for clip in clips
+            if clip.get("url") and not str(clip.get("url")).startswith("pending://")
+        )
+        incomplete_reason = ""
+        if max_clips > 1 and successful_clip_count < max_clips:
+            failed_reasons = [
+                str(clip.get("failReason") or clip.get("providerError") or "").strip()
+                for clip in clips
+                if not (clip.get("url") and not str(clip.get("url")).startswith("pending://"))
+            ]
+            detail = "；".join(reason for reason in failed_reasons if reason)
+            incomplete_reason = f"期望生成 {max_clips} 个 Veo 片段，但只有 {successful_clip_count} 个成功。{detail}".strip()
+        checkpoint_clip_urls: dict[str, str] = {}
+        for clip in clips:
+            if not isinstance(clip, dict):
+                continue
+            checkpoint_key = str(clip.get("checkpointKey") or "").strip()
+            clip_url = str(clip.get("url") or "").strip()
+            if checkpoint_key and _is_usable_checkpoint_url(clip_url):
+                checkpoint_clip_urls[checkpoint_key] = clip_url
+        checkpoint_signature = hashlib.sha256(
+            json.dumps(
+                {
+                    "model": veo_model,
+                    "aspect": aspect,
+                    "quality": str(veo_fields.get("quality") or "auto"),
+                    "keys": sorted(checkpoint_keys),
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            ).encode("utf-8")
+        ).hexdigest()[:28]
+        resume_checkpoint = {
+            "signature": checkpoint_signature,
+            "model": veo_model,
+            "aspect": aspect,
+            "quality": str(veo_fields.get("quality") or "auto"),
+            "clips": checkpoint_clip_urls,
+            "updatedAt": datetime.now(timezone.utc).isoformat(),
+        }
+        return {
+            "provider": veo_fields.get("provider") or "Veo / Gemini API",
+            "modelTarget": veo_model,
+            "generateAudio": veo_generate_audio,
+            "audioPrompt": veo_audio_prompt,
+            "subtitlePrompt": veo_caption_prompt,
+            "subtitleStrategy": "backend-srt-ffmpeg",
+            "parallelExecution": {
+                "enabled": allow_provider_calls and provider_status["veo"]["configured"] and len(clip_jobs) > 1,
+                "workers": parallel_workers,
+                "submittedClips": runnable_job_count,
+                "checkpointHits": checkpoint_hits,
+                "requestedClips": requested_clips,
+                "maxClips": max_clips,
+            },
+            "canvasParameters": {
+                "model": veo_model,
+                "quality": veo_fields.get("quality"),
+                "motionPrompt": veo_motion_prompt,
+                "negativePrompt": veo_negative_prompt,
+                "baseTemplate": template_name,
+                "baseTemplateSource": BASE_VIDEO_TEMPLATE_SOURCE,
+            },
+            "durationStrategy": "Veo clips run in parallel, then FFmpeg stitches real mp4 clips and burns subtitles.",
+            "clips": clips,
+            "generatedClipCount": len(clips),
+            "successfulClipCount": successful_clip_count,
+            "failedClipCount": max(0, len(clips) - successful_clip_count),
+            "audioFallbackClipCount": sum(1 for clip in clips if clip.get("audioFallback")),
+            "isComplete": True,
+            "isFullyComplete": successful_clip_count >= max_clips,
+            "usedTemplateFallback": successful_clip_count == 0,
+            "incompleteReason": incomplete_reason,
+            "skippedClipCount": skipped_count,
+            "requestedClipCount": requested_clips,
+            "maxClipLimit": env_clip_limit,
+            "firstVideoUrl": next((clip.get("url") for clip in clips if clip.get("url") and not str(clip.get("url")).startswith("pending://")), None),
+            "providerStatus": provider_status["veo"],
+            "resumeCheckpoint": resume_checkpoint,
+            "checkpointHitCount": checkpoint_hits,
+            "note": "Veo multiple clips are generated in parallel according to the canvas clip count, then composed by the backend.",
+            "ragReferences": rag_references,
+            "storyboardManifest": _update_storyboard_manifest_artifacts(manifest_base, clips=clips),
+        }
+    if node_id == "voice":
+        return {
+            "text": voiceover,
+            "mode": narration_mode,
+            "engine": voice_fields.get("engine") or "Veo 原生音频",
+            "voice": voice_fields.get("voice") or "中文沉稳旁白",
+            "soundscape": soundscape,
+            "audioPrompt": veo_audio_prompt,
+            "audioUrl": None,
+            "duration": duration,
+            "fallback": "如果 Veo 中文旁白不可控，再接入本地 TTS 生成独立音轨。",
+            "note": "初版不调用独立 TTS，声音要求会写入 Veo 节点提示词。",
+        }
+    if node_id == "subtitle":
+        normalized_subtitle_segments = _normalize_subtitle_segments(subtitle_segments, duration)
+        srt_url = _write_workflow_srt(task.id, normalized_subtitle_segments)
+        return {
+            "mode": subtitle_mode,
+            "style": subtitle_fields.get("style") or "金色下三分之一",
+            "subtitlePrompt": veo_caption_prompt,
+            "srtUrl": srt_url or f"pending://subtitle/{task.id}.srt",
+            "segments": normalized_subtitle_segments,
+            "fallback": "Veo 不负责生成片内文字；后端用这些 segments 生成 SRT，再用 FFmpeg 烧录，避免乱码。",
+        }
+    if node_id == "xhs_publish":
+        return _publish_to_xhs(task, output_fields=output_fields, xhs_fields=xhs_fields)
+    if node_id == "compose":
+        veo_output = _completed_node_output(task, "veo") or {}
+        subtitle_output = _completed_node_output(task, "subtitle") or {}
+        veo_clips = veo_output.get("clips") if isinstance(veo_output.get("clips"), list) else []
+        if veo_output.get("isComplete") is False:
+            return {
+                "engine": compose_fields.get("engine") or "FFmpeg / 网站后端",
+                "videoUrl": f"pending://final/{task.id}.mp4",
+                "sourceClips": [],
+                "compositionMode": "incomplete-veo-clips",
+                "warning": veo_output.get("incompleteReason") or "Veo 多片段没有全部成功，已停止合成。",
+                "providerStatus": provider_status,
+            }
+        real_clip_urls = [
+            str(clip.get("url")).strip()
+            for clip in veo_clips
+            if isinstance(clip, dict)
+            and str(clip.get("url") or "").strip()
+            and not str(clip.get("url") or "").startswith("pending://")
+        ]
+        first_video_url = str(veo_output.get("firstVideoUrl") or "").strip() or (real_clip_urls[0] if real_clip_urls else "")
+        subtitle_style = str(subtitle_output.get("style") or subtitle_fields.get("style") or "金色下三分之一")
+        source_segments = subtitle_output.get("segments") if isinstance(subtitle_output.get("segments"), list) else subtitle_segments
+        return _compose_workflow_video(
+            task_id=task.id,
+            source_video_url=first_video_url,
+            source_clips=real_clip_urls,
+            segments=source_segments,
+            subtitle_style=subtitle_style,
+            voiceover_text=voiceover,
+            voice_fields=voice_fields,
+            compose_fields=compose_fields,
+            provider_status=provider_status,
+            horse=horse,
+            target_clip_count=_safe_int(
+                veo_output.get("requestedClipCount") or veo_output.get("maxClipLimit") or len(real_clip_urls),
+                max(1, len(real_clip_urls)),
+                minimum=1,
+                maximum=8,
+            ),
+            duration_seconds=duration,
+            aspect_ratio=aspect,
+            storyboard_manifest=veo_output.get("storyboardManifest") if isinstance(veo_output.get("storyboardManifest"), dict) else storyboard_manifest,
+        )
+        return {
+            "engine": compose_fields.get("engine") or "FFmpeg / 网站后端",
+            "transition": compose_fields.get("transition") or "卷轴擦除",
+            "videoUrl": first_video_url or f"pending://final/{task.id}.mp4",
+            "sourceClips": real_clip_urls,
+            "compositionMode": "single-veo-clip-pass-through" if first_video_url else "pending-compose",
+            "thumbnailUrl": _preferred_thumbnail_url(horse_name=horse, references=rag_references),
+            "audioMix": compose_fields.get("ducking") or "自动压低背景乐",
+            "providerStatus": provider_status,
+            "note": "第一版先把首个 Veo mp4 作为成片返回；多片段 FFmpeg 拼接后续接入。",
+        }
+    compose_output = _completed_node_output(task, "compose") or {}
+    video_url = str(compose_output.get("videoUrl") or "").strip() or f"pending://final/{task.id}.mp4"
+    return {
+        "taskId": task.id,
+        "status": "completed" if not video_url.startswith("pending://") else "pending",
+        "videoUrl": video_url,
+        "sourceClips": compose_output.get("sourceClips") if isinstance(compose_output.get("sourceClips"), list) else [],
+        "sourceVideoUrl": compose_output.get("sourceVideoUrl"),
+        "subtitleUrl": compose_output.get("subtitleUrl"),
+        "subtitleSegments": compose_output.get("subtitleSegments") if isinstance(compose_output.get("subtitleSegments"), list) else [],
+        "compositionMode": compose_output.get("compositionMode"),
+        "composeWarning": compose_output.get("warning"),
+        "storyboardManifest": compose_output.get("storyboardManifest") if isinstance(compose_output.get("storyboardManifest"), dict) else storyboard_manifest,
+        "reviewReport": compose_output.get("reviewReport") if isinstance(compose_output.get("reviewReport"), dict) else {},
+        "saveTo": output_fields.get("saveTo") or "网站 generated/videos",
+        "executionMode": "site-workflow",
+        "providerStatus": provider_status,
+        "note": "第一版真实成片返回首个 Veo mp4；后续再保存本地和 FFmpeg 拼接。",
+    }
+
+
+def generate_workflow_task_id() -> str:
+    return f"wft_{uuid.uuid4().hex[:12]}"
+
+
+def generate_callback_token() -> str:
+    return secrets.token_urlsafe(24)
+
+
+def build_callback_url(task_id: str) -> str:
+    base = str(settings.APP_PUBLIC_BASE_URL or "http://127.0.0.1:8000").rstrip("/")
+    return f"{base}/api/v1/video/workflow/callback/{task_id}"
+
+
+def normalize_n8n_webhook_url(webhook_url: str | None) -> str:
+    value = str(webhook_url or "").strip()
+    fallback = str(settings.N8N_WEBHOOK_URL or "").strip()
+    if not value:
+        return fallback
+
+    lower = value.lower()
+    if "/webhook-test/" in lower:
+        return fallback
+    if "video-factory-run" in lower and "video-factory-run-v2" not in lower:
+        return fallback
+    return value
+
+
+def normalize_workflow_definition(definition: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(definition, dict):
+        return default_workflow_definition()
+
+    nodes = definition.get("nodes")
+    if not isinstance(nodes, list) or not nodes:
+        return default_workflow_definition()
+
+    normalized_nodes: list[dict[str, Any]] = []
+    for index, node in enumerate(nodes):
+        if not isinstance(node, dict):
+            continue
+        node_id = str(node.get("id") or f"node_{index + 1}").strip() or f"node_{index + 1}"
+        node_type = str(node.get("type") or "custom").strip() or "custom"
+        label = str(node.get("label") or node.get("name") or node_id).strip() or node_id
+        normalized_nodes.append({"id": node_id, "type": node_type, "label": label})
+
+    connections = definition.get("connections")
+    normalized_connections = connections if isinstance(connections, list) else []
+    return {
+        "name": str(definition.get("name") or "video-factory-workflow").strip() or "video-factory-workflow",
+        "mode": str(definition.get("mode") or "custom").strip() or "custom",
+        "nodes": normalized_nodes or list(DEFAULT_WORKFLOW_NODES),
+        "connections": normalized_connections,
+    }
+
+
+def build_initial_node_states(workflow_definition: dict[str, Any]) -> list[dict[str, Any]]:
+    states: list[dict[str, Any]] = []
+    for node in workflow_definition.get("nodes", []):
+        if not isinstance(node, dict):
+            continue
+        node_id = str(node.get("id") or "").strip()
+        if not node_id:
+            continue
+        state = {
+            "node_id": node_id,
+            "label": str(node.get("label") or node_id),
+            "type": str(node.get("type") or "custom"),
+            "status": "pending",
+            "progress": 0,
+            "output": {},
+        }
+        if node_id in {"input", "trigger", "webhook"}:
+            state["status"] = "completed"
+            state["progress"] = 100
+        states.append(state)
+    return states
+
+
+def build_standard_input_payload(task: WorkflowTask) -> dict[str, Any]:
+    return {
+        "task_id": task.id,
+        "title": task.title,
+        "horse_name": task.horse_name,
+        "duration": task.duration,
+        "aspect_ratio": task.aspect_ratio,
+        "input_payload": dict(task.input_payload or {}),
+        "workflow_definition": dict(task.workflow_definition or {}),
+        "callback_url": build_callback_url(task.id),
+        "callback_token": task.callback_token,
+        "source": "baiqipu-video-factory",
+    }
+
+
+def merge_node_states(
+    current_states: list[dict[str, Any]] | None,
+    incoming_states: list[dict[str, Any]] | None = None,
+    *,
+    node_id: str | None = None,
+    node_status: str | None = None,
+    node_progress: int | None = None,
+    node_output: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = [dict(item) for item in (current_states or []) if isinstance(item, dict)]
+    index_by_id = {
+        str(item.get("node_id")): position
+        for position, item in enumerate(merged)
+        if str(item.get("node_id") or "").strip()
+    }
+
+    for incoming in incoming_states or []:
+        incoming_id = str(incoming.get("node_id") or "").strip()
+        if not incoming_id:
+            continue
+        payload = {
+            "node_id": incoming_id,
+            "label": incoming.get("label"),
+            "type": incoming.get("type"),
+            "status": incoming.get("status") or "pending",
+            "progress": int(incoming.get("progress") or 0),
+            "output": dict(incoming.get("output") or {}),
+        }
+        if incoming_id in index_by_id:
+            existing = merged[index_by_id[incoming_id]]
+            existing.update({key: value for key, value in payload.items() if value is not None})
+        else:
+            index_by_id[incoming_id] = len(merged)
+            merged.append(payload)
+
+    if node_id:
+        normalized_node_id = str(node_id).strip()
+        if normalized_node_id:
+            if normalized_node_id not in index_by_id:
+                index_by_id[normalized_node_id] = len(merged)
+                merged.append(
+                    {
+                        "node_id": normalized_node_id,
+                        "label": normalized_node_id,
+                        "type": "custom",
+                        "status": "pending",
+                        "progress": 0,
+                        "output": {},
+                    }
+                )
+            target = merged[index_by_id[normalized_node_id]]
+            if node_status is not None:
+                target["status"] = node_status
+            if node_progress is not None:
+                target["progress"] = int(node_progress)
+            if node_output:
+                next_output = dict(target.get("output") or {})
+                next_output.update(node_output)
+                target["output"] = next_output
+
+    return merged
+
+
+def derive_status_from_nodes(node_states: list[dict[str, Any]]) -> str:
+    if any(str(item.get("status")) == "failed" for item in node_states):
+        return "failed"
+    if node_states and all(str(item.get("status")) == "completed" for item in node_states):
+        return "completed"
+    if any(str(item.get("status")) in {"processing", "running"} for item in node_states):
+        return "processing"
+    if any(str(item.get("status")) == "queued" for item in node_states):
+        return "queued"
+    return "draft"
+
+
+def serialize_workflow_task(task: WorkflowTask) -> dict[str, Any]:
+    runtime_state = read_workflow_runtime(task.id) or {}
+    return {
+        "task_id": task.id,
+        "title": task.title,
+        "horse_name": task.horse_name,
+        "status": task.status,
+        "progress": task.progress,
+        "current_node": task.current_node,
+        "aspect_ratio": task.aspect_ratio,
+        "duration": task.duration,
+        "webhook_url": task.webhook_url,
+        "callback_url": build_callback_url(task.id),
+        "callback_token": task.callback_token,
+        "n8n_execution_id": task.n8n_execution_id,
+        "workflow_definition": dict(task.workflow_definition or {}),
+        "input_payload": dict(task.input_payload or {}),
+        "normalized_payload": dict(task.normalized_payload or {}),
+        "node_states": list(task.node_states or []),
+        "result_payload": dict(task.result_payload or {}),
+        "dispatch_response": dict(task.dispatch_response or {}),
+        "runtime_state": runtime_state,
+        "error_message": task.error_message,
+        "created_at": task.created_at.isoformat() if task.created_at else "",
+        "updated_at": task.updated_at.isoformat() if task.updated_at else None,
+    }
+
+
+def dispatch_workflow_task(task_id: str) -> dict[str, Any]:
+    session = SessionLocal()
+    try:
+        task = session.query(WorkflowTask).filter(WorkflowTask.id == task_id).first()
+        if not task:
+            return {"dispatch_status": "missing", "message": "Task not found"}
+
+        webhook_url = normalize_n8n_webhook_url(task.webhook_url)
+        if task.webhook_url != webhook_url:
+            task.webhook_url = webhook_url or None
+        if not webhook_url:
+            task.status = "draft"
+            task.error_message = "N8N webhook is not configured"
+            task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            session.add(task)
+            session.commit()
+            sync_task_runtime(task, event="dispatch-skipped", event_payload={"reason": "n8n_webhook_missing"})
+            return {"dispatch_status": "skipped", "message": "N8N webhook is not configured"}
+
+        node_states = merge_node_states(
+            task.node_states,
+            node_id="input",
+            node_status="completed",
+            node_progress=100,
+        )
+        task.node_states = merge_node_states(
+            node_states,
+            node_id="script",
+            node_status="queued",
+            node_progress=0,
+        )
+        task.status = "queued"
+        task.progress = max(int(task.progress or 0), 6)
+        task.current_node = "script"
+        task.error_message = None
+        task.normalized_payload = build_standard_input_payload(task)
+        task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        session.add(task)
+        session.commit()
+        sync_task_runtime(task, event="dispatch-queued", event_payload={"mode": "n8n"})
+
+        try:
+            response = httpx.post(
+                webhook_url,
+                json=task.normalized_payload,
+                timeout=settings.N8N_TIMEOUT_SECONDS,
+                trust_env=False,
+            )
+            response.raise_for_status()
+            response_payload = response.json() if response.content else {}
+        except ValueError:
+            response_payload = {"raw_text": response.text}
+        except httpx.HTTPStatusError as exc:
+            response_text = exc.response.text.strip()
+            message = str(exc)
+            if response_text:
+                message = f"{message}; response body: {response_text[:1000]}"
+            task.status = "failed"
+            task.progress = 100
+            task.error_message = message
+            task.dispatch_response = {"error": message}
+            task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            session.add(task)
+            session.commit()
+            sync_task_runtime(task, event="dispatch-failed", event_payload={"error": message})
+            return {"dispatch_status": "failed", "message": message}
+        except httpx.HTTPError as exc:
+            task.status = "failed"
+            task.progress = 100
+            task.error_message = str(exc)
+            task.dispatch_response = {"error": str(exc)}
+            task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            session.add(task)
+            session.commit()
+            sync_task_runtime(task, event="dispatch-failed", event_payload={"error": str(exc)})
+            return {"dispatch_status": "failed", "message": str(exc)}
+
+        task.status = "processing"
+        task.progress = max(int(task.progress or 0), 12)
+        task.current_node = "script"
+        task.dispatch_response = response_payload if isinstance(response_payload, dict) else {"raw": response_payload}
+        execution_id = (
+            task.dispatch_response.get("execution_id")
+            or task.dispatch_response.get("id")
+            or task.n8n_execution_id
+            or ""
+        )
+        task.n8n_execution_id = str(execution_id).strip() or task.n8n_execution_id
+        task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        session.add(task)
+        session.commit()
+        sync_task_runtime(task, event="dispatch-started", event_payload={"mode": "n8n"})
+        return {"dispatch_status": "started", "message": "Workflow dispatched to n8n"}
+    finally:
+        session.close()
+
+
+def run_site_workflow_task(task_id: str, step_delay_seconds: float = 0.2) -> dict[str, Any]:
+    execution_stages: list[list[str]] = []
+    node_order: list[str] = []
+    progress_by_node: dict[str, int] = {}
+    session = SessionLocal()
+
+    def load_task() -> WorkflowTask | None:
+        return session.query(WorkflowTask).filter(WorkflowTask.id == task_id).first()
+
+    def mark_workflow_cancelled(task: WorkflowTask, node_id: str) -> dict[str, Any]:
+        task.progress = 100
+        task.current_node = node_id
+        task.error_message = task.error_message or "工作流已取消。"
+        task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        session.add(task)
+        session.commit()
+        sync_task_runtime(task, event="workflow-cancelled", event_payload={"nodeId": node_id})
+        return {"dispatch_status": "cancelled", "message": "Workflow task cancelled"}
+
+    def start_stage_nodes(task: WorkflowTask, stage: list[str], stage_index: int) -> WorkflowTask:
+        incoming_states = []
+        for node_id in stage:
+            meta = _workflow_node_meta(task, node_id)
+            incoming_states.append(
+                {
+                    "node_id": node_id,
+                    "label": meta["label"],
+                    "type": meta["type"],
+                    "status": "processing",
+                    "progress": 45,
+                    "output": {},
+                }
+            )
+        task.node_states = merge_node_states(task.node_states, incoming_states=incoming_states)
+        task.status = "processing"
+        task.progress = min(96, max(int(task.progress or 0), int((node_order.index(stage[0]) / len(node_order)) * 100)))
+        task.current_node = ",".join(stage)
+        task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        session.add(task)
+        session.commit()
+        sync_task_runtime(
+            task,
+            event="stage-started" if len(stage) > 1 else "node-started",
+            event_payload={"nodeIds": stage, "nodeId": stage[0], "stageIndex": stage_index, "parallel": len(stage) > 1},
+        )
+        return task
+
+    def complete_stage_node(node_id: str, output: dict[str, Any], stage_index: int, node_index: int) -> WorkflowTask | None:
+        task = load_task()
+        if not task:
+            return None
+        meta = _workflow_node_meta(task, node_id)
+        task.node_states = merge_node_states(
+            task.node_states,
+            incoming_states=[
+                {
+                    "node_id": node_id,
+                    "label": meta["label"],
+                    "type": meta["type"],
+                    "status": "completed",
+                    "progress": 100,
+                    "output": output,
+                }
+            ],
+        )
+        task.progress = min(98, max(int(task.progress or 0), progress_by_node.get(node_id, int(task.progress or 0))))
+        remaining_active = [
+            str(state.get("node_id"))
+            for state in (task.node_states or [])
+            if isinstance(state, dict) and str(state.get("status") or "").lower() == "processing"
+        ]
+        task.current_node = ",".join(remaining_active) if remaining_active else node_id
+        if node_id == "output":
+            task.result_payload = output
+        if node_id == "veo" and isinstance(output, dict):
+            checkpoint_payload = output.get("resumeCheckpoint")
+            if isinstance(checkpoint_payload, dict) and isinstance(checkpoint_payload.get("clips"), dict):
+                next_input_payload = dict(task.input_payload or {})
+                next_input_payload["veoCheckpoint"] = checkpoint_payload
+                task.input_payload = next_input_payload
+        task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        session.add(task)
+        session.commit()
+        sync_task_runtime(
+            task,
+            event="node-completed",
+            event_payload={"nodeId": node_id, "stageIndex": stage_index, "index": node_index, "hasOutput": bool(output)},
+        )
+        return task
+
+    def readonly_task_snapshot(task: WorkflowTask) -> Any:
+        return SimpleNamespace(
+            id=task.id,
+            user_id=task.user_id,
+            title=task.title,
+            horse_name=task.horse_name,
+            status=task.status,
+            progress=task.progress,
+            current_node=task.current_node,
+            aspect_ratio=task.aspect_ratio,
+            duration=task.duration,
+            webhook_url=task.webhook_url,
+            n8n_execution_id=task.n8n_execution_id,
+            callback_token=task.callback_token,
+            workflow_definition=dict(task.workflow_definition or {}),
+            input_payload=dict(task.input_payload or {}),
+            normalized_payload=dict(task.normalized_payload or {}),
+            node_states=[dict(item) for item in (task.node_states or []) if isinstance(item, dict)],
+            result_payload=dict(task.result_payload or {}),
+            dispatch_response=dict(task.dispatch_response or {}),
+            error_message=task.error_message,
+            created_at=task.created_at,
+            updated_at=task.updated_at,
+        )
+
+    try:
+        task = load_task()
+        if not task:
+            return {"dispatch_status": "missing", "message": "Task not found"}
+
+        execution_stages = _build_execution_stages(task)
+        node_order = [node_id for stage in execution_stages for node_id in stage]
+        if not node_order:
+            return {"dispatch_status": "failed", "message": "Workflow has no executable nodes"}
+        progress_by_node = {
+            node_id: int(((index + 1) / len(node_order)) * 98)
+            for index, node_id in enumerate(node_order)
+        }
+
+        task.node_states = build_initial_node_states(task.workflow_definition or default_workflow_definition())
+        task.normalized_payload = build_standard_input_payload(task)
+        task.dispatch_response = {
+            "execution_mode": "site-workflow",
+            "message": "Workflow is running inside Baiqipu backend",
+            "provider_status": video_factory_provider_status(),
+            "execution_stages": execution_stages,
+        }
+        task.status = "queued"
+        task.progress = 4
+        task.current_node = "input"
+        task.error_message = None
+        task.result_payload = {}
+        task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        session.add(task)
+        session.commit()
+        sync_task_runtime(task, event="workflow-started", event_payload={"mode": "site-workflow"})
+
+        for stage_index, stage in enumerate(execution_stages):
+            task = load_task()
+            if not task:
+                return {"dispatch_status": "missing", "message": "Task not found"}
+            if str(task.status or "").lower() in {"cancelled", "canceled"}:
+                return mark_workflow_cancelled(task, stage[0])
+
+            task = start_stage_nodes(task, stage, stage_index)
+            if step_delay_seconds > 0:
+                time.sleep(step_delay_seconds)
+
+            if len(stage) == 1:
+                node_id = stage[0]
+                output = _site_workflow_output(task, node_id)
+                if complete_stage_node(node_id, output, stage_index, node_order.index(node_id)) is None:
+                    return {"dispatch_status": "missing", "message": "Task not found"}
+                continue
+
+            sync_task_runtime(
+                task,
+                event="parallel-nodes-started",
+                event_payload={"nodeIds": stage, "stageIndex": stage_index},
+            )
+            stage_outputs: dict[str, dict[str, Any]] = {}
+            with ThreadPoolExecutor(max_workers=len(stage), thread_name_prefix=f"workflow-{task.id[:8]}") as executor:
+                future_to_node = {
+                    executor.submit(_site_workflow_output, readonly_task_snapshot(task), node_id): node_id
+                    for node_id in stage
+                }
+                for future in as_completed(future_to_node):
+                    node_id = future_to_node[future]
+                    try:
+                        output = future.result()
+                    except Exception as exc:
+                        output = {
+                            "error": str(exc),
+                            "providerError": _provider_message(exc),
+                        }
+                    stage_outputs[node_id] = output
+                    if complete_stage_node(node_id, output, stage_index, node_order.index(node_id)) is None:
+                        return {"dispatch_status": "missing", "message": "Task not found"}
+
+            task = load_task()
+            if not task:
+                return {"dispatch_status": "missing", "message": "Task not found"}
+            if str(task.status or "").lower() in {"cancelled", "canceled"}:
+                return mark_workflow_cancelled(task, stage[-1])
+            sync_task_runtime(
+                task,
+                event="parallel-nodes-completed",
+                event_payload={"nodeIds": stage, "stageIndex": stage_index, "completed": list(stage_outputs.keys())},
+            )
+
+        task = load_task()
+        if not task:
+            return {"dispatch_status": "missing", "message": "Task not found"}
+        result_payload = task.result_payload if isinstance(task.result_payload, dict) else {}
+        video_url = str(result_payload.get("videoUrl") or "").strip()
+        incomplete_warning = ""
+        for state in task.node_states or []:
+            if not isinstance(state, dict) or state.get("node_id") != "veo":
+                continue
+            veo_output = state.get("output") if isinstance(state.get("output"), dict) else {}
+            if veo_output.get("isComplete") is False:
+                incomplete_warning = str(veo_output.get("incompleteReason") or "Veo 多片段没有全部成功。")
+            break
+        if _is_real_media_url(video_url):
+            task.status = "completed"
+            task.error_message = None
+        else:
+            provider_errors = _collect_provider_errors(task)
+            detail = "；".join(provider_errors[:3])
+            task.status = "failed"
+            task.error_message = (
+                (incomplete_warning or "工作流已跑完节点，但 Veo/合成没有返回真实视频文件地址。")
+                + (f" 最近错误：{detail}" if detail else " 请检查 Veo 节点模型、baseurl、apikey 和中转站任务状态接口。")
+            )
+            task.node_states = merge_node_states(
+                task.node_states,
+                node_id="output",
+                node_status="failed",
+                node_progress=100,
+                node_output={"error": task.error_message},
+            )
+        task.progress = 100
+        task.current_node = node_order[-1] if node_order else "output"
+        task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        session.add(task)
+        session.commit()
+        sync_task_runtime(task, event=f"workflow-{task.status}", event_payload={"videoUrl": video_url})
+        return {
+            "dispatch_status": task.status,
+            "message": "Site workflow completed" if task.status == "completed" else task.error_message,
+        }
+    except Exception as exc:
+        task = session.query(WorkflowTask).filter(WorkflowTask.id == task_id).first()
+        if task:
+            task.status = "failed"
+            task.progress = 100
+            task.error_message = str(exc)
+            task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            session.add(task)
+            session.commit()
+            sync_task_runtime(task, event="workflow-failed", event_payload={"error": str(exc)})
+        return {"dispatch_status": "failed", "message": str(exc)}
+    finally:
+        session.close()

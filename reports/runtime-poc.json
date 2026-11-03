@@ -1,0 +1,14 @@
+{
+  "candidate": "Huey 3.5.3 SqliteHuey",
+  "license": "MIT",
+  "pending_survives_reopen": true,
+  "queue_before": 1,
+  "queue_after_dequeue": 0,
+  "dequeue_then_execute": "PASS",
+  "not_tested": [
+    "provider submission semantics",
+    "same fault matrix as V2",
+    "production concurrency"
+  ],
+  "decision": "Keep V2 DB worker provisionally: project-specific fencing/ACL/evidence state already tested; not evidence that Huey is generally less reliable."
+}

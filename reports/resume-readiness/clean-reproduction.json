@@ -1,0 +1,33 @@
+{
+  "source_commit": "ff0b430ab0380b517cfcf83baaa0df1d53a06f6a",
+  "clean_directory": "runtime/resume-clean",
+  "system_site_packages": false,
+  "source_file_mismatches": [],
+  "private_database_copied": false,
+  "private_media_copied": false,
+  "dependency_check": "pip check PASS",
+  "frontend_tests": 3,
+  "frontend_typecheck": "PASS",
+  "frontend_original_build": "PASS",
+  "dependency_lock": "requirements-resume-windows-py313.lock",
+  "source_files_checked": 260,
+  "comparison": "CRLF/LF normalized; git archive has LF, Windows checkout may use CRLF",
+  "full_tests": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "104",
+    "time": "83.845",
+    "timestamp": "2026-11-02T02:39:51.461920-08:00",
+    "hostname": "desktop"
+  },
+  "online_requests": 9,
+  "offline_requests": 0,
+  "empty_cache_fails_honestly": true,
+  "browser_pages": 16,
+  "flagship_source_flows": 3,
+  "cpu_video": "SUCCEEDED",
+  "restart": "PASS",
+  "legacy_business_checks": 16
+}

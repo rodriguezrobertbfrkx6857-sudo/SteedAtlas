@@ -1,0 +1,63 @@
+[
+  {
+    "provider": "wikisource",
+    "url": "https://zh.wikisource.org/w/api.php?action=query&format=json&formatversion=2&prop=revisions&rvprop=ids%7Ctimestamp%7Ccontent%7Csha1&rvslots=main&titles=%E4%B8%89%E5%9C%8B%E5%BF%97%2F%E5%8D%B707&maxlag=5",
+    "status": 200,
+    "bytes": 35579,
+    "content_type": "application/json; charset=utf-8",
+    "response_sha256": "3621af0a7523e4b71acdecb453b29359a2c2a6800612ed756c61a40a5e032675",
+    "checked_at": "2026-11-02T08:25:30.436867+00:00",
+    "seconds": 1.039
+  },
+  {
+    "provider": "wikidata",
+    "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=%E8%B5%A4%E5%85%94&language=zh&format=json&limit=3",
+    "status": 200,
+    "bytes": 1634,
+    "content_type": "application/json; charset=utf-8",
+    "response_sha256": "731e0bff8acbafd45f79ff0f8b88c2261123c4504cb7a701e69095a948844385",
+    "checked_at": "2026-11-02T08:25:32.383244+00:00",
+    "seconds": 0.947
+  },
+  {
+    "provider": "huggingface",
+    "url": "https://huggingface.co/api/datasets/gujilab/chinese-classical-corpus",
+    "status": 200,
+    "bytes": 2378,
+    "content_type": "application/json; charset=utf-8",
+    "response_sha256": "239373f92c41b36e61b3155da3338635ccc5b8295859d30614d515584b159c09",
+    "checked_at": "2026-11-02T08:25:35.595690+00:00",
+    "seconds": 2.21
+  },
+  {
+    "provider": "github",
+    "url": "https://api.github.com/repos/chinese-poetry/chinese-poetry",
+    "status": 403,
+    "bytes": 278,
+    "content_type": "application/json; charset=utf-8",
+    "response_sha256": "7048c1b237a083d98fe5d32c841938be5072b14d7536e9702fc9cae22398b9bf",
+    "checked_at": "2026-11-02T08:25:37.131157+00:00",
+    "reason": "RATE_LIMIT",
+    "seconds": 0.534
+  },
+  {
+    "provider": "huggingface-card",
+    "url": "https://huggingface.co/datasets/gujilab/chinese-classical-corpus/raw/1979f15b4b749b3601fd9ee3e4111a725c079439/README.md",
+    "status": 200,
+    "bytes": 8356,
+    "content_type": "text/plain; charset=utf-8",
+    "response_sha256": "93ac6368f80f3021f36e976eb6ef0a618fbef6e8e3db8b13e83d3191e156d675",
+    "checked_at": "2026-11-02T08:25:38.462849+00:00",
+    "seconds": 0.333
+  },
+  {
+    "provider": "kaggle",
+    "url": "https://www.kaggle.com/api/v1/datasets/view/qianboao/chinesepoetrydataset",
+    "status": 200,
+    "bytes": 4218,
+    "content_type": "application/json",
+    "response_sha256": "5cd61844da23e3004538bbc577b37d006e58776a38fbe98eb50ffe4258cc24f7",
+    "checked_at": "2026-11-02T08:25:40.122628+00:00",
+    "seconds": 0.659
+  }
+]

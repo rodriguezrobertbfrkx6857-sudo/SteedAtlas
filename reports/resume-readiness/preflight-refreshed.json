@@ -1,0 +1,435 @@
+{
+  "database": "runtime\\resume-rc\\autonomous-demo.db",
+  "read_only": true,
+  "database_sha256": "31f549ccd63ee1552ba551c52754f5399864632d2bbe01c1874f937a294e49f4",
+  "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+  "tools": {
+    "node": "v22.20.0",
+    "ffmpeg": "ffmpeg version 8.1.1-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+    "ffprobe": "ffprobe version 8.1.1-full_build-www.gyan.dev Copyright (c) 2007-2026 the FFmpeg developers"
+  },
+  "ports": {
+    "8006": "IN_USE",
+    "5178": "IN_USE"
+  },
+  "sources": [
+    {
+      "id": "ws-7226",
+      "title": "三國演義/第003回",
+      "revision": 2567965,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-7226",
+        "checked_at": "2026-11-02T10:29:55.575008+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 3
+    },
+    {
+      "id": "ws-12873",
+      "title": "三國志/卷32",
+      "revision": 2583378,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-12873",
+        "checked_at": "2026-11-02T10:16:42.857068+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    },
+    {
+      "id": "ws-7274",
+      "title": "三國演義/第034回",
+      "revision": 2567997,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-7274",
+        "checked_at": "2026-11-02T10:16:48.552706+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 5
+    },
+    {
+      "id": "ws-7541",
+      "title": "史記/卷007",
+      "revision": 5978360,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-7541",
+        "checked_at": "2026-11-02T10:16:52.668710+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    },
+    {
+      "id": "ws-16112",
+      "title": "三國志/卷07",
+      "revision": 2452141,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-16112",
+        "checked_at": "2026-11-02T10:16:57.449528+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    },
+    {
+      "id": "ws-335598",
+      "title": "隋唐演義/004",
+      "revision": 857435,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-335598",
+        "checked_at": "2026-11-02T10:17:03.093273+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 4
+    },
+    {
+      "id": "ws-57940",
+      "title": "拾遺記/卷三",
+      "revision": 2063662,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-57940",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 11
+    },
+    {
+      "id": "ws-55370",
+      "title": "穆天子傳/卷一",
+      "revision": 845388,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-55370",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 4
+    },
+    {
+      "id": "ws-32730",
+      "title": "西遊記/第060回",
+      "revision": 1500612,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-32730",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 0
+    },
+    {
+      "id": "ws-37682",
+      "title": "封神演義/卷074",
+      "revision": 1518198,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-37682",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 0
+    },
+    {
+      "id": "ws-7919",
+      "title": "漢書",
+      "revision": 9458837,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-7919",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 0
+    },
+    {
+      "id": "ws-12396",
+      "title": "三國志/卷01",
+      "revision": 2585429,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-12396",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    },
+    {
+      "id": "ws-891843",
+      "title": "名馬記/卷上",
+      "revision": 1567182,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-891843",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 24
+    },
+    {
+      "id": "ws-891967",
+      "title": "名馬記/卷下",
+      "revision": 1566994,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-891967",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 3
+    },
+    {
+      "id": "ws-483461",
+      "title": "全唐詩/卷647",
+      "revision": 1013876,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-483461",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 0
+    },
+    {
+      "id": "ws-101729",
+      "title": "水滸傳 (120回本)/第068回",
+      "revision": 836418,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-101729",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 4
+    },
+    {
+      "id": "ws-61978",
+      "title": "說唐/第036回",
+      "revision": 823572,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-61978",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 7
+    },
+    {
+      "id": "ws-61982",
+      "title": "說唐/第040回",
+      "revision": 823576,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-61982",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    },
+    {
+      "id": "ws-323796",
+      "title": "太平廣記/卷第435",
+      "revision": 812435,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-323796",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 10
+    },
+    {
+      "id": "ws-26757",
+      "title": "全唐詩/卷165",
+      "revision": 2256074,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-26757",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 2
+    },
+    {
+      "id": "ws-525959",
+      "title": "全唐詩/卷371",
+      "revision": 1061353,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-525959",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 0
+    },
+    {
+      "id": "ws-869353",
+      "title": "全唐詩/卷490",
+      "revision": 1499241,
+      "rights": "ATTRIBUTION_REQUIRED",
+      "visibility": "PUBLIC",
+      "health": {
+        "source_id": "ws-869353",
+        "checked_at": "2026-11-02T07:34:35.793784+00:00",
+        "status": "AVAILABLE"
+      },
+      "valid_current_quotes": 1
+    }
+  ],
+  "cache": [
+    {
+      "title": "三國演義/第003回",
+      "revision": 2567965,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    },
+    {
+      "title": "三國志/卷32",
+      "revision": 2583378,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    },
+    {
+      "title": "史記/卷007",
+      "revision": 5978360,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    },
+    {
+      "title": "三國志/卷07",
+      "revision": 2452141,
+      "state": "CACHE_INTEGRITY_VERIFIED"
+    }
+  ],
+  "cost_paths": "DISABLED_BY_RC_LAUNCHER; PREFLIGHT_CALLS_NO_MODEL",
+  "manifest_sha256": "5ed2ea790e70b124700843121fe4083d17085c08884a4224ca989e541866556d",
+  "chinese_font_available": true,
+  "coverage": {
+    "corpus_snapshot_id": "127be994e69be1f2e2cc34fa41bc4de758d5af93b85bf7524c69eccabdd1cb74",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 83,
+    "review_states": {
+      "DRAFT": 83
+    },
+    "citable_count": 83,
+    "machine_verified_count": 83,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": true
+  },
+  "snapshot_quote_count": 83,
+  "snapshot_links": [
+    "/api/v2/snapshot-evidence/wsc-c1df3fd0995e6e7210d8317b542aaddab6bf125cd89ea94a",
+    "/api/v2/snapshot-evidence/wsc-6be393207be665df9f31312a2485e7d2ebe0079a80f072e0",
+    "/api/v2/snapshot-evidence/wsc-deb6b45007c36a5edaad79ced1bb9ba1cd34514225e2b04c",
+    "/api/v2/snapshot-evidence/wsc-2efea90fe3ab5b1c64d21fdcf5a392f4695d0ba3ce8c9f49",
+    "/api/v2/snapshot-evidence/wsc-d54956fd4c1c4218de272ee3dc1df52beb33411b1b241257",
+    "/api/v2/snapshot-evidence/wsc-27fe7e19fd340236a9e919699095178d6dad72132f77c67b",
+    "/api/v2/snapshot-evidence/wsc-fbe248ddb25268fffc67a80725fcf5a8b1542e0947bec81f",
+    "/api/v2/snapshot-evidence/wsc-2579dbe500656ad4684984313ed3d52b957133fe79d93227",
+    "/api/v2/snapshot-evidence/wsc-c977556543f8bc0295ed6e1ce54701d9e17ea33d6a7c7fb3",
+    "/api/v2/snapshot-evidence/wsc-58d0f146e14252aaebabe6b6413eadac7fc0ca385341cae4",
+    "/api/v2/snapshot-evidence/wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+    "/api/v2/snapshot-evidence/wsc-bb9a950fdf599079def598c0c27339dcb0de22f2f3b1e22c",
+    "/api/v2/snapshot-evidence/wsc-7db7de29068c32824473afa3907270a1006f6310d97b74ad",
+    "/api/v2/snapshot-evidence/wsc-e1a3950ef116e38c3637ac11bcd92bf114dc927c4cbe36fa",
+    "/api/v2/snapshot-evidence/wsc-8a712bb49235360e7166bf50952ed22018eccc8046417597",
+    "/api/v2/snapshot-evidence/wsc-8de91cdcfe0665299264eace084940020cf5430cdd0f8ebe",
+    "/api/v2/snapshot-evidence/wsc-0e2758d0baaf956eb54441722ff1820d02dc84417826abcb",
+    "/api/v2/snapshot-evidence/wsc-5c6b72d0c09c5fb4f6da9dcc9ca81f6e03a1f003197ce5e3",
+    "/api/v2/snapshot-evidence/wsc-7b712ecc4a4eb691e0f6bceb742741e7fcca5e55e914bcab",
+    "/api/v2/snapshot-evidence/wsc-c7bb0f1b1fa382a635f6ae9f4a4f8cb9ad95f98fbd248d75",
+    "/api/v2/snapshot-evidence/wsc-194cec2adf82ae7adbe3579af0d587d97a3057bb0d4024b5",
+    "/api/v2/snapshot-evidence/wsc-898a84058c97b5c1c54d4d07b1fe8e0e02172d1f275ae63d",
+    "/api/v2/snapshot-evidence/wsc-55eec5f958735f039a7defea80c0c60f70d60b771703e374",
+    "/api/v2/snapshot-evidence/wsc-4cb7d870b11fb425480e850a37a76c02df894d9b00108dd7",
+    "/api/v2/snapshot-evidence/wsc-bc1bc68c51d55b8b60ba0745aec3b56e689c80226e5318bb",
+    "/api/v2/snapshot-evidence/wsc-9462661e316d10067fb0d842e07b88f9e59be7e1a722b64c",
+    "/api/v2/snapshot-evidence/wsc-989c2de522345bf87a61781a64b6a043a7a52ae62247fe68",
+    "/api/v2/snapshot-evidence/wsc-e8f1a7ca25bd07a7db1fba0e6eaac30d83fc38311e17981c",
+    "/api/v2/snapshot-evidence/wsc-db2780c87ea461eff62ebecd819b73bbc716fa4e2fc82beb",
+    "/api/v2/snapshot-evidence/wsc-25f70e7e9b5ca9292211ca2a19296fb7d9159de50c9139fd",
+    "/api/v2/snapshot-evidence/wsc-669d3d147d064aaf11c814353be233936b34eaa5eae87094",
+    "/api/v2/snapshot-evidence/wsc-d443a48210ba2dd012a549fef4c472ffb640ec4fb2a3ef22",
+    "/api/v2/snapshot-evidence/wsc-a444b0f21e8d1fcf76d21955c02110b0e04b7f4352d63846",
+    "/api/v2/snapshot-evidence/wsc-f9a2b79ba5bca6554419ad5504f0e14519564907165d88a6",
+    "/api/v2/snapshot-evidence/wsc-53702b4b4722c80fc0aaeaf8d7d5d001cda1a3ca8ea1ac0c",
+    "/api/v2/snapshot-evidence/wsc-4c4beb01de2d41bda5377c160c59f3d4cfa4226d33b28111",
+    "/api/v2/snapshot-evidence/wsc-f9ffb58f1173c4dae1180fc495f54cb04598919af07cb787",
+    "/api/v2/snapshot-evidence/wsc-c2e2e92411335d6af7e9eab66604c9a90a52aee3d4562f25",
+    "/api/v2/snapshot-evidence/wsc-228e332945457c56ce683fb1077040bd87781554b82be3cf",
+    "/api/v2/snapshot-evidence/wsc-2825121ca21f2dd827f8ad36108205b7cd119bf867851417",
+    "/api/v2/snapshot-evidence/wsc-abd9bf9a118e175c673ce8ceb2f923310ca12b2ab1e54c6e",
+    "/api/v2/snapshot-evidence/wsc-e29c5e6135c4d02c7bf5c91a3f3abe6f13a8d0583559f7c2",
+    "/api/v2/snapshot-evidence/wsc-d4705f208d86b3079dbe2d1a2943f30e8db530468d8565f1",
+    "/api/v2/snapshot-evidence/wsc-e556727929d8eef88df393ccb65b13fe80ca8a7767de7077",
+    "/api/v2/snapshot-evidence/wsc-b531d532ccd36cd394936af13ce916104bc2bcfda3a65afa",
+    "/api/v2/snapshot-evidence/wsc-49a9f7bee1bf4fffe148c20dce640badbbb201697cfd7681",
+    "/api/v2/snapshot-evidence/wsc-6efc0ddc5b15d2747d4b816cf60899540ebcd4de5cc6a8a0",
+    "/api/v2/snapshot-evidence/wsc-f95a836a8c7b9decc87f8f6c6044d7da9c8a08c287ea45e5",
+    "/api/v2/snapshot-evidence/wsc-8d24dc085c6a4c638422fb3eef14ab87ba78065f03ac40ae",
+    "/api/v2/snapshot-evidence/wsc-8677918626e7f81c0e5758dc9cb5d3183cc7695701964881",
+    "/api/v2/snapshot-evidence/wsc-a1074afd3032c2a0d905758be4dec750967bd7598ba8e6d4",
+    "/api/v2/snapshot-evidence/wsc-ad5f72741e787e83a1534730152b67be0d827c9b063b1844",
+    "/api/v2/snapshot-evidence/wsc-cb74b35e53102e4663cac658a9e621be382f0cfd05b25d77",
+    "/api/v2/snapshot-evidence/wsc-20abe210ba60d258caf3e83d39034adbd31b55c7a3123466",
+    "/api/v2/snapshot-evidence/wsc-cc70d3b8e2f6f8a44e4186f727a74ea88103c87a6fc265f6",
+    "/api/v2/snapshot-evidence/wsc-43911d809e616833839aa899920c7a7e740bacfdec4decd2",
+    "/api/v2/snapshot-evidence/wsc-9216ba75259dace587176a849775bce0b7c35272b2700df5",
+    "/api/v2/snapshot-evidence/wsc-2f0dca0a9c4142dd3a8794502a8b1ac52f38d4ffc5f9ea11",
+    "/api/v2/snapshot-evidence/wsc-e95c8ede010b3df2338fb3aaf9cdf84c1198e3a80da47fc8",
+    "/api/v2/snapshot-evidence/wsc-31947a0f01d6cb70cb080fc370a405bbb8316522d10a5329",
+    "/api/v2/snapshot-evidence/wsc-f20d0a27aa2e3ce072408547bfd3976485abf30503aebf1c",
+    "/api/v2/snapshot-evidence/wsc-d6a2ac7ede5302663fd510fd5792f2df23c9ea8ad0f5a610",
+    "/api/v2/snapshot-evidence/wsc-a6a67f6c2e2b6a23cb0bd45db185e9c89dd9f877533dbf19",
+    "/api/v2/snapshot-evidence/wsc-512439f42ede6bd72b01bae452685c45f13d2a65174860d3",
+    "/api/v2/snapshot-evidence/wsc-9503e8c395721d2a23d1e7aa5ca396fff9c36598331e6dfe",
+    "/api/v2/snapshot-evidence/wsc-2681c14c52fef37ab3a0c794603949912207338141e4359d",
+    "/api/v2/snapshot-evidence/wsc-cf0f4e693e3a94647cfac42a2c79e3c289861d619ecab32f",
+    "/api/v2/snapshot-evidence/wsc-90f84b42ce103cee00a49a7a21ef70d92669220abba2e800",
+    "/api/v2/snapshot-evidence/wsc-42798963034436d9106ef95f6f5b472238ad760bc9364914",
+    "/api/v2/snapshot-evidence/wsc-4c75da06e537515ad8dacc531293ae8f286e9de4cc95a823",
+    "/api/v2/snapshot-evidence/wsc-cd727f76b044d9620040a8bf556aa25ff9e6db8962d5e024",
+    "/api/v2/snapshot-evidence/wsc-2d3a78fb6ad7747751ae42495c907612f9649e3522460aaa",
+    "/api/v2/snapshot-evidence/wsc-933a0b4a5538b0bd1f8659875b2c88645530190fc5fe15e0",
+    "/api/v2/snapshot-evidence/wsc-b37c313ae476e4e54cd55d1f4c2f87af753109722ae03e06",
+    "/api/v2/snapshot-evidence/wsc-d5ee057c618aced2292d66961c6eae59c74ebfba1efc5b95",
+    "/api/v2/snapshot-evidence/wsc-aee23dae95ef7268a62f6c9570eb2b746b01b76a7be0d9d6",
+    "/api/v2/snapshot-evidence/wsc-04e799b2662eb20b5db69e82b58744e4e1ce75ffa33eeee4",
+    "/api/v2/snapshot-evidence/wsc-9058f58443667697bd4378bfe130bfc3f9597b1bdf36f8c3",
+    "/api/v2/snapshot-evidence/wsc-810058bc51fcae97c31f4244fea6d139f1991a52840479a8",
+    "/api/v2/snapshot-evidence/wsc-7dd1b0730dac47f1ac83d31acd2265033d55d38210672f89",
+    "/api/v2/snapshot-evidence/wsc-4ce56c3c742a29784a54bb1db2f5f35b4ea11126ed695b8f",
+    "/api/v2/snapshot-evidence/wsc-dcd9f7bc8642db8df13373d37e75672a695bcccc411e1a5e",
+    "/api/v2/snapshot-evidence/wsc-4119ba5ec44c8c1a2b6e6daaebbd86ffd093e358c6c2a8a9"
+  ],
+  "network_requests": 0,
+  "source_health_issues": [],
+  "missing_database_versions": [],
+  "status": "PASS",
+  "policy": "Current citations require successful observation <=7 days. Snapshot browsing never renews observation and never bypasses hashes, rights, withdrawal or private access. Missing cache: run resume_demo.py replay online."
+}

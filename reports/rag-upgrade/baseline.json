@@ -1,0 +1,29 @@
+{
+  "backup": "runtime\\backups\\rag-1793600033347747500",
+  "protected_file_count": 703,
+  "legacy_table_counts": {
+    "horses": 103,
+    "users": 32,
+    "products": 5,
+    "orders": 0,
+    "gacha_records": 23,
+    "collections": 9,
+    "video_tasks": 3,
+    "shopee_connections": 0,
+    "shopee_publish_configs": 0,
+    "crossborder_publish_records": 0,
+    "alembic_version": 1,
+    "workflow_tasks": 56,
+    "gacha_fragments": 3,
+    "v2_entities": 46,
+    "v2_revisions": 68,
+    "v2_jobs": 15,
+    "v2_nodes": 105,
+    "v2_events": 308
+  },
+  "media_policy": "hashed and retained in place; no writes",
+  "initial_dirty_file": "reports/original-video-factory-v2.json",
+  "initial_head": "5359141",
+  "synced_head": "e30acf7",
+  "remote_main": "9f98765"
+}

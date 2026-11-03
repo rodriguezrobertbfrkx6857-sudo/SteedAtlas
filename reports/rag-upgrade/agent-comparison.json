@@ -1,0 +1,1420 @@
+[
+  {
+    "mode": "RULE_BASED",
+    "router": "J0",
+    "strategy": "single",
+    "query": "赤兔与的卢的出处比较",
+    "plan": [
+      "赤兔与的卢的出处比较"
+    ],
+    "trace": [
+      {
+        "tool": "search_entities",
+        "arguments": {
+          "query": "赤兔与的卢的出处比较"
+        },
+        "status": "OK",
+        "output": [
+          {
+            "id": "chitu",
+            "kind": "knowledge_entity",
+            "version": 1,
+            "data": {
+              "name": "赤兔",
+              "entity_type": "Horse",
+              "aliases": [
+                "赤菟",
+                "赤兔马"
+              ],
+              "visibility": "PUBLIC"
+            }
+          },
+          {
+            "id": "dilu",
+            "kind": "knowledge_entity",
+            "version": 1,
+            "data": {
+              "name": "的卢",
+              "entity_type": "Horse",
+              "aliases": [
+                "的盧",
+                "的颅"
+              ],
+              "visibility": "PUBLIC"
+            }
+          }
+        ],
+        "output_hash": "6832d78ef847eb015a52fe88691183a49217eef4460fe9ec1f9961fa6c2088c4",
+        "elapsed_ms": 4.026
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "赤兔与的卢的出处比较"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "results": [],
+          "entities": [
+            {
+              "id": "chitu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "赤兔",
+                "entity_type": "Horse",
+                "aliases": [
+                  "赤菟",
+                  "赤兔马"
+                ],
+                "visibility": "PUBLIC"
+              }
+            },
+            {
+              "id": "dilu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "的卢",
+                "entity_type": "Horse",
+                "aliases": [
+                  "的盧",
+                  "的颅"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "claim-1",
+              "version": 2,
+              "text": "布有良马曰赤兔。 《三国志》吕布传记有良马赤兔。",
+              "source_title": "三国志·魏书·吕布臧洪传",
+              "genre": "PRIMARY_RECORD",
+              "review_state": "DRAFT",
+              "locator": "卷七·吕布传·良马段",
+              "href": "/api/v2/evidence/claim-1@2",
+              "usable_as_fact": false,
+              "score": 3.4770544393862703
+            },
+            {
+              "id": "claim-2",
+              "version": 2,
+              "text": "蔡夫人隔屏聽密語 刘皇叔躍马過檀溪 《三国演义》第三十四回以刘皇叔跃马过檀溪为回目之一;的卢故事属于文学叙事。",
+              "source_title": "三国演义·第三十四回",
+              "genre": "LITERARY_WORK",
+              "review_state": "DRAFT",
+              "locator": "第三十四回·回目",
+              "href": "/api/v2/evidence/claim-2@2",
+              "usable_as_fact": false,
+              "score": 1.727245407754828
+            }
+          ],
+          "editorial": [
+            {
+              "id": "editorial:horse-001",
+              "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+              "score": 11.359347473519964
+            },
+            {
+              "id": "editorial:horse-003",
+              "text": "的卢。对应人物:刘备。朝代/出处:东汉末年《三国志》/《三国演义》。故事:跃檀溪救主脱险,被视为危局转机之马。人格标签:转机、避险、天命。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a38908d3f32e69ac5f8267954d5651e32079a40306cd083b30a78612687c7c67",
+              "score": 9.564690705514346
+            },
+            {
+              "id": "editorial:horse-042",
+              "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+              "score": 5.016345695510134
+            },
+            {
+              "id": "editorial:horse-062",
+              "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+              "score": 3.9784455508811045
+            },
+            {
+              "id": "editorial:horse-076",
+              "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+              "score": 3.7143012287564234
+            },
+            {
+              "id": "editorial:horse-082",
+              "text": "胭脂兽。对应人物:女英雄系。朝代/出处:戏曲评书。故事:强烈的艳色与战力反差。人格标签:妩媚、英武、反差感。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8863fb3a47558ab84267d97f7d1e73a0bf56f57a9bd47e6fd59917478a249257",
+              "score": 2.8105882822073505
+            },
+            {
+              "id": "editorial:horse-087",
+              "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+              "score": 2.761008119836735
+            },
+            {
+              "id": "editorial:horse-052",
+              "text": "黑风驹。对应人物:猛将系统。朝代/出处:民间演义。故事:夜袭与突阵感极强的黑马名号。人格标签:凶猛、夜行、压迫。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8dcb7fbf6bb545943ada9b99c2151a5ae64211e0462344831c09dd5662ac0235",
+              "score": 2.746605445596627
+            },
+            {
+              "id": "editorial:horse-007",
+              "text": "黄骠马。对应人物:秦琼。朝代/出处:隋唐演义《说唐》。故事:常与秦琼并提,代表可靠耐战的名将之马。人格标签:稳健、义气、老成。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "1853ba91a49290d4383cf43df0bcd9f3859445c69a80b199e7c7019787a8b016",
+              "score": 2.6559129496249163
+            },
+            {
+              "id": "editorial:horse-021",
+              "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+              "score": 2.6234992610787717
+            },
+            {
+              "id": "editorial:horse-069",
+              "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+              "score": 2.6234992610787717
+            },
+            {
+              "id": "editorial:horse-025",
+              "text": "青海骢。对应人物:边将、边塞英雄。朝代/出处:边塞诗与军旅传统。故事:西北风雪之地的强韧战马意象。人格标签:耐寒、坚忍、边疆。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "961a85c230e921c8311f280b1d677b9fbf75920a7840cca17cc1354c2ee1ee3e",
+              "score": 2.584788511858981
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "53d25f834557da451cf08ad7f0750b895d5bf59d23b35ab663059cb0345842a1",
+        "elapsed_ms": 73.93
+      },
+      {
+        "tool": "compare_sources",
+        "arguments": {
+          "source_ids": []
+        },
+        "status": "OK",
+        "output": [],
+        "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "elapsed_ms": 0.04
+      },
+      {
+        "tool": "inspect_claim_edges",
+        "arguments": {
+          "claim_ids": []
+        },
+        "status": "OK",
+        "output": [],
+        "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "elapsed_ms": 0.2
+      },
+      {
+        "tool": "check_coverage",
+        "arguments": {},
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "editorial_count": 100,
+          "legacy_editorial_count": 100,
+          "claim_count": 3,
+          "review_states": {
+            "DRAFT": 3
+          },
+          "citable_count": 0,
+          "llm_available": false,
+          "source_present": true,
+          "index_ready": true,
+          "evidence_verified": false
+        },
+        "output_hash": "b4fd31acff9f040a52ca3afebc5a47cbc990eee02eab666623db4a1d3b97d852",
+        "elapsed_ms": 0.284
+      }
+    ],
+    "evidence": [],
+    "review_state": "PENDING",
+    "proposal_type": "ReviewFinding",
+    "stop_reason": "PLAN_COMPLETE",
+    "findings": [
+      "NO_REVIEWED_EVIDENCE"
+    ],
+    "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+    "policy": {
+      "max_calls": 8,
+      "max_seconds": 10,
+      "max_evidence": 12,
+      "max_rounds": 3
+    },
+    "tokens": 0,
+    "cost": 0,
+    "model": null,
+    "jev_status": "BLOCKED_NO_AUTHORIZATION"
+  },
+  {
+    "mode": "RULE_BASED",
+    "router": "J0",
+    "strategy": "fixed",
+    "query": "赤兔与的卢的出处比较",
+    "plan": [
+      "赤兔与的卢的出处比较",
+      "赤兔",
+      "的卢"
+    ],
+    "trace": [
+      {
+        "tool": "search_entities",
+        "arguments": {
+          "query": "赤兔与的卢的出处比较"
+        },
+        "status": "OK",
+        "output": [
+          {
+            "id": "chitu",
+            "kind": "knowledge_entity",
+            "version": 1,
+            "data": {
+              "name": "赤兔",
+              "entity_type": "Horse",
+              "aliases": [
+                "赤菟",
+                "赤兔马"
+              ],
+              "visibility": "PUBLIC"
+            }
+          },
+          {
+            "id": "dilu",
+            "kind": "knowledge_entity",
+            "version": 1,
+            "data": {
+              "name": "的卢",
+              "entity_type": "Horse",
+              "aliases": [
+                "的盧",
+                "的颅"
+              ],
+              "visibility": "PUBLIC"
+            }
+          }
+        ],
+        "output_hash": "6832d78ef847eb015a52fe88691183a49217eef4460fe9ec1f9961fa6c2088c4",
+        "elapsed_ms": 3.003
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "赤兔与的卢的出处比较"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "results": [],
+          "entities": [
+            {
+              "id": "chitu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "赤兔",
+                "entity_type": "Horse",
+                "aliases": [
+                  "赤菟",
+                  "赤兔马"
+                ],
+                "visibility": "PUBLIC"
+              }
+            },
+            {
+              "id": "dilu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "的卢",
+                "entity_type": "Horse",
+                "aliases": [
+                  "的盧",
+                  "的颅"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "claim-1",
+              "version": 2,
+              "text": "布有良马曰赤兔。 《三国志》吕布传记有良马赤兔。",
+              "source_title": "三国志·魏书·吕布臧洪传",
+              "genre": "PRIMARY_RECORD",
+              "review_state": "DRAFT",
+              "locator": "卷七·吕布传·良马段",
+              "href": "/api/v2/evidence/claim-1@2",
+              "usable_as_fact": false,
+              "score": 3.4770544393862703
+            },
+            {
+              "id": "claim-2",
+              "version": 2,
+              "text": "蔡夫人隔屏聽密語 刘皇叔躍马過檀溪 《三国演义》第三十四回以刘皇叔跃马过檀溪为回目之一;的卢故事属于文学叙事。",
+              "source_title": "三国演义·第三十四回",
+              "genre": "LITERARY_WORK",
+              "review_state": "DRAFT",
+              "locator": "第三十四回·回目",
+              "href": "/api/v2/evidence/claim-2@2",
+              "usable_as_fact": false,
+              "score": 1.727245407754828
+            }
+          ],
+          "editorial": [
+            {
+              "id": "editorial:horse-001",
+              "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+              "score": 11.359347473519964
+            },
+            {
+              "id": "editorial:horse-003",
+              "text": "的卢。对应人物:刘备。朝代/出处:东汉末年《三国志》/《三国演义》。故事:跃檀溪救主脱险,被视为危局转机之马。人格标签:转机、避险、天命。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a38908d3f32e69ac5f8267954d5651e32079a40306cd083b30a78612687c7c67",
+              "score": 9.564690705514346
+            },
+            {
+              "id": "editorial:horse-042",
+              "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+              "score": 5.016345695510134
+            },
+            {
+              "id": "editorial:horse-062",
+              "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+              "score": 3.9784455508811045
+            },
+            {
+              "id": "editorial:horse-076",
+              "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+              "score": 3.7143012287564234
+            },
+            {
+              "id": "editorial:horse-082",
+              "text": "胭脂兽。对应人物:女英雄系。朝代/出处:戏曲评书。故事:强烈的艳色与战力反差。人格标签:妩媚、英武、反差感。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8863fb3a47558ab84267d97f7d1e73a0bf56f57a9bd47e6fd59917478a249257",
+              "score": 2.8105882822073505
+            },
+            {
+              "id": "editorial:horse-087",
+              "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+              "score": 2.761008119836735
+            },
+            {
+              "id": "editorial:horse-052",
+              "text": "黑风驹。对应人物:猛将系统。朝代/出处:民间演义。故事:夜袭与突阵感极强的黑马名号。人格标签:凶猛、夜行、压迫。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8dcb7fbf6bb545943ada9b99c2151a5ae64211e0462344831c09dd5662ac0235",
+              "score": 2.746605445596627
+            },
+            {
+              "id": "editorial:horse-007",
+              "text": "黄骠马。对应人物:秦琼。朝代/出处:隋唐演义《说唐》。故事:常与秦琼并提,代表可靠耐战的名将之马。人格标签:稳健、义气、老成。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "1853ba91a49290d4383cf43df0bcd9f3859445c69a80b199e7c7019787a8b016",
+              "score": 2.6559129496249163
+            },
+            {
+              "id": "editorial:horse-021",
+              "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+              "score": 2.6234992610787717
+            },
+            {
+              "id": "editorial:horse-069",
+              "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+              "score": 2.6234992610787717
+            },
+            {
+              "id": "editorial:horse-025",
+              "text": "青海骢。对应人物:边将、边塞英雄。朝代/出处:边塞诗与军旅传统。故事:西北风雪之地的强韧战马意象。人格标签:耐寒、坚忍、边疆。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "961a85c230e921c8311f280b1d677b9fbf75920a7840cca17cc1354c2ee1ee3e",
+              "score": 2.584788511858981
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "53d25f834557da451cf08ad7f0750b895d5bf59d23b35ab663059cb0345842a1",
+        "elapsed_ms": 67.211
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "赤兔"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "results": [],
+          "entities": [
+            {
+              "id": "chitu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "赤兔",
+                "entity_type": "Horse",
+                "aliases": [
+                  "赤菟",
+                  "赤兔马"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "claim-1",
+              "version": 2,
+              "text": "布有良马曰赤兔。 《三国志》吕布传记有良马赤兔。",
+              "source_title": "三国志·魏书·吕布臧洪传",
+              "genre": "PRIMARY_RECORD",
+              "review_state": "DRAFT",
+              "locator": "卷七·吕布传·良马段",
+              "href": "/api/v2/evidence/claim-1@2",
+              "usable_as_fact": false,
+              "score": 1.2329231676504893
+            }
+          ],
+          "editorial": [
+            {
+              "id": "editorial:horse-001",
+              "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+              "score": 10.053491090673836
+            },
+            {
+              "id": "editorial:horse-042",
+              "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+              "score": 3.7527442189467055
+            },
+            {
+              "id": "editorial:horse-087",
+              "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+              "score": 2.7452890984492098
+            },
+            {
+              "id": "editorial:horse-021",
+              "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+              "score": 2.608563107614112
+            },
+            {
+              "id": "editorial:horse-069",
+              "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+              "score": 2.608563107614112
+            },
+            {
+              "id": "editorial:horse-062",
+              "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+              "score": 2.5659647914946593
+            },
+            {
+              "id": "editorial:horse-076",
+              "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+              "score": 2.511285126473286
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "b96de96c0b9cf6a26b8a657dbc8e0d37cf2f80618fb02ed2a35f53628b9a387c",
+        "elapsed_ms": 31.174
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "的卢"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "results": [],
+          "entities": [
+            {
+              "id": "dilu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "的卢",
+                "entity_type": "Horse",
+                "aliases": [
+                  "的盧",
+                  "的颅"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "claim-2",
+              "version": 2,
+              "text": "蔡夫人隔屏聽密語 刘皇叔躍马過檀溪 《三国演义》第三十四回以刘皇叔跃马过檀溪为回目之一;的卢故事属于文学叙事。",
+              "source_title": "三国演义·第三十四回",
+              "genre": "LITERARY_WORK",
+              "review_state": "DRAFT",
+              "locator": "第三十四回·回目",
+              "href": "/api/v2/evidence/claim-2@2",
+              "usable_as_fact": false,
+              "score": 0.8630462173553426
+            }
+          ],
+          "editorial": [
+            {
+              "id": "editorial:horse-003",
+              "text": "的卢。对应人物:刘备。朝代/出处:东汉末年《三国志》/《三国演义》。故事:跃檀溪救主脱险,被视为危局转机之马。人格标签:转机、避险、天命。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a38908d3f32e69ac5f8267954d5651e32079a40306cd083b30a78612687c7c67",
+              "score": 9.550234534129387
+            },
+            {
+              "id": "editorial:horse-085",
+              "text": "奔雷驹。对应人物:猛将。朝代/出处:演义命名传统。故事:雷霆式冲锋的典型代表。人格标签:猛进、压制、冲阵。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "12b65dd1790441035859a0eb7aaef42e9017db1b83befe20edcf1b881d26cf49",
+              "score": 1.5130979695180684
+            },
+            {
+              "id": "editorial:horse-082",
+              "text": "胭脂兽。对应人物:女英雄系。朝代/出处:戏曲评书。故事:强烈的艳色与战力反差。人格标签:妩媚、英武、反差感。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8863fb3a47558ab84267d97f7d1e73a0bf56f57a9bd47e6fd59917478a249257",
+              "score": 1.4954739783629318
+            },
+            {
+              "id": "editorial:horse-044",
+              "text": "渠黄。对应人物:古代王者名驹。朝代/出处:古典名马谱系。故事:黄马中的名品,厚重稳健。人格标签:厚重、贵气、可靠。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9c71bd905a3c001a04b4001a1bf3481a0683800676c6d5b180861b6c04a5f4fe",
+              "score": 1.4697945640891563
+            },
+            {
+              "id": "editorial:horse-075",
+              "text": "踏雪梅花驹。对应人物:女将/少年将。朝代/出处:戏曲评书。故事:雪地留梅般的视觉诗意。人格标签:灵巧、美感、韧性。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "0b59c8f1cb93d388925125f2d3418109f877214c43912f60292387f6aa90d94d",
+              "score": 1.4697945640891563
+            },
+            {
+              "id": "editorial:horse-052",
+              "text": "黑风驹。对应人物:猛将系统。朝代/出处:民间演义。故事:夜袭与突阵感极强的黑马名号。人格标签:凶猛、夜行、压迫。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8dcb7fbf6bb545943ada9b99c2151a5ae64211e0462344831c09dd5662ac0235",
+              "score": 1.4614296226602763
+            },
+            {
+              "id": "editorial:horse-038",
+              "text": "腾雾。对应人物:周穆王。朝代/出处:《穆天子传》八骏之一。故事:有腾云驾雾般的传奇色彩。人格标签:空灵、神秘、飞升感。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "2bc9069b6d1a4ae910bcace452571d521b0cf105efa3841628a48286bac03c24",
+              "score": 1.453159356054847
+            },
+            {
+              "id": "editorial:horse-031",
+              "text": "纤离。对应人物:周穆王。朝代/出处:《穆天子传》八骏之一。故事:伴随天子远巡,是远征王权的象征。人格标签:远志、王者、巡狩。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "5128bd80b4af5b42e739610f4f5c3fd1750f65722e60a4428dc94b309255699a",
+              "score": 1.4289008004813386
+            },
+            {
+              "id": "editorial:horse-043",
+              "text": "白义。对应人物:周穆王系传说。朝代/出处:古代名驹传统。故事:白马母题中的纯白圣洁路线。人格标签:纯净、忠正、圣洁。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9d3e0764c3d794bcca1961e4804b5d0f55138bd1d1d4cb71db1ea058d737e03f",
+              "score": 1.4289008004813386
+            },
+            {
+              "id": "editorial:horse-057",
+              "text": "闪电白龙驹。对应人物:罗成系/少年将。朝代/出处:演义命名传统。故事:白马高速线的理想命名。人格标签:电速、清俊、耀眼。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "ed2d53f736a24eaf5cfae8031ff427b8a5b222ee3c8af6c76ccf9186d73df501",
+              "score": 1.4209936033906636
+            },
+            {
+              "id": "editorial:horse-007",
+              "text": "黄骠马。对应人物:秦琼。朝代/出处:隋唐演义《说唐》。故事:常与秦琼并提,代表可靠耐战的名将之马。人格标签:稳健、义气、老成。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "1853ba91a49290d4383cf43df0bcd9f3859445c69a80b199e7c7019787a8b016",
+              "score": 1.4131734377835778
+            },
+            {
+              "id": "editorial:horse-040",
+              "text": "骅骝。对应人物:王者/古代天子。朝代/出处:《诗经》等古典文献。故事:中国古代最经典的名骥名号之一。人格标签:高贵、经典、王者。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "20f32f709a768904b97be966703421b25a94c98d0fc4b554521c71454374f291",
+              "score": 1.3977885160595311
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "ef7e832ef732ad9b51faddee853d4d9a6a966f3e26df1cd005f551066d824458",
+        "elapsed_ms": 19.506
+      },
+      {
+        "tool": "compare_sources",
+        "arguments": {
+          "source_ids": []
+        },
+        "status": "OK",
+        "output": [],
+        "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "elapsed_ms": 0.023
+      },
+      {
+        "tool": "inspect_claim_edges",
+        "arguments": {
+          "claim_ids": []
+        },
+        "status": "OK",
+        "output": [],
+        "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "elapsed_ms": 0.145
+      },
+      {
+        "tool": "check_coverage",
+        "arguments": {},
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "editorial_count": 100,
+          "legacy_editorial_count": 100,
+          "claim_count": 3,
+          "review_states": {
+            "DRAFT": 3
+          },
+          "citable_count": 0,
+          "llm_available": false,
+          "source_present": true,
+          "index_ready": true,
+          "evidence_verified": false
+        },
+        "output_hash": "b4fd31acff9f040a52ca3afebc5a47cbc990eee02eab666623db4a1d3b97d852",
+        "elapsed_ms": 0.252
+      }
+    ],
+    "evidence": [],
+    "review_state": "PENDING",
+    "proposal_type": "ReviewFinding",
+    "stop_reason": "PLAN_COMPLETE",
+    "findings": [
+      "NO_REVIEWED_EVIDENCE"
+    ],
+    "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+    "policy": {
+      "max_calls": 8,
+      "max_seconds": 10,
+      "max_evidence": 12,
+      "max_rounds": 3
+    },
+    "tokens": 0,
+    "cost": 0,
+    "model": null,
+    "jev_status": "BLOCKED_NO_AUTHORIZATION"
+  },
+  {
+    "mode": "RULE_BASED",
+    "router": "J0",
+    "strategy": "adaptive",
+    "query": "赤兔与的卢的出处比较",
+    "plan": [
+      "赤兔与的卢的出处比较",
+      "赤兔",
+      "的卢"
+    ],
+    "trace": [
+      {
+        "tool": "search_entities",
+        "arguments": {
+          "query": "赤兔与的卢的出处比较"
+        },
+        "status": "OK",
+        "output": [
+          {
+            "id": "chitu",
+            "kind": "knowledge_entity",
+            "version": 1,
+            "data": {
+              "name": "赤兔",
+              "entity_type": "Horse",
+              "aliases": [
+                "赤菟",
+                "赤兔马"
+              ],
+              "visibility": "PUBLIC"
+            }
+          },
+          {
+            "id": "dilu",
+            "kind": "knowledge_entity",
+            "version": 1,
+            "data": {
+              "name": "的卢",
+              "entity_type": "Horse",
+              "aliases": [
+                "的盧",
+                "的颅"
+              ],
+              "visibility": "PUBLIC"
+            }
+          }
+        ],
+        "output_hash": "6832d78ef847eb015a52fe88691183a49217eef4460fe9ec1f9961fa6c2088c4",
+        "elapsed_ms": 3.484
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "赤兔与的卢的出处比较"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "results": [],
+          "entities": [
+            {
+              "id": "chitu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "赤兔",
+                "entity_type": "Horse",
+                "aliases": [
+                  "赤菟",
+                  "赤兔马"
+                ],
+                "visibility": "PUBLIC"
+              }
+            },
+            {
+              "id": "dilu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "的卢",
+                "entity_type": "Horse",
+                "aliases": [
+                  "的盧",
+                  "的颅"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "claim-1",
+              "version": 2,
+              "text": "布有良马曰赤兔。 《三国志》吕布传记有良马赤兔。",
+              "source_title": "三国志·魏书·吕布臧洪传",
+              "genre": "PRIMARY_RECORD",
+              "review_state": "DRAFT",
+              "locator": "卷七·吕布传·良马段",
+              "href": "/api/v2/evidence/claim-1@2",
+              "usable_as_fact": false,
+              "score": 3.4770544393862703
+            },
+            {
+              "id": "claim-2",
+              "version": 2,
+              "text": "蔡夫人隔屏聽密語 刘皇叔躍马過檀溪 《三国演义》第三十四回以刘皇叔跃马过檀溪为回目之一;的卢故事属于文学叙事。",
+              "source_title": "三国演义·第三十四回",
+              "genre": "LITERARY_WORK",
+              "review_state": "DRAFT",
+              "locator": "第三十四回·回目",
+              "href": "/api/v2/evidence/claim-2@2",
+              "usable_as_fact": false,
+              "score": 1.727245407754828
+            }
+          ],
+          "editorial": [
+            {
+              "id": "editorial:horse-001",
+              "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+              "score": 11.359347473519964
+            },
+            {
+              "id": "editorial:horse-003",
+              "text": "的卢。对应人物:刘备。朝代/出处:东汉末年《三国志》/《三国演义》。故事:跃檀溪救主脱险,被视为危局转机之马。人格标签:转机、避险、天命。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a38908d3f32e69ac5f8267954d5651e32079a40306cd083b30a78612687c7c67",
+              "score": 9.564690705514346
+            },
+            {
+              "id": "editorial:horse-042",
+              "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+              "score": 5.016345695510134
+            },
+            {
+              "id": "editorial:horse-062",
+              "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+              "score": 3.9784455508811045
+            },
+            {
+              "id": "editorial:horse-076",
+              "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+              "score": 3.7143012287564234
+            },
+            {
+              "id": "editorial:horse-082",
+              "text": "胭脂兽。对应人物:女英雄系。朝代/出处:戏曲评书。故事:强烈的艳色与战力反差。人格标签:妩媚、英武、反差感。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8863fb3a47558ab84267d97f7d1e73a0bf56f57a9bd47e6fd59917478a249257",
+              "score": 2.8105882822073505
+            },
+            {
+              "id": "editorial:horse-087",
+              "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+              "score": 2.761008119836735
+            },
+            {
+              "id": "editorial:horse-052",
+              "text": "黑风驹。对应人物:猛将系统。朝代/出处:民间演义。故事:夜袭与突阵感极强的黑马名号。人格标签:凶猛、夜行、压迫。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8dcb7fbf6bb545943ada9b99c2151a5ae64211e0462344831c09dd5662ac0235",
+              "score": 2.746605445596627
+            },
+            {
+              "id": "editorial:horse-007",
+              "text": "黄骠马。对应人物:秦琼。朝代/出处:隋唐演义《说唐》。故事:常与秦琼并提,代表可靠耐战的名将之马。人格标签:稳健、义气、老成。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "1853ba91a49290d4383cf43df0bcd9f3859445c69a80b199e7c7019787a8b016",
+              "score": 2.6559129496249163
+            },
+            {
+              "id": "editorial:horse-021",
+              "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+              "score": 2.6234992610787717
+            },
+            {
+              "id": "editorial:horse-069",
+              "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+              "score": 2.6234992610787717
+            },
+            {
+              "id": "editorial:horse-025",
+              "text": "青海骢。对应人物:边将、边塞英雄。朝代/出处:边塞诗与军旅传统。故事:西北风雪之地的强韧战马意象。人格标签:耐寒、坚忍、边疆。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "961a85c230e921c8311f280b1d677b9fbf75920a7840cca17cc1354c2ee1ee3e",
+              "score": 2.584788511858981
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "53d25f834557da451cf08ad7f0750b895d5bf59d23b35ab663059cb0345842a1",
+        "elapsed_ms": 68.009
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "赤兔"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "results": [],
+          "entities": [
+            {
+              "id": "chitu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "赤兔",
+                "entity_type": "Horse",
+                "aliases": [
+                  "赤菟",
+                  "赤兔马"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "claim-1",
+              "version": 2,
+              "text": "布有良马曰赤兔。 《三国志》吕布传记有良马赤兔。",
+              "source_title": "三国志·魏书·吕布臧洪传",
+              "genre": "PRIMARY_RECORD",
+              "review_state": "DRAFT",
+              "locator": "卷七·吕布传·良马段",
+              "href": "/api/v2/evidence/claim-1@2",
+              "usable_as_fact": false,
+              "score": 1.2329231676504893
+            }
+          ],
+          "editorial": [
+            {
+              "id": "editorial:horse-001",
+              "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+              "score": 10.053491090673836
+            },
+            {
+              "id": "editorial:horse-042",
+              "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+              "score": 3.7527442189467055
+            },
+            {
+              "id": "editorial:horse-087",
+              "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+              "score": 2.7452890984492098
+            },
+            {
+              "id": "editorial:horse-021",
+              "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+              "score": 2.608563107614112
+            },
+            {
+              "id": "editorial:horse-069",
+              "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+              "score": 2.608563107614112
+            },
+            {
+              "id": "editorial:horse-062",
+              "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+              "score": 2.5659647914946593
+            },
+            {
+              "id": "editorial:horse-076",
+              "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+              "score": 2.511285126473286
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "b96de96c0b9cf6a26b8a657dbc8e0d37cf2f80618fb02ed2a35f53628b9a387c",
+        "elapsed_ms": 30.138
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "的卢"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "results": [],
+          "entities": [
+            {
+              "id": "dilu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "的卢",
+                "entity_type": "Horse",
+                "aliases": [
+                  "的盧",
+                  "的颅"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "claim-2",
+              "version": 2,
+              "text": "蔡夫人隔屏聽密語 刘皇叔躍马過檀溪 《三国演义》第三十四回以刘皇叔跃马过檀溪为回目之一;的卢故事属于文学叙事。",
+              "source_title": "三国演义·第三十四回",
+              "genre": "LITERARY_WORK",
+              "review_state": "DRAFT",
+              "locator": "第三十四回·回目",
+              "href": "/api/v2/evidence/claim-2@2",
+              "usable_as_fact": false,
+              "score": 0.8630462173553426
+            }
+          ],
+          "editorial": [
+            {
+              "id": "editorial:horse-003",
+              "text": "的卢。对应人物:刘备。朝代/出处:东汉末年《三国志》/《三国演义》。故事:跃檀溪救主脱险,被视为危局转机之马。人格标签:转机、避险、天命。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a38908d3f32e69ac5f8267954d5651e32079a40306cd083b30a78612687c7c67",
+              "score": 9.550234534129387
+            },
+            {
+              "id": "editorial:horse-085",
+              "text": "奔雷驹。对应人物:猛将。朝代/出处:演义命名传统。故事:雷霆式冲锋的典型代表。人格标签:猛进、压制、冲阵。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "12b65dd1790441035859a0eb7aaef42e9017db1b83befe20edcf1b881d26cf49",
+              "score": 1.5130979695180684
+            },
+            {
+              "id": "editorial:horse-082",
+              "text": "胭脂兽。对应人物:女英雄系。朝代/出处:戏曲评书。故事:强烈的艳色与战力反差。人格标签:妩媚、英武、反差感。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8863fb3a47558ab84267d97f7d1e73a0bf56f57a9bd47e6fd59917478a249257",
+              "score": 1.4954739783629318
+            },
+            {
+              "id": "editorial:horse-044",
+              "text": "渠黄。对应人物:古代王者名驹。朝代/出处:古典名马谱系。故事:黄马中的名品,厚重稳健。人格标签:厚重、贵气、可靠。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9c71bd905a3c001a04b4001a1bf3481a0683800676c6d5b180861b6c04a5f4fe",
+              "score": 1.4697945640891563
+            },
+            {
+              "id": "editorial:horse-075",
+              "text": "踏雪梅花驹。对应人物:女将/少年将。朝代/出处:戏曲评书。故事:雪地留梅般的视觉诗意。人格标签:灵巧、美感、韧性。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "0b59c8f1cb93d388925125f2d3418109f877214c43912f60292387f6aa90d94d",
+              "score": 1.4697945640891563
+            },
+            {
+              "id": "editorial:horse-052",
+              "text": "黑风驹。对应人物:猛将系统。朝代/出处:民间演义。故事:夜袭与突阵感极强的黑马名号。人格标签:凶猛、夜行、压迫。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "8dcb7fbf6bb545943ada9b99c2151a5ae64211e0462344831c09dd5662ac0235",
+              "score": 1.4614296226602763
+            },
+            {
+              "id": "editorial:horse-038",
+              "text": "腾雾。对应人物:周穆王。朝代/出处:《穆天子传》八骏之一。故事:有腾云驾雾般的传奇色彩。人格标签:空灵、神秘、飞升感。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "2bc9069b6d1a4ae910bcace452571d521b0cf105efa3841628a48286bac03c24",
+              "score": 1.453159356054847
+            },
+            {
+              "id": "editorial:horse-031",
+              "text": "纤离。对应人物:周穆王。朝代/出处:《穆天子传》八骏之一。故事:伴随天子远巡,是远征王权的象征。人格标签:远志、王者、巡狩。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "5128bd80b4af5b42e739610f4f5c3fd1750f65722e60a4428dc94b309255699a",
+              "score": 1.4289008004813386
+            },
+            {
+              "id": "editorial:horse-043",
+              "text": "白义。对应人物:周穆王系传说。朝代/出处:古代名驹传统。故事:白马母题中的纯白圣洁路线。人格标签:纯净、忠正、圣洁。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9d3e0764c3d794bcca1961e4804b5d0f55138bd1d1d4cb71db1ea058d737e03f",
+              "score": 1.4289008004813386
+            },
+            {
+              "id": "editorial:horse-057",
+              "text": "闪电白龙驹。对应人物:罗成系/少年将。朝代/出处:演义命名传统。故事:白马高速线的理想命名。人格标签:电速、清俊、耀眼。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "ed2d53f736a24eaf5cfae8031ff427b8a5b222ee3c8af6c76ccf9186d73df501",
+              "score": 1.4209936033906636
+            },
+            {
+              "id": "editorial:horse-007",
+              "text": "黄骠马。对应人物:秦琼。朝代/出处:隋唐演义《说唐》。故事:常与秦琼并提,代表可靠耐战的名将之马。人格标签:稳健、义气、老成。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "1853ba91a49290d4383cf43df0bcd9f3859445c69a80b199e7c7019787a8b016",
+              "score": 1.4131734377835778
+            },
+            {
+              "id": "editorial:horse-040",
+              "text": "骅骝。对应人物:王者/古代天子。朝代/出处:《诗经》等古典文献。故事:中国古代最经典的名骥名号之一。人格标签:高贵、经典、王者。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "20f32f709a768904b97be966703421b25a94c98d0fc4b554521c71454374f291",
+              "score": 1.3977885160595311
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "ef7e832ef732ad9b51faddee853d4d9a6a966f3e26df1cd005f551066d824458",
+        "elapsed_ms": 28.401
+      },
+      {
+        "tool": "compare_sources",
+        "arguments": {
+          "source_ids": []
+        },
+        "status": "OK",
+        "output": [],
+        "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "elapsed_ms": 0.025
+      },
+      {
+        "tool": "inspect_claim_edges",
+        "arguments": {
+          "claim_ids": []
+        },
+        "status": "OK",
+        "output": [],
+        "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "elapsed_ms": 0.147
+      },
+      {
+        "tool": "check_coverage",
+        "arguments": {},
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+          "editorial_count": 100,
+          "legacy_editorial_count": 100,
+          "claim_count": 3,
+          "review_states": {
+            "DRAFT": 3
+          },
+          "citable_count": 0,
+          "llm_available": false,
+          "source_present": true,
+          "index_ready": true,
+          "evidence_verified": false
+        },
+        "output_hash": "b4fd31acff9f040a52ca3afebc5a47cbc990eee02eab666623db4a1d3b97d852",
+        "elapsed_ms": 0.246
+      }
+    ],
+    "evidence": [],
+    "review_state": "PENDING",
+    "proposal_type": "ReviewFinding",
+    "stop_reason": "PLAN_COMPLETE",
+    "findings": [
+      "NO_REVIEWED_EVIDENCE"
+    ],
+    "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+    "policy": {
+      "max_calls": 8,
+      "max_seconds": 10,
+      "max_evidence": 12,
+      "max_rounds": 3
+    },
+    "tokens": 0,
+    "cost": 0,
+    "model": null,
+    "jev_status": "BLOCKED_NO_AUTHORIZATION"
+  }
+]

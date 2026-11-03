@@ -1,0 +1,255 @@
+{
+  "version": 3,
+  "width": 480,
+  "height": 270,
+  "packs": [
+    {
+      "id": "imperial-scroll",
+      "name": "帝卷金纹",
+      "description": "卷轴、山势和鎏金边饰组成的历史叙事底图，适合纪传长卷式视频。",
+      "recommended_templates": [
+        "chronicle"
+      ],
+      "semantic_tags": [
+        "忠义",
+        "守护",
+        "帝王",
+        "史传",
+        "经典",
+        "厚重",
+        "贵气",
+        "王者",
+        "统御",
+        "远志",
+        "巡狩",
+        "创业",
+        "修行"
+      ],
+      "figure_keywords": [
+        "关羽",
+        "刘备",
+        "李世民",
+        "唐僧",
+        "唐玄宗",
+        "汉武帝",
+        "周穆王",
+        "帝",
+        "王",
+        "天子"
+      ],
+      "story_keywords": [
+        "历史",
+        "征战",
+        "护送",
+        "西行",
+        "远征",
+        "业绩",
+        "创业",
+        "王朝",
+        "正典"
+      ],
+      "match_hint": "适合忠义、帝王、史传与守护气质的中国名马。",
+      "asset_count": 4,
+      "preview_url": "/assets/video_backgrounds/imperial-scroll/opening-scroll.bmp",
+      "assets": [
+        {
+          "id": "opening-scroll",
+          "name": "卷首晨光",
+          "description": "适合开篇点题和人物登场。",
+          "scene_index": 1,
+          "file_url": "/assets/video_backgrounds/imperial-scroll/opening-scroll.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/imperial-scroll/opening-scroll.bmp"
+        },
+        {
+          "id": "historical-map",
+          "name": "山川古图",
+          "description": "适合史料讲述和背景交代。",
+          "scene_index": 2,
+          "file_url": "/assets/video_backgrounds/imperial-scroll/historical-map.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/imperial-scroll/historical-map.bmp"
+        },
+        {
+          "id": "bronze-chronicle",
+          "name": "金石纪传",
+          "description": "适合中段推进和典籍感镜头。",
+          "scene_index": 3,
+          "file_url": "/assets/video_backgrounds/imperial-scroll/bronze-chronicle.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/imperial-scroll/bronze-chronicle.bmp"
+        },
+        {
+          "id": "epilogue-banner",
+          "name": "落款题记",
+          "description": "适合收束情绪和片尾文案。",
+          "scene_index": 4,
+          "file_url": "/assets/video_backgrounds/imperial-scroll/epilogue-banner.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/imperial-scroll/epilogue-banner.bmp"
+        }
+      ]
+    },
+    {
+      "id": "battlefield-ember",
+      "name": "沙场赤焰",
+      "description": "更偏冲阵和旌旗感的战报底图，适合战场、奔袭和高压叙事。",
+      "recommended_templates": [
+        "battle"
+      ],
+      "semantic_tags": [
+        "爆发",
+        "冲锋",
+        "威猛",
+        "征战",
+        "边疆",
+        "逆境",
+        "速度",
+        "锋芒",
+        "硬战",
+        "夜战",
+        "强攻",
+        "野性",
+        "压迫",
+        "勇武",
+        "执行"
+      ],
+      "figure_keywords": [
+        "吕布",
+        "项羽",
+        "曹操",
+        "秦琼",
+        "尉迟恭",
+        "罗成",
+        "岳云",
+        "猛将",
+        "英雄"
+      ],
+      "story_keywords": [
+        "冲阵",
+        "厮杀",
+        "边关",
+        "兵败",
+        "脱险",
+        "夜战",
+        "征伐",
+        "奇袭",
+        "硬战"
+      ],
+      "match_hint": "适合冲锋、爆发、边疆与征战气质的战阵型名马。",
+      "asset_count": 4,
+      "preview_url": "/assets/video_backgrounds/battlefield-ember/campfire-dawn.bmp",
+      "assets": [
+        {
+          "id": "campfire-dawn",
+          "name": "营火破晓",
+          "description": "适合战前蓄势和出征开场。",
+          "scene_index": 1,
+          "file_url": "/assets/video_backgrounds/battlefield-ember/campfire-dawn.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/battlefield-ember/campfire-dawn.bmp"
+        },
+        {
+          "id": "banner-charge",
+          "name": "旌旗突进",
+          "description": "适合主镜头冲锋和节奏拉满。",
+          "scene_index": 2,
+          "file_url": "/assets/video_backgrounds/battlefield-ember/banner-charge.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/battlefield-ember/banner-charge.bmp"
+        },
+        {
+          "id": "dust-clash",
+          "name": "烟尘鏖战",
+          "description": "适合中段爆发和压迫感转场。",
+          "scene_index": 3,
+          "file_url": "/assets/video_backgrounds/battlefield-ember/dust-clash.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/battlefield-ember/dust-clash.bmp"
+        },
+        {
+          "id": "victory-smoke",
+          "name": "战后余烬",
+          "description": "适合结尾余韵和人物定格。",
+          "scene_index": 4,
+          "file_url": "/assets/video_backgrounds/battlefield-ember/victory-smoke.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/battlefield-ember/victory-smoke.bmp"
+        }
+      ]
+    },
+    {
+      "id": "moonlit-legend",
+      "name": "夜照传奇",
+      "description": "月色、云海与神秘纹样构成的传说系底图，适合稀有马和高位角色。",
+      "recommended_templates": [
+        "legend"
+      ],
+      "semantic_tags": [
+        "神秘",
+        "空灵",
+        "传奇",
+        "祥瑞",
+        "稀有",
+        "白马",
+        "神异",
+        "圣洁",
+        "终局",
+        "隐藏王者",
+        "修行",
+        "神话",
+        "灵动",
+        "贵重"
+      ],
+      "figure_keywords": [
+        "赵云",
+        "唐僧",
+        "周穆王",
+        "仙",
+        "传说",
+        "神马",
+        "英魂"
+      ],
+      "story_keywords": [
+        "月",
+        "传奇",
+        "神话",
+        "西域",
+        "八骏",
+        "星",
+        "光",
+        "祥瑞",
+        "稀世"
+      ],
+      "match_hint": "适合传奇、白马、空灵与神话向叙事的高稀有坐骑。",
+      "asset_count": 4,
+      "preview_url": "/assets/video_backgrounds/moonlit-legend/moon-gate.bmp",
+      "assets": [
+        {
+          "id": "moon-gate",
+          "name": "月门初现",
+          "description": "适合传说马的高位登场。",
+          "scene_index": 1,
+          "file_url": "/assets/video_backgrounds/moonlit-legend/moon-gate.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/moonlit-legend/moon-gate.bmp"
+        },
+        {
+          "id": "cloud-passage",
+          "name": "云海行迹",
+          "description": "适合旅途、追风和命运感。",
+          "scene_index": 2,
+          "file_url": "/assets/video_backgrounds/moonlit-legend/cloud-passage.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/moonlit-legend/cloud-passage.bmp"
+        },
+        {
+          "id": "starlit-relic",
+          "name": "星纹遗卷",
+          "description": "适合细节讲述和藏品镜头。",
+          "scene_index": 3,
+          "file_url": "/assets/video_backgrounds/moonlit-legend/starlit-relic.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/moonlit-legend/starlit-relic.bmp"
+        },
+        {
+          "id": "silent-crown",
+          "name": "静夜王座",
+          "description": "适合片尾停驻和传说定格。",
+          "scene_index": 4,
+          "file_url": "/assets/video_backgrounds/moonlit-legend/silent-crown.bmp",
+          "file_path": "/var/www/baiqipu/server/assets/video_backgrounds/moonlit-legend/silent-crown.bmp"
+        }
+      ]
+    }
+  ]
+}

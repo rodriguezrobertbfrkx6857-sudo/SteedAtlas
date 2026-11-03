@@ -1,0 +1,740 @@
+{
+  "database": "runtime\\autonomous-agent-rc-1793615844016764600.db",
+  "provider_mocked": false,
+  "before": {
+    "corpus_snapshot_id": "b783eefe74d9989086f7728921546c57f0f569d3f53b999571e757b5b535b92f",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 0,
+    "review_states": {},
+    "citable_count": 0,
+    "machine_verified_count": 0,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": false
+  },
+  "run": {
+    "mode": "RULE_BASED",
+    "router": "J0",
+    "strategy": "single",
+    "query": "赤兔的史籍出处",
+    "plan": [
+      "赤兔的史籍出处"
+    ],
+    "trace": [
+      {
+        "tool": "search_entities",
+        "arguments": {
+          "query": "赤兔的史籍出处"
+        },
+        "status": "OK",
+        "output": [
+          {
+            "id": "chitu",
+            "kind": "knowledge_entity",
+            "version": 1,
+            "data": {
+              "name": "赤兔",
+              "entity_type": "Horse",
+              "aliases": [
+                "赤菟",
+                "赤兔马"
+              ],
+              "visibility": "PUBLIC"
+            }
+          }
+        ],
+        "output_hash": "01e21336c6b5c5fa149358c35fe32a2644110c71ffb2dd84678ad8822800c77e",
+        "elapsed_ms": 4.176
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "赤兔的史籍出处"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "b783eefe74d9989086f7728921546c57f0f569d3f53b999571e757b5b535b92f",
+          "results": [],
+          "entities": [
+            {
+              "id": "chitu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "赤兔",
+                "entity_type": "Horse",
+                "aliases": [
+                  "赤菟",
+                  "赤兔马"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [],
+          "coverage": {
+            "limit": 12,
+            "missing_entity_ids": [
+              "chitu"
+            ],
+            "known_opposition_pairs": 0,
+            "opposition_truncated": false,
+            "conflict_detection": "EXPLICIT_PROPOSITION_SAME_ENTITY_ONLY"
+          },
+          "editorial": [
+            {
+              "id": "editorial:horse-001",
+              "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+              "score": 11.355183584563767
+            },
+            {
+              "id": "editorial:horse-076",
+              "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+              "score": 5.7710315197423165
+            },
+            {
+              "id": "editorial:horse-002",
+              "text": "乌骓。对应人物:项羽。朝代/出处:秦末汉初《史记·项羽本纪》。故事:垓下兵败后伴随项羽至乌江,成为英雄末路的象征。人格标签:孤勇、逆境、悲壮。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "0b64c2cd0e840cdd294be5b1adb41d59b2fe5274b2fb6ae420094d6d67e157e5",
+              "score": 4.461693410965634
+            },
+            {
+              "id": "editorial:horse-062",
+              "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+              "score": 3.9771070967855784
+            },
+            {
+              "id": "editorial:horse-045",
+              "text": "绿耳。对应人物:古代名驹。朝代/出处:古籍名马系统。故事:带有独特外貌与神异感。人格标签:灵敏、异相、稀有。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "fd4d4b79489e5927dfe33a10238eb6f5513768a0e0c2c3ff8d578613e8b1b5ab",
+              "score": 3.919704591538005
+            },
+            {
+              "id": "editorial:horse-042",
+              "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+              "score": 3.766974254347109
+            },
+            {
+              "id": "editorial:horse-039",
+              "text": "盗骊。对应人物:先秦名驹谱系。朝代/出处:先秦古籍传统。故事:黑色名骥意象,常作极品良马代称。人格标签:深沉、稀贵、强韧。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "eda00b6be70f8c3e7621fdf0d582026f44e97dff09936773a1f37e1d848e51df",
+              "score": 3.6836237781620884
+            },
+            {
+              "id": "editorial:horse-026",
+              "text": "紫骍。对应人物:帝王/贵族系统。朝代/出处:史传与诗赋名马意象。故事:紫色骏马常作高贵祥瑞象征。人格标签:华贵、威仪、祥瑞。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "35b6fb87c7bda83d6ae243b737ad35e2d281306abdcb45dd139992f7915090f9",
+              "score": 3.3135917856518327
+            },
+            {
+              "id": "editorial:horse-087",
+              "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+              "score": 2.7601562750505604
+            },
+            {
+              "id": "editorial:horse-021",
+              "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+              "score": 2.6226340336565355
+            },
+            {
+              "id": "editorial:horse-069",
+              "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+              "score": 2.6226340336565355
+            },
+            {
+              "id": "editorial:horse-085",
+              "text": "奔雷驹。对应人物:猛将。朝代/出处:演义命名传统。故事:雷霆式冲锋的典型代表。人格标签:猛进、压制、冲阵。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "12b65dd1790441035859a0eb7aaef42e9017db1b83befe20edcf1b881d26cf49",
+              "score": 1.5285381962858817
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "INSUFFICIENT_EVIDENCE"
+        },
+        "output_hash": "94a9e244f6deea821a95e74af21729e64375fbc3770f342e1a0f54bd54bab1fa",
+        "elapsed_ms": 35.835
+      },
+      {
+        "tool": "discover_sources",
+        "arguments": {
+          "entity_id": "chitu"
+        },
+        "status": "OK",
+        "output": {
+          "candidates": [
+            {
+              "title": "三國志/卷07",
+              "permitted_work": true,
+              "provider": "wikisource",
+              "discovery": "TARGET_WORK"
+            },
+            {
+              "title": "三國演義/第003回",
+              "permitted_work": true,
+              "provider": "wikisource",
+              "discovery": "TARGET_WORK"
+            },
+            {
+              "title": "嘉靖本三國志通俗演義/第006回",
+              "permitted_work": false,
+              "provider": "wikisource"
+            },
+            {
+              "title": "嘉靖本三國志通俗演義/第010回",
+              "permitted_work": false,
+              "provider": "wikisource"
+            }
+          ],
+          "discovery_failure": null,
+          "fallback": null,
+          "provider_trace": [
+            {
+              "params": {
+                "format": "json",
+                "formatversion": 2,
+                "maxlag": 5,
+                "action": "query",
+                "list": "search",
+                "srnamespace": 0,
+                "srsearch": "\"赤兔\" -intitle:判决 -intitle:裁定",
+                "srlimit": 2,
+                "srprop": ""
+              },
+              "status": "CACHE",
+              "hash": "1929be1a65a591c2131df3237152f7c5500f77e05bbb74bd06935c12bf86ddeb"
+            }
+          ]
+        },
+        "output_hash": "3d9288532e46bcc16a593322d77171a3a4ea6dd0adbe9ae8bc2035d0f46d1c66",
+        "elapsed_ms": 4416.797
+      },
+      {
+        "tool": "acquire_source",
+        "arguments": {
+          "title": "三國志/卷07"
+        },
+        "status": "OK",
+        "output": {
+          "source_id": "ws-16112",
+          "title": "三國志/卷07",
+          "revision": 2452141,
+          "changed": true,
+          "quotes": 1,
+          "new_claims": 1,
+          "updated_links": 0,
+          "entities": [
+            "chitu"
+          ],
+          "mode": "APPLY",
+          "provider_trace": [
+            {
+              "params": {
+                "format": "json",
+                "formatversion": 2,
+                "maxlag": 5,
+                "action": "query",
+                "meta": "siteinfo",
+                "siprop": "rightsinfo"
+              },
+              "status": "CACHE",
+              "hash": "15c6880ec09d4a3a944e02b80820f5de38aa835e2ee63709846bb7b6fda77e03"
+            },
+            {
+              "params": {
+                "format": "json",
+                "formatversion": 2,
+                "maxlag": 5,
+                "action": "query",
+                "prop": "revisions",
+                "rvprop": "ids|timestamp|content|sha1",
+                "rvslots": "main",
+                "titles": "三國志/卷07"
+              },
+              "status": "CACHE",
+              "hash": "56002e96e4054aef029216dd2eaac1657abf77973ef18c6c15d2f0a6d823ecf2"
+            },
+            {
+              "params": {
+                "format": "json",
+                "formatversion": 2,
+                "maxlag": 5,
+                "action": "parse",
+                "oldid": 2452141,
+                "prop": "text|revid",
+                "disableeditsection": 1
+              },
+              "status": "CACHE",
+              "hash": "980415942522bffadeaccd3a8a313a274f86e2589297d8a37ee669fb28989dc4"
+            }
+          ]
+        },
+        "output_hash": "3a76b12ccd211964b6b68a2cd3d09726cefa959f91ad5bb44dfd7ed7fb2f0967",
+        "elapsed_ms": 2440.944
+      },
+      {
+        "tool": "search_evidence",
+        "arguments": {
+          "query": "赤兔的史籍出处"
+        },
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "0c998a385c90a0a62867c14fb7df76bf085b551780f52a068483faa124d0e695",
+          "results": [
+            {
+              "id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+              "version": 1,
+              "text": "赤兔 布自以杀卓为术报雠,欲以德之。术恶其反复,拒而不受。北诣袁绍,绍与布击张燕于常山。燕精兵万余,骑数千。布有良马曰赤兔。 〈《曹瞒传》曰:时人语曰:「人中有吕布,马中有赤兔。」〉常与其亲近成廉、魏越等陷锋突陈,遂破燕军。而求益兵众,将士钞掠,绍患忌之。布觉其意,从绍求去。绍恐还为己害,遣壮士夜掩杀布,不获。事露,布走河内,〈《英雄记》曰:布自以有功于袁氏,轻傲绍下诸将,以为擅相署置,不足贵也。布求还洛,绍假布领司隶校尉。外言当遣,内欲杀布。明日当发,绍遣甲士三十人,辞以送布。布使止于帐侧,伪使人于帐中鼓筝。绍兵卧,布无何出帐去,而兵不觉。夜半兵起,乱斫布床被,谓为已死。明日,绍讯问,知布尚在,乃闭城门。布遂引去。 〉与张杨合。绍令众追之,皆畏布,莫敢逼近者。 〈《英雄记》曰:杨及部曲诸将,皆受傕、汜购募,共图布。布闻之,谓杨曰:「布,卿州里也。卿杀布,于卿弱。不如卖布,可极得汜、傕爵宠。」杨于是外许汜、傕,内实保护布。汜、傕患之,更下大封诏书,以布为颍川太守。 〉 《三国志/卷07》段落提及赤兔;实体归属为自动候选,未验证事件蕴含。",
+              "claim": {
+                "source_id": "ws-16112",
+                "source_version": 1,
+                "passage_id": "wsp-c5f792d55a0a01dd49a607b68b884caa0c09596d940a6ab5",
+                "passage_version": 1,
+                "horse_id": "chitu",
+                "subject_entity_ids": [
+                  "chitu"
+                ],
+                "span": [
+                  0,
+                  437
+                ],
+                "text": "《三國志/卷07》段落提及赤兔；实体归属为自动候选，未验证事件蕴含。",
+                "entity_alias": "赤兔",
+                "relation": "MENTIONS",
+                "proposition_key": "",
+                "epistemic_status": "ATTESTED",
+                "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+                "review_state": "DRAFT",
+                "human_review_state": "NOT_REVIEWED",
+                "machine_validation": "VERIFIED_QUOTATION",
+                "presentation_track": "AUTO_VERIFIED_SOURCE",
+                "entailment": "UNVERIFIED",
+                "visibility": "PUBLIC"
+              },
+              "citation": {
+                "claim_id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+                "claim_revision": 1,
+                "source_id": "ws-16112",
+                "source_revision": 1,
+                "passage_id": "wsp-c5f792d55a0a01dd49a607b68b884caa0c09596d940a6ab5",
+                "passage_revision": 1,
+                "span": [
+                  0,
+                  437
+                ],
+                "quote": "布自以殺卓為術報讎，欲以德之。術惡其反覆，拒而不受。北詣袁紹，紹與布擊張燕于常山。燕精兵萬餘，騎數千。布有良馬曰赤兔。 〈《曹瞞傳》曰：時人語曰：「人中有呂布，馬中有赤兔。」〉常與其親近成廉、魏越等陷鋒突陳，遂破燕軍。而求益兵眾，將士鈔掠，紹患忌之。布覺其意，從紹求去。紹恐還為己害，遣壯士夜掩殺布，不獲。事露，布走河內，〈《英雄記》曰：布自以有功於袁氏，輕傲紹下諸將，以為擅相署置，不足貴也。布求還洛，紹假布領司隸校尉。外言當遣，內欲殺布。明日當發，紹遣甲士三十人，辭以送布。布使止於帳側，偽使人於帳中鼓箏。紹兵臥，布無何出帳去，而兵不覺。夜半兵起，亂斫布床被，謂為已死。明日，紹訊問，知布尚在，乃閉城門。布遂引去。 〉與張楊合。紹令眾追之，皆畏布，莫敢逼近者。 〈《英雄記》曰：楊及部曲諸將，皆受傕、汜購募，共圖布。布聞之，謂楊曰：「布，卿州里也。卿殺布，於卿弱。不如賣布，可極得汜、傕爵寵。」楊於是外許汜、傕，內實保護布。汜、傕患之，更下大封詔書，以布為潁川太守。 〉",
+                "locator": "呂布 / 段4",
+                "source_title": "三國志/卷07",
+                "edition": "維基文庫 oldid=2452141; render=f8664dc54604d052; mediawiki-paragraphs-v1",
+                "source_url": "https://zh.wikisource.org/w/index.php?oldid=2452141",
+                "genre": "PRIMARY_RECORD",
+                "relation": "MENTIONS",
+                "epistemic_status": "ATTESTED",
+                "review_state": "DRAFT",
+                "verification": "MACHINE_VERIFIED",
+                "source_observation": {
+                  "source_id": "ws-16112",
+                  "checked_at": "2026-11-02T07:36:36.145913+00:00",
+                  "status": "AVAILABLE"
+                },
+                "snapshot_only": false,
+                "human_review_state": "NOT_REVIEWED",
+                "presentation_track": "AUTO_VERIFIED_SOURCE",
+                "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+                "entailment": "UNVERIFIED",
+                "entity_identity": "ALIAS_CANDIDATE_NOT_IDENTITY_PROOF",
+                "attribution": "《三國志/卷07》；陳壽；含裴松之注；維基文庫貢獻者；修訂2452141",
+                "license": "CC-BY-SA-4.0",
+                "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+                "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text.",
+                "upstream_revision": 2452141,
+                "independence_group": [
+                  "work:三國志"
+                ],
+                "proposition_key": "",
+                "href": "/api/v2/evidence/wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd@1",
+                "index_snapshot_id": "0c998a385c90a0a62867c14fb7df76bf085b551780f52a068483faa124d0e695"
+              },
+              "score": 1.8568570130978581
+            }
+          ],
+          "entities": [
+            {
+              "id": "chitu",
+              "kind": "knowledge_entity",
+              "version": 1,
+              "data": {
+                "name": "赤兔",
+                "entity_type": "Horse",
+                "aliases": [
+                  "赤菟",
+                  "赤兔马"
+                ],
+                "visibility": "PUBLIC"
+              }
+            }
+          ],
+          "candidates": [
+            {
+              "id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+              "version": 1,
+              "text": "布自以杀卓为术报雠,欲以德之。术恶其反复,拒而不受。北诣袁绍,绍与布击张燕于常山。燕精兵万余,骑数千。布有良马曰赤兔。 〈《曹瞒传》曰:时人语曰:「人中有吕布,马中有赤兔。」〉常与其亲近成廉、魏越等陷锋突陈,遂破燕军。而求益兵众,将士钞掠,绍患忌之。布觉其意,从绍求去。绍恐还为己害,遣壮士夜掩杀布,不获。事露,布走河内,〈《英雄记》曰:布自以有功于袁氏,轻傲绍下诸将,以为擅相署置,不足贵也。布求还洛,绍假布领司隶校尉。外言当遣,内欲杀布。明日当发,绍遣甲士三十人,辞以送布。布使止于帐侧,伪使人于帐中鼓筝。绍兵卧,布无何出帐去,而兵不觉。夜半兵起,乱斫布床被,谓为已死。明日,绍讯问,知布尚在,乃闭城门。布遂引去。 〉与张杨合。绍令众追之,皆畏布,莫敢逼近者。 〈《英雄记》曰:杨及部曲诸将,皆受傕、汜购募,共图布。布闻之,谓杨曰:「布,卿州里也。卿杀布,于卿弱。不如卖布,可极得汜、傕爵宠。」杨于是外许汜、傕,内实保护布。汜、傕患之,更下大封诏书,以布为颍川太守。 〉 《三国志/卷07》段落提及赤兔;实体归属为自动候选,未验证事件蕴含。",
+              "source_title": "三國志/卷07",
+              "genre": "PRIMARY_RECORD",
+              "review_state": "DRAFT",
+              "locator": "呂布 / 段4",
+              "href": "/api/v2/evidence/wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd@1",
+              "usable_as_fact": false,
+              "usable_as_attributed_quote": true,
+              "verification": "MACHINE_VERIFIED",
+              "score": 1.7260924347106852
+            }
+          ],
+          "coverage": {
+            "limit": 12,
+            "missing_entity_ids": [],
+            "known_opposition_pairs": 0,
+            "opposition_truncated": false,
+            "conflict_detection": "EXPLICIT_PROPOSITION_SAME_ENTITY_ONLY"
+          },
+          "editorial": [
+            {
+              "id": "editorial:horse-001",
+              "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+              "score": 11.355183584563767
+            },
+            {
+              "id": "editorial:horse-076",
+              "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+              "score": 5.7710315197423165
+            },
+            {
+              "id": "editorial:horse-002",
+              "text": "乌骓。对应人物:项羽。朝代/出处:秦末汉初《史记·项羽本纪》。故事:垓下兵败后伴随项羽至乌江,成为英雄末路的象征。人格标签:孤勇、逆境、悲壮。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "0b64c2cd0e840cdd294be5b1adb41d59b2fe5274b2fb6ae420094d6d67e157e5",
+              "score": 4.461693410965634
+            },
+            {
+              "id": "editorial:horse-062",
+              "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+              "score": 3.9771070967855784
+            },
+            {
+              "id": "editorial:horse-045",
+              "text": "绿耳。对应人物:古代名驹。朝代/出处:古籍名马系统。故事:带有独特外貌与神异感。人格标签:灵敏、异相、稀有。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "fd4d4b79489e5927dfe33a10238eb6f5513768a0e0c2c3ff8d578613e8b1b5ab",
+              "score": 3.919704591538005
+            },
+            {
+              "id": "editorial:horse-042",
+              "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+              "score": 3.766974254347109
+            },
+            {
+              "id": "editorial:horse-039",
+              "text": "盗骊。对应人物:先秦名驹谱系。朝代/出处:先秦古籍传统。故事:黑色名骥意象,常作极品良马代称。人格标签:深沉、稀贵、强韧。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "eda00b6be70f8c3e7621fdf0d582026f44e97dff09936773a1f37e1d848e51df",
+              "score": 3.6836237781620884
+            },
+            {
+              "id": "editorial:horse-026",
+              "text": "紫骍。对应人物:帝王/贵族系统。朝代/出处:史传与诗赋名马意象。故事:紫色骏马常作高贵祥瑞象征。人格标签:华贵、威仪、祥瑞。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "35b6fb87c7bda83d6ae243b737ad35e2d281306abdcb45dd139992f7915090f9",
+              "score": 3.3135917856518327
+            },
+            {
+              "id": "editorial:horse-087",
+              "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+              "score": 2.7601562750505604
+            },
+            {
+              "id": "editorial:horse-021",
+              "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+              "score": 2.6226340336565355
+            },
+            {
+              "id": "editorial:horse-069",
+              "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+              "score": 2.6226340336565355
+            },
+            {
+              "id": "editorial:horse-085",
+              "text": "奔雷驹。对应人物:猛将。朝代/出处:演义命名传统。故事:雷霆式冲锋的典型代表。人格标签:猛进、压制、冲阵。",
+              "knowledge_class": "EDITORIAL",
+              "review_state": "UNVERIFIED",
+              "usable_as_fact": false,
+              "revision": "12b65dd1790441035859a0eb7aaef42e9017db1b83befe20edcf1b881d26cf49",
+              "score": 1.5285381962858817
+            }
+          ],
+          "independent_support_groups": 0,
+          "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+          "scope": "all",
+          "mode": "RETRIEVAL_ONLY"
+        },
+        "output_hash": "9a86499e1198f45cb6416bcdde002c5b1406139dfb1c1b63dc6c4452fbd3e766",
+        "elapsed_ms": 63.179
+      },
+      {
+        "tool": "compare_sources",
+        "arguments": {
+          "source_ids": [
+            "ws-16112"
+          ]
+        },
+        "status": "OK",
+        "output": [
+          {
+            "source_id": "ws-16112",
+            "independence_group": [
+              "work:三國志"
+            ]
+          }
+        ],
+        "output_hash": "a42f5fb5c1678003be7c6892e36e8344db1fb8858bc708d9becb90706254a762",
+        "elapsed_ms": 0.026
+      },
+      {
+        "tool": "inspect_claim_edges",
+        "arguments": {
+          "claim_ids": [
+            "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd"
+          ]
+        },
+        "status": "OK",
+        "output": [
+          {
+            "claim_id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+            "relation": "MENTIONS",
+            "proposition_key": ""
+          }
+        ],
+        "output_hash": "21f25bf09b885125bd03ccc330b8bab62fd8598c5f5cc9103b0a7787af9d6186",
+        "elapsed_ms": 0.065
+      },
+      {
+        "tool": "check_coverage",
+        "arguments": {},
+        "status": "OK",
+        "output": {
+          "corpus_snapshot_id": "0c998a385c90a0a62867c14fb7df76bf085b551780f52a068483faa124d0e695",
+          "editorial_count": 100,
+          "legacy_editorial_count": 100,
+          "claim_count": 1,
+          "review_states": {
+            "DRAFT": 1
+          },
+          "citable_count": 1,
+          "machine_verified_count": 1,
+          "human_reviewed_count": 0,
+          "llm_available": false,
+          "source_present": true,
+          "index_ready": true,
+          "evidence_verified": true
+        },
+        "output_hash": "828340969852f1c0194a40e07263f563ad1e41bca7d4856eacf08bff6119bb69",
+        "elapsed_ms": 4.247
+      }
+    ],
+    "evidence": [
+      {
+        "id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+        "version": 1,
+        "text": "赤兔 布自以杀卓为术报雠,欲以德之。术恶其反复,拒而不受。北诣袁绍,绍与布击张燕于常山。燕精兵万余,骑数千。布有良马曰赤兔。 〈《曹瞒传》曰:时人语曰:「人中有吕布,马中有赤兔。」〉常与其亲近成廉、魏越等陷锋突陈,遂破燕军。而求益兵众,将士钞掠,绍患忌之。布觉其意,从绍求去。绍恐还为己害,遣壮士夜掩杀布,不获。事露,布走河内,〈《英雄记》曰:布自以有功于袁氏,轻傲绍下诸将,以为擅相署置,不足贵也。布求还洛,绍假布领司隶校尉。外言当遣,内欲杀布。明日当发,绍遣甲士三十人,辞以送布。布使止于帐侧,伪使人于帐中鼓筝。绍兵卧,布无何出帐去,而兵不觉。夜半兵起,乱斫布床被,谓为已死。明日,绍讯问,知布尚在,乃闭城门。布遂引去。 〉与张杨合。绍令众追之,皆畏布,莫敢逼近者。 〈《英雄记》曰:杨及部曲诸将,皆受傕、汜购募,共图布。布闻之,谓杨曰:「布,卿州里也。卿杀布,于卿弱。不如卖布,可极得汜、傕爵宠。」杨于是外许汜、傕,内实保护布。汜、傕患之,更下大封诏书,以布为颍川太守。 〉 《三国志/卷07》段落提及赤兔;实体归属为自动候选,未验证事件蕴含。",
+        "claim": {
+          "source_id": "ws-16112",
+          "source_version": 1,
+          "passage_id": "wsp-c5f792d55a0a01dd49a607b68b884caa0c09596d940a6ab5",
+          "passage_version": 1,
+          "horse_id": "chitu",
+          "subject_entity_ids": [
+            "chitu"
+          ],
+          "span": [
+            0,
+            437
+          ],
+          "text": "《三國志/卷07》段落提及赤兔；实体归属为自动候选，未验证事件蕴含。",
+          "entity_alias": "赤兔",
+          "relation": "MENTIONS",
+          "proposition_key": "",
+          "epistemic_status": "ATTESTED",
+          "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+          "review_state": "DRAFT",
+          "human_review_state": "NOT_REVIEWED",
+          "machine_validation": "VERIFIED_QUOTATION",
+          "presentation_track": "AUTO_VERIFIED_SOURCE",
+          "entailment": "UNVERIFIED",
+          "visibility": "PUBLIC"
+        },
+        "citation": {
+          "claim_id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+          "claim_revision": 1,
+          "source_id": "ws-16112",
+          "source_revision": 1,
+          "passage_id": "wsp-c5f792d55a0a01dd49a607b68b884caa0c09596d940a6ab5",
+          "passage_revision": 1,
+          "span": [
+            0,
+            437
+          ],
+          "quote": "布自以殺卓為術報讎，欲以德之。術惡其反覆，拒而不受。北詣袁紹，紹與布擊張燕于常山。燕精兵萬餘，騎數千。布有良馬曰赤兔。 〈《曹瞞傳》曰：時人語曰：「人中有呂布，馬中有赤兔。」〉常與其親近成廉、魏越等陷鋒突陳，遂破燕軍。而求益兵眾，將士鈔掠，紹患忌之。布覺其意，從紹求去。紹恐還為己害，遣壯士夜掩殺布，不獲。事露，布走河內，〈《英雄記》曰：布自以有功於袁氏，輕傲紹下諸將，以為擅相署置，不足貴也。布求還洛，紹假布領司隸校尉。外言當遣，內欲殺布。明日當發，紹遣甲士三十人，辭以送布。布使止於帳側，偽使人於帳中鼓箏。紹兵臥，布無何出帳去，而兵不覺。夜半兵起，亂斫布床被，謂為已死。明日，紹訊問，知布尚在，乃閉城門。布遂引去。 〉與張楊合。紹令眾追之，皆畏布，莫敢逼近者。 〈《英雄記》曰：楊及部曲諸將，皆受傕、汜購募，共圖布。布聞之，謂楊曰：「布，卿州里也。卿殺布，於卿弱。不如賣布，可極得汜、傕爵寵。」楊於是外許汜、傕，內實保護布。汜、傕患之，更下大封詔書，以布為潁川太守。 〉",
+          "locator": "呂布 / 段4",
+          "source_title": "三國志/卷07",
+          "edition": "維基文庫 oldid=2452141; render=f8664dc54604d052; mediawiki-paragraphs-v1",
+          "source_url": "https://zh.wikisource.org/w/index.php?oldid=2452141",
+          "genre": "PRIMARY_RECORD",
+          "relation": "MENTIONS",
+          "epistemic_status": "ATTESTED",
+          "review_state": "DRAFT",
+          "verification": "MACHINE_VERIFIED",
+          "source_observation": {
+            "source_id": "ws-16112",
+            "checked_at": "2026-11-02T07:36:36.145913+00:00",
+            "status": "AVAILABLE"
+          },
+          "snapshot_only": false,
+          "human_review_state": "NOT_REVIEWED",
+          "presentation_track": "AUTO_VERIFIED_SOURCE",
+          "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+          "entailment": "UNVERIFIED",
+          "entity_identity": "ALIAS_CANDIDATE_NOT_IDENTITY_PROOF",
+          "attribution": "《三國志/卷07》；陳壽；含裴松之注；維基文庫貢獻者；修訂2452141",
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+          "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text.",
+          "upstream_revision": 2452141,
+          "independence_group": [
+            "work:三國志"
+          ],
+          "proposition_key": "",
+          "href": "/api/v2/evidence/wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd@1",
+          "index_snapshot_id": "0c998a385c90a0a62867c14fb7df76bf085b551780f52a068483faa124d0e695"
+        },
+        "score": 1.8568570130978581
+      }
+    ],
+    "review_state": "PENDING",
+    "proposal_type": "ReviewFinding",
+    "stop_reason": "VERIFIED_EXCERPTS_ACQUIRED",
+    "findings": [],
+    "acquired_pages": 1,
+    "historical_claim_approval": "NOT_PERFORMED",
+    "corpus_snapshot_id": "0c998a385c90a0a62867c14fb7df76bf085b551780f52a068483faa124d0e695",
+    "policy": {
+      "max_calls": 10,
+      "max_seconds": 45,
+      "max_evidence": 12,
+      "max_rounds": 3,
+      "allow_acquisition": true,
+      "max_network_requests": 9
+    },
+    "tokens": 0,
+    "cost": 0,
+    "model": null,
+    "jev_status": "BLOCKED_NO_AUTHORIZATION"
+  },
+  "after": {
+    "corpus_snapshot_id": "0c998a385c90a0a62867c14fb7df76bf085b551780f52a068483faa124d0e695",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 1,
+    "review_states": {
+      "DRAFT": 1
+    },
+    "citable_count": 1,
+    "machine_verified_count": 1,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "mode": "ORIGINAL_VIDEO_FACTORY_V2",
+  "console_errors": [],
+  "steps": [
+    "landing",
+    "logged-in",
+    "topic-filled",
+    "running",
+    "completed",
+    "final"
+  ],
+  "workflow_status": "完成 100%",
+  "run_log_tail": "00:17:30\n批量生成\n已完成 1/1 条视频。\n00:17:30\n任务状态\n完成 100% / compose\n00:17:28\n任务状态\n制作中 40% / compose\n00:17:25\n任务状态\n排队中 10% / compose\n00:17:25\n制作流程\n已提交到站内 V2 本地 CPU 工作台。\n00:17:25\n任务创建\n20c815235ad347908ab295691ca5d44b (1/1)\n00:17:25\n开始\n准备提交单条视频任务。",
+  "preview_video_src": "/api/v2/compat/workflow/media/node-15e0032f95cb4998840e190fb5bc1f82?t=1793521050.262bcdd43861b9314be16f371d83c6a76d4364824624e0bf262447bdf59d701c",
+  "preview_video_state": "206 video/mp4",
+  "download_enabled": true,
+  "download_label": "下载成片",
+  "generated_menu_items": 1
+}

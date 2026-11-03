@@ -1,0 +1,13 @@
+{
+  "method": "Same original assets, enhancement script disabled for control; entrance animations settled 2.5 seconds",
+  "measurements": [
+    {
+      "device": "desktop",
+      "pixel_difference_fraction_gt20": 0.0
+    },
+    {
+      "device": "mobile",
+      "pixel_difference_fraction_gt20": 0.0
+    }
+  ]
+}

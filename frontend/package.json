@@ -1,0 +1,28 @@
+{
+  "name": "steedatlas-v2-web",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "python ../scripts/package_original.py",
+    "test": "node --test tests/*.test.mjs",
+    "dev:preview": "vite --mode redesign --host 127.0.0.1",
+    "build:preview": "tsc --noEmit && vite build --mode redesign"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "@xyflow/react": "12.12.0",
+    "@tiptap/react": "3.32.2",
+    "@tiptap/starter-kit": "3.32.2",
+    "@tiptap/pm": "3.32.2",
+    "@xzdarcy/react-timeline-editor": "1.0.0"
+  },
+  "devDependencies": {
+    "vite": "8.3.5",
+    "typescript": "5.9.3",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2"
+  }
+}

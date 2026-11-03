@@ -1,0 +1,67 @@
+{
+  "dataset_kind": "NAME_DIAGNOSTIC_NOT_HISTORICAL_GOLD",
+  "corpus_sha256": "2cec0b44ef911bc0755bbc9bbdd56278dc40b3c27b01868666a55a4fa019c522",
+  "metrics": [
+    {
+      "variant": "R0_NORMALIZED_BM25",
+      "n": 104,
+      "mrr": 0.9727564102564102,
+      "mrr_bootstrap_95_ci": [
+        0.9455128205128205,
+        0.9951923076923077
+      ],
+      "recall_at_5": 1,
+      "ndcg_at_5": 0.9797383582760998,
+      "p50_ms": 27.165499996044673,
+      "p95_ms": 37.33819999615662
+    },
+    {
+      "variant": "SPARSE_RRF",
+      "n": 104,
+      "mrr": 0.9577991452991453,
+      "mrr_bootstrap_95_ci": [
+        0.9241452991452992,
+        0.9866452991452992
+      ],
+      "recall_at_5": 0.9903846153846154,
+      "ndcg_at_5": 0.9653152813530228,
+      "p50_ms": 27.273200001218356,
+      "p95_ms": 38.74000000359956
+    },
+    {
+      "variant": "V1_COUNTER",
+      "n": 104,
+      "mrr": 0.9554053402737613,
+      "mrr_bootstrap_95_ci": [
+        0.919329573934837,
+        0.9855769230769231
+      ],
+      "recall_at_5": 0.9807692307692307,
+      "ndcg_at_5": 0.9605075890453305,
+      "p50_ms": 2.8104000084567815,
+      "p95_ms": 3.1796999974176288
+    }
+  ],
+  "complex_n": 40,
+  "coverage": {
+    "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 3,
+    "review_states": {
+      "DRAFT": 3
+    },
+    "citable_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": false
+  },
+  "gold_count": 0,
+  "human_annotators": 0,
+  "complex_quality_metrics": "BLOCKED_NO_GOLD",
+  "dense_hybrid": "NOT_RUN_NO_GO_PENDING_GOLD",
+  "tokens": 0,
+  "paid_cost": 0,
+  "agent_quality_gain": "NOT_ESTABLISHED; inspect actual search-call counts"
+}

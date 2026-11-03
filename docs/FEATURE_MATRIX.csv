@@ -1,0 +1,7 @@
+feature,legacy,v2_target
+catalogue,103 DB records,read retained data
+gacha,existing API,legacy compatibility
+collection,existing API,legacy compatibility
+commerce,sandbox only,clearly labeled
+knowledge,100 corpus records,versioned evidence
+video,provider and placeholder,CPU real files

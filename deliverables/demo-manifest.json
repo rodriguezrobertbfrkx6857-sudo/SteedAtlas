@@ -1,0 +1,439 @@
+{
+  "mode": "REAL_CPU_FFMPEG_NO_MODEL",
+  "audio": "Synthetic test tone, not speech or TTS",
+  "project": {
+    "id": "a29e3b5733ed46c487a465ebfdda0ef8",
+    "kind": "project",
+    "version": 3,
+    "data": {
+      "title": "百骑谱 CPU 有声三幕验收",
+      "horse_id": "chitu",
+      "scenes": [
+        {
+          "id": "s1",
+          "text": "赤兔：从名马档案开始，分辨历史与想象。",
+          "duration_ticks": 72,
+          "asset_id": "68d89d94987a4467ad6df9565aec0000",
+          "claim_refs": [],
+          "label": "CREATIVE",
+          "period": "",
+          "script_doc": null
+        },
+        {
+          "id": "s2",
+          "text": "每段叙述，都应保留它的出处与边界。",
+          "duration_ticks": 72,
+          "asset_id": "e006059fc8074f78ac0fdcf4a559c0d5",
+          "claim_refs": [],
+          "label": "CREATIVE",
+          "period": "",
+          "script_doc": null
+        },
+        {
+          "id": "s3",
+          "text": "百骑谱，让故事有据可循。此片为艺术演绎。",
+          "duration_ticks": 72,
+          "asset_id": "860ec85188a34847ac774d3257212f6e",
+          "claim_refs": [],
+          "label": "CREATIVE",
+          "period": "",
+          "script_doc": null
+        }
+      ],
+      "bible": {
+        "style": "数字博物馆",
+        "period": "",
+        "identity": "赤兔"
+      },
+      "width": 1280,
+      "height": 720,
+      "fps_num": 24,
+      "fps_den": 1,
+      "audio_asset_ids": [
+        "1813729ad7c34a07b3e50001ca67f272"
+      ],
+      "audio_gain": 0.6,
+      "audio_fade_seconds": 0.3,
+      "review_state": "APPROVED"
+    },
+    "timeline": {
+      "schema_version": 1,
+      "fps_num": 24,
+      "fps_den": 1,
+      "width": 1280,
+      "height": 720,
+      "duration_ticks": 216,
+      "tracks": [
+        {
+          "kind": "VISUAL",
+          "clips": [
+            {
+              "clip_id": "s1",
+              "scene_id": "s1",
+              "asset_id": "68d89d94987a4467ad6df9565aec0000",
+              "start_tick": 0,
+              "end_tick": 72,
+              "source_in_tick": 0,
+              "claim_refs": []
+            },
+            {
+              "clip_id": "s2",
+              "scene_id": "s2",
+              "asset_id": "e006059fc8074f78ac0fdcf4a559c0d5",
+              "start_tick": 72,
+              "end_tick": 144,
+              "source_in_tick": 0,
+              "claim_refs": []
+            },
+            {
+              "clip_id": "s3",
+              "scene_id": "s3",
+              "asset_id": "860ec85188a34847ac774d3257212f6e",
+              "start_tick": 144,
+              "end_tick": 216,
+              "source_in_tick": 0,
+              "claim_refs": []
+            }
+          ]
+        },
+        {
+          "kind": "NARRATION",
+          "assets": [
+            "1813729ad7c34a07b3e50001ca67f272"
+          ]
+        },
+        {
+          "kind": "SUBTITLE",
+          "cues": [
+            {
+              "cue_id": "s1",
+              "start_tick": 0,
+              "end_tick": 72,
+              "text": "赤兔：从名马档案开始，分辨历史与想象。",
+              "label": "CREATIVE"
+            },
+            {
+              "cue_id": "s2",
+              "start_tick": 72,
+              "end_tick": 144,
+              "text": "每段叙述，都应保留它的出处与边界。",
+              "label": "CREATIVE"
+            },
+            {
+              "cue_id": "s3",
+              "start_tick": 144,
+              "end_tick": 216,
+              "text": "百骑谱，让故事有据可循。此片为艺术演绎。",
+              "label": "CREATIVE"
+            }
+          ]
+        }
+      ],
+      "alignment": "MANUAL_SCENE_TIMING"
+    },
+    "publication": "PRIVATE_NOT_PUBLISHED",
+    "sources": [],
+    "findings": []
+  },
+  "assets": [
+    {
+      "id": "68d89d94987a4467ad6df9565aec0000",
+      "sha256": "56e578c781022e3fb3d6f805206db32e728e147a8cc2893ed8c8a8b59780054f",
+      "license": "Original programmatic illustration"
+    },
+    {
+      "id": "e006059fc8074f78ac0fdcf4a559c0d5",
+      "sha256": "f6f74ef4db6439aa44899ea828ed2a531831fa0c7cd77cb7407ddd9d9db0eb95",
+      "license": "Original programmatic illustration"
+    },
+    {
+      "id": "860ec85188a34847ac774d3257212f6e",
+      "sha256": "659d995182b91003c4ce6186acb6375224c32ae261e57ffe3ab65f5ca92c19c2",
+      "license": "Original programmatic illustration"
+    },
+    {
+      "id": "1813729ad7c34a07b3e50001ca67f272",
+      "sha256": "3b52a4301611bf62a847ab6166784275b4a63b6e916fed00850622c5c796bb5f",
+      "license": "Synthetic test tone; not narration"
+    }
+  ],
+  "job": {
+    "id": "773eead8378b40d2985af270815f2baf",
+    "status": "SUCCEEDED",
+    "revision": 3,
+    "nodes": [
+      {
+        "id": "bc5019d570f34f3fb526dce005daf20b",
+        "key": "scene:s1",
+        "kind": "segment",
+        "state": "SUCCEEDED",
+        "deps": [],
+        "attempts": 1,
+        "error": "",
+        "download": "/api/v2/artifacts/bc5019d570f34f3fb526dce005daf20b/download"
+      },
+      {
+        "id": "b1ae619f9d9a40a8a5ee2e100d7dca01",
+        "key": "scene:s2",
+        "kind": "segment",
+        "state": "SUCCEEDED",
+        "deps": [],
+        "attempts": 1,
+        "error": "",
+        "download": "/api/v2/artifacts/b1ae619f9d9a40a8a5ee2e100d7dca01/download"
+      },
+      {
+        "id": "e280aa3ac825479f8bf9e3d31a5bf3ab",
+        "key": "scene:s3",
+        "kind": "segment",
+        "state": "SUCCEEDED",
+        "deps": [],
+        "attempts": 1,
+        "error": "",
+        "download": "/api/v2/artifacts/e280aa3ac825479f8bf9e3d31a5bf3ab/download"
+      },
+      {
+        "id": "591605a3a18e444488cdea238c7d7882",
+        "key": "audio",
+        "kind": "audio",
+        "state": "SUCCEEDED",
+        "deps": [],
+        "attempts": 1,
+        "error": "",
+        "download": "/api/v2/artifacts/591605a3a18e444488cdea238c7d7882/download"
+      },
+      {
+        "id": "3d64b49deffd411caa590b4ba5f9be6c",
+        "key": "subtitle",
+        "kind": "subtitle",
+        "state": "SUCCEEDED",
+        "deps": [
+          "audio"
+        ],
+        "attempts": 1,
+        "error": "",
+        "download": "/api/v2/artifacts/3d64b49deffd411caa590b4ba5f9be6c/download"
+      },
+      {
+        "id": "1e774322d5594782a4d790f03bd8ae2e",
+        "key": "compose",
+        "kind": "compose",
+        "state": "SUCCEEDED",
+        "deps": [
+          "scene:s1",
+          "scene:s2",
+          "scene:s3",
+          "audio",
+          "subtitle"
+        ],
+        "attempts": 1,
+        "error": "",
+        "download": "/api/v2/artifacts/1e774322d5594782a4d790f03bd8ae2e/download"
+      },
+      {
+        "id": "e1d39b7555dd461eb97b52f4dc8aee11",
+        "key": "qa",
+        "kind": "qa",
+        "state": "SUCCEEDED",
+        "deps": [
+          "compose"
+        ],
+        "attempts": 1,
+        "error": "",
+        "download": "/api/v2/artifacts/e1d39b7555dd461eb97b52f4dc8aee11/download"
+      }
+    ]
+  },
+  "events": [
+    {
+      "event": "ENQUEUED",
+      "data": {
+        "revision": 3,
+        "mode": "CPU_REAL",
+        "timeline_hash": "739f5687cdafc10dfbeb8bdee5d703a6b5c1567b4cbe538a784ff49350c65a16"
+      },
+      "time": 1793505059.116837
+    },
+    {
+      "event": "LEASED",
+      "data": {
+        "node": "scene:s1",
+        "fence": 1
+      },
+      "time": 1793505059.511372
+    },
+    {
+      "event": "SUCCEEDED",
+      "data": {
+        "node": "scene:s1",
+        "sha256": "3d29aa2dd56e6272f88e72ec0f572c683e745f2bff5db9facf6350fd5904767f",
+        "fence": 1
+      },
+      "time": 1793505060.4157763
+    },
+    {
+      "event": "LEASED",
+      "data": {
+        "node": "scene:s2",
+        "fence": 1
+      },
+      "time": 1793505060.4311666
+    },
+    {
+      "event": "SUCCEEDED",
+      "data": {
+        "node": "scene:s2",
+        "sha256": "0ee4b4cfa67d3aedaec4fe763d4065e2f46bd77031965f1cc2ee0706da4f062c",
+        "fence": 1
+      },
+      "time": 1793505061.3555708
+    },
+    {
+      "event": "LEASED",
+      "data": {
+        "node": "scene:s3",
+        "fence": 1
+      },
+      "time": 1793505061.3707879
+    },
+    {
+      "event": "SUCCEEDED",
+      "data": {
+        "node": "scene:s3",
+        "sha256": "c2bd8748d98aec8f5df939ff2dc62c3019bf52332b9f0db62e265c5b9970c39f",
+        "fence": 1
+      },
+      "time": 1793505062.2611628
+    },
+    {
+      "event": "LEASED",
+      "data": {
+        "node": "audio",
+        "fence": 1
+      },
+      "time": 1793505062.2702086
+    },
+    {
+      "event": "SUCCEEDED",
+      "data": {
+        "node": "audio",
+        "sha256": "af842d267a1e4387d2051f29c4050ac9d07d249a7206207eb05b35693893a01b",
+        "fence": 1
+      },
+      "time": 1793505062.2918715
+    },
+    {
+      "event": "LEASED",
+      "data": {
+        "node": "subtitle",
+        "fence": 1
+      },
+      "time": 1793505062.3101056
+    },
+    {
+      "event": "SUCCEEDED",
+      "data": {
+        "node": "subtitle",
+        "sha256": "50e0e9b41262d331bc0432048b0e332f86206174929a082e4dcfd407e38657b6",
+        "fence": 1
+      },
+      "time": 1793505062.3316057
+    },
+    {
+      "event": "LEASED",
+      "data": {
+        "node": "compose",
+        "fence": 1
+      },
+      "time": 1793505062.3513935
+    },
+    {
+      "event": "SUCCEEDED",
+      "data": {
+        "node": "compose",
+        "sha256": "9e9d532e6af3b8e5dc260a904be2035a923bc8fcfc2c609d043e24eb0f24b1cd",
+        "fence": 1
+      },
+      "time": 1793505063.0500124
+    },
+    {
+      "event": "LEASED",
+      "data": {
+        "node": "qa",
+        "fence": 1
+      },
+      "time": 1793505063.068274
+    },
+    {
+      "event": "SUCCEEDED",
+      "data": {
+        "node": "qa",
+        "sha256": "9e9d532e6af3b8e5dc260a904be2035a923bc8fcfc2c609d043e24eb0f24b1cd",
+        "fence": 1
+      },
+      "time": 1793505063.681497
+    }
+  ],
+  "trace": {
+    "id": "67338ba76a154626aa4ab27fec91ba85",
+    "kind": "proposal",
+    "version": 1,
+    "data": {
+      "mode": "RULE_BASED",
+      "roles": [
+        "DIRECTOR",
+        "REVIEW"
+      ],
+      "reason_codes": [
+        "SCENE_PLAN_REQUESTED",
+        "HUMAN_REVIEW_REQUIRED"
+      ],
+      "patches": [
+        {
+          "path": "/bible/style",
+          "value": "克制的数字博物馆编辑风格"
+        }
+      ],
+      "findings": [],
+      "tool_calls": [
+        "inspect_timeline",
+        "get_scene_bible",
+        "validate_citations"
+      ],
+      "input_hash": "ceb0c50d887ee439386fa143e6ea63b44dd1d0e06614451ec13a7c4c81020362",
+      "policy_version": "controller-1",
+      "review_state": "PENDING",
+      "tool_results": [
+        {
+          "tool": "inspect_timeline",
+          "output_hash": "739f5687cdafc10dfbeb8bdee5d703a6b5c1567b4cbe538a784ff49350c65a16"
+        },
+        {
+          "tool": "get_scene_bible",
+          "output_hash": "31bca6af45a6d50b6aa684fa802e52612676a86956149a8c552dce3efc390441"
+        },
+        {
+          "tool": "check_scene_constraints",
+          "output": []
+        },
+        {
+          "tool": "validate_citations",
+          "result": "VALID"
+        }
+      ],
+      "project_id": "a29e3b5733ed46c487a465ebfdda0ef8",
+      "base_version": 3,
+      "max_turns": 2
+    }
+  },
+  "probe": {
+    "sha256": "9e9d532e6af3b8e5dc260a904be2035a923bc8fcfc2c609d043e24eb0f24b1cd",
+    "bytes": 321778,
+    "duration": 9.0,
+    "width": 1280,
+    "height": 720,
+    "fps": "24/1",
+    "audio_streams": 1,
+    "decoded": true
+  }
+}

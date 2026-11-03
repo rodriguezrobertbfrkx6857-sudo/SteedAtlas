@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RAG知识库</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #11100e;
+      --panel: #191816;
+      --panel-2: #22201c;
+      --line: #38342d;
+      --text: #f4eee4;
+      --muted: #b8ada0;
+      --soft: #83776b;
+      --gold: #d8a84d;
+      --gold-2: #f2cd7a;
+      --cyan: #66c7d9;
+      --green: #7ccf91;
+      --red: #e27d6d;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(216, 168, 77, 0.07), transparent 280px),
+        radial-gradient(circle at 74% 4%, rgba(102, 199, 217, 0.13), transparent 340px),
+        var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 18px;
+      border-right: 1px solid var(--line);
+      background: rgba(17, 16, 14, 0.86);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: grid;
+      gap: 8px;
+      padding: 14px 14px 18px;
+      border: 1px solid rgba(216, 168, 77, 0.32);
+      background: linear-gradient(180deg, rgba(216, 168, 77, 0.16), rgba(255, 255, 255, 0.03));
+      box-shadow: var(--shadow);
+    }
+
+    .brand strong {
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-size: 14px;
+      transition: 160ms ease;
+    }
+
+    .nav a:hover,
+    .nav a:focus {
+      border-color: rgba(216, 168, 77, 0.34);
+      color: var(--gold-2);
+      background: rgba(216, 168, 77, 0.08);
+      outline: none;
+    }
+
+    .nav code {
+      color: var(--soft);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .main {
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: rgba(25, 24, 22, 0.78);
+      box-shadow: var(--shadow);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      color: var(--gold-2);
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 850px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .status-pill {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid rgba(124, 207, 145, 0.36);
+      color: #c7f7d0;
+      background: rgba(124, 207, 145, 0.1);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(124, 207, 145, 0.8);
+    }
+
+    section {
+      scroll-margin-top: 24px;
+      margin-top: 22px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: rgba(25, 24, 22, 0.72);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-head h2 {
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .section-head p {
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .kpis {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .kpi {
+      min-height: 112px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--panel-2);
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kpi .value {
+      display: block;
+      margin-top: 8px;
+      color: var(--gold-2);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 36px;
+      line-height: 1;
+    }
+
+    .kpi .desc {
+      margin-top: 10px;
+      color: var(--soft);
+      font-size: 12px;
+    }
+
+    .two-col {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .panel {
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--panel-2);
+    }
+
+    .panel h3 {
+      margin-bottom: 10px;
+      font-size: 17px;
+    }
+
+    .panel p,
+    .panel li {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .step {
+      min-height: 98px;
+      padding: 14px;
+      border: 1px solid rgba(102, 199, 217, 0.26);
+      background: rgba(102, 199, 217, 0.07);
+    }
+
+    .step b {
+      display: block;
+      margin-bottom: 8px;
+      color: #d2f7ff;
+      font-size: 14px;
+    }
+
+    .step span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    code,
+    pre {
+      font-family: Consolas, "Cascadia Mono", "Microsoft YaHei Mono", monospace;
+    }
+
+    pre {
+      overflow: auto;
+      max-height: 360px;
+      margin: 0;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e7d7c0;
+      background: #0c0c0b;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .path-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .path-list code {
+      display: block;
+      padding: 10px 12px;
+      border: 1px solid rgba(216, 168, 77, 0.24);
+      color: #f5dca8;
+      background: rgba(216, 168, 77, 0.07);
+      white-space: normal;
+      word-break: break-all;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      background: var(--panel-2);
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      color: var(--gold-2);
+      font-weight: 700;
+      background: rgba(216, 168, 77, 0.08);
+    }
+
+    td {
+      color: var(--muted);
+    }
+
+    td strong {
+      color: var(--text);
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #efe4d4;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 12px;
+    }
+
+    .name-cloud {
+      max-height: 190px;
+      overflow: auto;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #12110f;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    input,
+    button {
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text);
+      background: #100f0e;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(216, 168, 77, 0.56);
+    }
+
+    button {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid rgba(216, 168, 77, 0.44);
+      color: #21180a;
+      background: var(--gold-2);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .result-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .result {
+      display: grid;
+      grid-template-columns: 80px minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid rgba(102, 199, 217, 0.22);
+      background: rgba(102, 199, 217, 0.06);
+    }
+
+    .score {
+      display: grid;
+      place-items: center;
+      height: 54px;
+      border: 1px solid rgba(102, 199, 217, 0.32);
+      color: #d2f7ff;
+      background: rgba(102, 199, 217, 0.09);
+      font-weight: 800;
+    }
+
+    .result h3 {
+      margin-bottom: 6px;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .result p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .shot {
+      padding: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--panel-2);
+    }
+
+    .shot b {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--gold-2);
+    }
+
+    .shot span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .notice {
+      border-color: rgba(124, 207, 145, 0.28);
+      background: rgba(124, 207, 145, 0.07);
+    }
+
+    .notice p {
+      color: #d8f4dd;
+    }
+
+    @media (max-width: 1040px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .kpis,
+      .two-col,
+      .flow,
+      .checklist {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .main {
+        padding: 14px;
+      }
+
+      .topbar,
+      section {
+        padding: 16px;
+      }
+
+      .topbar,
+      .section-head {
+        display: grid;
+      }
+
+      .nav,
+      .kpis,
+      .two-col,
+      .flow,
+      .checklist,
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>RAG知识库</strong>
+        <span>首批历史名马资料</span>
+      </div>
+      <nav class="nav" aria-label="页面目录">
+        <a href="#overview">原型总览 <code>01</code></a>
+        <a href="#structure">搭建结构 <code>02</code></a>
+        <a href="#video-factory">视频工厂层 <code>03</code></a>
+        <a href="#corpus">史料录入 <code>04</code></a>
+        <a href="#query">检索演示 <code>05</code></a>
+        <a href="#statement">录入说明 <code>06</code></a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">百骑谱项目证明材料</p>
+          <h1>RAG知识库</h1>
+          <p class="subtitle">
+            本页面集中展示百骑谱项目的首批知识库建设成果，包括本地语料文件、向量检索文件、核心处理流程、首批名马条目样本与检索演示。
+          </p>
+        </div>
+        <div class="status-pill"><span class="dot"></span> 原型状态：已完成</div>
+      </header>
+
+      <section id="overview">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">01 原型总览</p>
+            <h2>原型总览</h2>
+          </div>
+          <p>当前 RAG 原型采用本地 JSON 知识库和轻量级向量索引，服务于历史名马资料检索、名马推荐、视频脚本素材整理等功能。</p>
+        </div>
+        <div class="grid kpis">
+          <div class="kpi">
+            <span class="label">原始知识文档</span>
+            <strong class="value">100</strong>
+            <p class="desc">corpus.json 已录入 100 条名马资料</p>
+          </div>
+          <div class="kpi">
+            <span class="label">向量索引条目</span>
+            <strong class="value">100</strong>
+            <p class="desc">vectordb.json 已生成检索索引</p>
+          </div>
+          <div class="kpi">
+            <span class="label">覆盖名马数量</span>
+            <strong class="value">100</strong>
+            <p class="desc">每条资料绑定独立名马名称</p>
+          </div>
+          <div class="kpi">
+            <span class="label">默认召回数量</span>
+            <strong class="value">3</strong>
+            <p class="desc">默认返回 3 条相关资料</p>
+          </div>
+          <div class="kpi">
+            <span class="label">视频素材层</span>
+            <strong class="value">18</strong>
+            <p class="desc">仅供视频工厂生成提示词使用</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="structure">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">02 搭建结构</p>
+            <h2>RAG 搭建结构</h2>
+          </div>
+          <p>原型没有依赖外部向量数据库，使用项目内文件完成语料存储、向量化、相似度召回和结果展示。</p>
+        </div>
+
+        <div class="grid two-col">
+          <div class="panel">
+            <h3>核心文件路径</h3>
+            <div class="path-list">
+              <code>server/data/corpus.json</code>
+              <code>server/data/vectordb.json</code>
+              <code>后端知识库服务模块</code>
+              <code>后端检索接口模块</code>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>状态接口样例</h3>
+            <pre>知识库状态：已完成
+原始知识文档：100 条
+向量索引条目：100 条
+覆盖名马数量：100 个
+默认召回数量：3 条</pre>
+          </div>
+        </div>
+
+        <div class="grid flow" style="margin-top: 14px;">
+          <div class="step"><b>资料整理</b><span>梳理历史记载、演义文学、评书传统和名马文化条目。</span></div>
+          <div class="step"><b>结构化录入</b><span>统一写入 id、text、metadata、source、labels 等字段。</span></div>
+          <div class="step"><b>构建索引</b><span>通过 build_vectordb 生成本地向量检索文件。</span></div>
+          <div class="step"><b>相似度召回</b><span>query_vectordb 根据用户问题返回相关片段。</span></div>
+          <div class="step"><b>结果展示</b><span>将命中片段返回页面，用于资料展示和内容引用。</span></div>
+        </div>
+      </section>
+
+      <section id="video-factory">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">03 视频工厂层</p>
+            <h2>视频工厂专用素材层</h2>
+          </div>
+          <p>为了让视频工厂生成更好的脚本、分镜、关键帧和 Veo 提示词，项目新增了一层独立素材库。它不替换原有 RAG 语料，因此不会影响聊天助手、推荐和其他知识问答功能。</p>
+        </div>
+
+        <div class="grid two-col">
+          <div class="panel">
+            <h3>独立文件路径</h3>
+            <div class="path-list">
+              <code>server/data/corpus.json</code>
+              <code>server/data/vectordb.json</code>
+              <code>server/data/video_factory_rag.json</code>
+              <code>server/app/services/workflow_tasks.py</code>
+            </div>
+            <p style="margin-top: 14px;">聊天功能继续读取原始 `corpus.json` 与 `vectordb.json`；视频工厂会先读取 `video_factory_rag.json`，没有命中时才回退到原始知识库。</p>
+          </div>
+          <div class="panel">
+            <h3>面向视频生成的字段</h3>
+            <div class="tags">
+              <span class="tag">hook 开场钩子</span>
+              <span class="tag">conflict 冲突</span>
+              <span class="tag">emotional_arc 情绪弧线</span>
+              <span class="tag">visual_keywords 画面关键词</span>
+              <span class="tag">shot_beats 分镜节拍</span>
+              <span class="tag">video_angles 选题角度</span>
+              <span class="tag">prompt_guidance 提示词约束</span>
+              <span class="tag">avoid 负向约束</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid two-col" style="margin-top: 14px;">
+          <div class="panel">
+            <h3>赤兔样例</h3>
+            <pre>开场钩子：
+一匹马两任主人，却把三国最锋利的野心和最沉重的忠义都驮在背上。
+
+视觉关键词：
+赤色鬃毛、铁蹄火星、青龙偃月刀、战旗、月下回望、尘土冲锋
+
+分镜节拍：
+红影掠过战场 -> 吕布剪影压住前景 -> 马缰易手 -> 关羽与赤兔并肩</pre>
+          </div>
+          <div class="panel">
+            <h3>调用边界</h3>
+            <pre>视频工厂：
+topic + horse + brief
+  -> video_factory_rag.json
+  -> promptSeed / ragReferences / nextPrompt
+  -> 分镜、关键帧、Veo 提示词
+
+聊天助手：
+用户问题
+  -> corpus.json / vectordb.json
+  -> sources / matched_horse
+  -> 聊天回复</pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="corpus">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">04 史料录入</p>
+            <h2>首批历史名马史料录入</h2>
+          </div>
+          <p>首批数据覆盖史籍、演义、评书、民间传说和古典名马传统。来源类型保留在 source 字段中，便于后续校勘和扩展。</p>
+        </div>
+
+        <div class="grid two-col">
+          <div class="panel">
+            <h3>字段结构</h3>
+            <pre>{
+  "id": "horse-001",
+  "text": "赤兔。对应人物：吕布、关羽...",
+  "metadata": {
+    "sequence": 1,
+    "name": "赤兔",
+    "figure": "吕布、关羽",
+    "source": "东汉末年《三国志》/《三国演义》",
+    "story": "先从吕布，后归关羽...",
+    "labels": ["忠义", "速度", "锋芒"]
+  }
+}</pre>
+          </div>
+          <div class="panel">
+            <h3>主要标签与来源</h3>
+            <div class="tags" aria-label="高频标签">
+              <span class="tag">神秘 6</span>
+              <span class="tag">爆发 4</span>
+              <span class="tag">速度 4</span>
+              <span class="tag">迅捷 3</span>
+              <span class="tag">锋芒 3</span>
+              <span class="tag">冷艳 3</span>
+              <span class="tag">沉稳 3</span>
+              <span class="tag">执行 3</span>
+              <span class="tag">华贵 3</span>
+              <span class="tag">祥瑞 3</span>
+            </div>
+            <p style="margin-top: 14px;">主要来源类型：评书传统、《穆天子传》八骏之一、演义命名传统、唐代昭陵六骏、古典命名传统、民间演义、民间传奇、三国相关史料与文学文本。</p>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 14px;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>名马</th>
+                <th>关联人物</th>
+                <th>来源标注</th>
+                <th>故事摘要</th>
+                <th>人格标签</th>
+              </tr>
+            </thead>
+            <tbody id="sampleRows"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" style="margin-top: 14px;">
+          <h3>首批 100 项名录</h3>
+          <div class="name-cloud" id="nameCloud"></div>
+        </div>
+      </section>
+
+      <section id="query">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">05 检索演示</p>
+            <h2>本地检索演示</h2>
+          </div>
+          <p>输入关键词后会在首批样本中计算命中分数，展示 RAG 检索的召回效果。</p>
+        </div>
+
+        <div class="search-row">
+          <input id="queryInput" value="赤兔 关羽 忠义" aria-label="检索关键词" />
+          <button id="queryButton" type="button">执行检索</button>
+        </div>
+        <div class="result-list" id="results"></div>
+      </section>
+
+      <section id="statement" class="notice">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">06 录入说明</p>
+            <h2>首批史料录入说明</h2>
+          </div>
+        </div>
+        <p>
+          百骑谱项目已完成 RAG 知识库原型搭建。首批录入 100 条历史名马及传统名驹资料，覆盖史籍记载、古典文学、评书传统、民间演义与名马文化意象。每条资料均包含名马名称、关联人物、来源标注、故事摘要和人格标签，并通过本地向量索引接入资料检索流程。该原型可为名马知识整理、用户查询、文创商品资料关联和视频脚本素材整理提供基础知识支撑。
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const sampleRecords = [
+      { id: "horse-001", name: "赤兔", figure: "吕布、关羽", source: "东汉末年《三国志》/《三国演义》", story: "先从吕布，后归关羽，是三国最具辨识度的名马之一", labels: "忠义 / 速度 / 锋芒" },
+      { id: "horse-002", name: "乌骓", figure: "项羽", source: "秦末汉初《史记·项羽本纪》", story: "垓下兵败后伴随项羽至乌江，成为英雄末路的象征", labels: "孤勇 / 逆境 / 悲壮" },
+      { id: "horse-003", name: "的卢", figure: "刘备", source: "东汉末年《三国志》/《三国演义》", story: "跃檀溪救主脱险，被视为危局转机之马", labels: "转机 / 避险 / 天命" },
+      { id: "horse-004", name: "绝影", figure: "曹操", source: "东汉末年《三国志》", story: "宛城之战中救曹操脱险，护主色彩极强", labels: "冷静 / 执行 / 护主" },
+      { id: "horse-005", name: "爪黄飞电", figure: "曹操", source: "东汉末年《三国演义》", story: "常被写作曹操仪仗与征战坐骑，强烈的统御感", labels: "威仪 / 速度 / 权势" },
+      { id: "horse-006", name: "照夜玉狮子", figure: "赵云（文学演绎）", source: "评书/戏曲/演义系统", story: "白马银枪英雄的经典坐骑意象", labels: "俊逸 / 少年感 / 白马英雄" },
+      { id: "horse-007", name: "黄骠马", figure: "秦琼", source: "隋唐演义《说唐》", story: "常与秦琼并提，代表可靠耐战的名将之马", labels: "稳健 / 义气 / 老成" },
+      { id: "horse-008", name: "呼雷豹", figure: "尉迟恭", source: "隋唐演义《说唐》", story: "名号凌厉，常用来强化猛将冲阵压迫感", labels: "爆发 / 威猛 / 黑金气质" },
+      { id: "horse-009", name: "玉兰白龙驹", figure: "罗成", source: "隋唐演义系统", story: "常配白袍少年将，视觉辨识度极高", labels: "清贵 / 敏捷 / 冷艳" },
+      { id: "horse-010", name: "里飞沙", figure: "关羽（民间演义）", source: "戏曲/评书系统", story: "常与武圣形象绑定，强化千里奔袭感", labels: "忠烈 / 迅猛 / 威严" },
+      { id: "horse-011", name: "菊花青", figure: "关羽/杨家将等文学系统", source: "民间演义系统", story: "常作冷色系名马，用于塑造肃杀名将气质", labels: "冷峻 / 肃杀 / 名将气" },
+      { id: "horse-012", name: "黄骠透骨龙", figure: "黄忠（文学系统）", source: "民间演义", story: "多配老将英雄，突出稳准狠的战阵经验", labels: "沉稳 / 老辣 / 耐战" }
+    ];
+
+    const allHorseNames = "赤兔、乌骓、的卢、绝影、爪黄飞电、照夜玉狮子、黄骠马、呼雷豹、玉兰白龙驹、里飞沙、菊花青、黄骠透骨龙、踏雪乌骓、乌云踏雪、白龙马、飒露紫、拳毛騧、白蹄乌、特勒骠、青骓、什伐赤、照夜白、汗血天马、乌孙天马、青海骢、紫骍、九花虬、狮子骢、五花马、青骢马、纤离、绝地、翻羽、奔霄、越影、逾辉、超光、腾雾、盗骊、骅骝、騄耳、赤骥、白义、渠黄、绿耳、玉花骢、乌云盖雪、雪里白、乌龙驹、白龙驹、青鬃马、黑风驹、千里火龙驹、卷毛狮子兽、一字板肋癞麒麟、万里烟云罩、闪电白龙驹、踏雪无痕、紫电青霜驹、白玉追风驹、乌金踏雪驹、赤焰流云驹、金睛兽马、卷云乌骓、飞霞骠、白鼻騧、青花骢、狮子骢王、赤炭火龙驹、乌骓踏雪、银鬃白龙驹、青骢追风马、龙鳞驹、飞电骢、踏雪梅花驹、赤鬃烈马、玉麒麟马、火眼狻猊马、青鬃追月马、乌骓胭脂马、金眼墨龙驹、胭脂兽、赛龙驹、追风驹、奔雷驹、踏燕乌骓、赤焰驹、银雪龙驹、飞云骠、天霜白骥、龙骧、虎步、飞黄、骐骥、白骐、乌骝、黄骝、青骝、玄驹、苍麟驹".split("、");
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;");
+    }
+
+    function renderRows() {
+      const rows = sampleRecords.map((item) => `
+        <tr>
+          <td><code>${escapeHtml(item.id)}</code></td>
+          <td><strong>${escapeHtml(item.name)}</strong></td>
+          <td>${escapeHtml(item.figure)}</td>
+          <td>${escapeHtml(item.source)}</td>
+          <td>${escapeHtml(item.story)}</td>
+          <td>${escapeHtml(item.labels)}</td>
+        </tr>
+      `).join("");
+      document.getElementById("sampleRows").innerHTML = rows;
+    }
+
+    function renderNameCloud() {
+      document.getElementById("nameCloud").innerHTML = allHorseNames
+        .map((name, index) => `<span class="tag">${String(index + 1).padStart(2, "0")} ${escapeHtml(name)}</span>`)
+        .join("");
+    }
+
+    function scoreRecord(query, record) {
+      const text = `${record.name} ${record.figure} ${record.source} ${record.story} ${record.labels}`;
+      const tokens = query.trim().split(/\s+/).filter(Boolean);
+      let score = 0;
+      for (const token of tokens) {
+        if (record.name.includes(token)) score += 4;
+        if (record.figure.includes(token)) score += 3;
+        if (record.labels.includes(token)) score += 3;
+        if (record.story.includes(token)) score += 2;
+        if (record.source.includes(token)) score += 1;
+        if (text.includes(token)) score += 1;
+      }
+      return score;
+    }
+
+    function runSearch() {
+      const query = document.getElementById("queryInput").value || "";
+      const ranked = sampleRecords
+        .map((record) => ({ record, score: scoreRecord(query, record) }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+      const fallback = sampleRecords.slice(0, 3).map((record, index) => ({ record, score: 3 - index }));
+      const results = ranked.length ? ranked : fallback;
+
+      document.getElementById("results").innerHTML = results.map((item) => `
+        <article class="result">
+          <div class="score">${item.score}</div>
+          <div>
+            <h3>${escapeHtml(item.record.name)} · ${escapeHtml(item.record.figure)}</h3>
+            <p>${escapeHtml(item.record.story)}</p>
+            <p style="margin-top: 6px;">来源：${escapeHtml(item.record.source)}；标签：${escapeHtml(item.record.labels)}</p>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    document.getElementById("queryButton").addEventListener("click", runSearch);
+    document.getElementById("queryInput").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") runSearch();
+    });
+
+    renderRows();
+    renderNameCloud();
+    runSearch();
+  </script>
+</body>
+</html>

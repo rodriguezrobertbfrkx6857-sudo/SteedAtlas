@@ -1,0 +1,62 @@
+{
+  "mode": "APPLY",
+  "entities": [
+    {
+      "horse_id": "chitu",
+      "status": "BLOCKED",
+      "reason": "MEDIAWIKI_maxlag"
+    },
+    {
+      "horse_id": "dilu",
+      "status": "BLOCKED",
+      "reason": "MEDIAWIKI_maxlag"
+    },
+    {
+      "horse_id": "wuzhui",
+      "status": "BLOCKED",
+      "reason": "MEDIAWIKI_maxlag"
+    }
+  ],
+  "policy": "CC0_METADATA_ONLY_NO_AUTOMATIC_IDENTITY_MERGE",
+  "trace": [
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "wbsearchentities",
+        "search": "赤兔",
+        "language": "zh",
+        "limit": 3
+      },
+      "status": "FAILED",
+      "reason": "AcquisitionError: MEDIAWIKI_maxlag"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "wbsearchentities",
+        "search": "的卢",
+        "language": "zh",
+        "limit": 3
+      },
+      "status": "FAILED",
+      "reason": "AcquisitionError: MEDIAWIKI_maxlag"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "wbsearchentities",
+        "search": "乌骓",
+        "language": "zh",
+        "limit": 3
+      },
+      "status": "FAILED",
+      "reason": "AcquisitionError: MEDIAWIKI_maxlag"
+    }
+  ]
+}

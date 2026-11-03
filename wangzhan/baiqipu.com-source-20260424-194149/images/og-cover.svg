@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="90" y1="60" x2="1110" y2="570" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1f130f" />
+      <stop offset="0.55" stop-color="#0c1820" />
+      <stop offset="1" stop-color="#050608" />
+    </linearGradient>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(970 120) rotate(90) scale(220 340)">
+      <stop stop-color="#f5c24b" stop-opacity="0.32" />
+      <stop offset="1" stop-color="#f5c24b" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(180 520) rotate(90) scale(210 320)">
+      <stop stop-color="#22d3ee" stop-opacity="0.2" />
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#glowA)" />
+  <rect width="1200" height="630" fill="url(#glowB)" />
+  <rect x="48" y="48" width="1104" height="534" rx="28" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
+  <text x="88" y="146" fill="#f3c96b" font-family="Georgia, serif" font-size="28" letter-spacing="8">百骑谱</text>
+  <text x="88" y="242" fill="#f8fafc" font-family="Georgia, serif" font-size="78" font-weight="700">找到你的守护名马</text>
+  <text x="88" y="312" fill="#d6d3d1" font-family="Arial, sans-serif" font-size="28">AI 驱动的历史名马数字化商业系统</text>
+  <text x="88" y="368" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="24">图鉴 · 性格测试 · 抽卡收藏 · AI 视频工厂 · 跨境商业化</text>
+  <g>
+    <rect x="88" y="430" width="226" height="92" rx="22" fill="rgba(245,194,75,0.12)" stroke="rgba(245,194,75,0.24)" />
+    <text x="116" y="468" fill="#f8fafc" font-family="Arial, sans-serif" font-size="20">文化图鉴</text>
+    <text x="116" y="502" fill="#f1f5f9" font-family="Georgia, serif" font-size="34" font-weight="700">11 匹核心名马</text>
+  </g>
+  <g>
+    <rect x="342" y="430" width="226" height="92" rx="22" fill="rgba(34,211,238,0.1)" stroke="rgba(34,211,238,0.2)" />
+    <text x="370" y="468" fill="#f8fafc" font-family="Arial, sans-serif" font-size="20">玩法体系</text>
+    <text x="370" y="502" fill="#f1f5f9" font-family="Georgia, serif" font-size="34" font-weight="700">抽卡 + 收藏</text>
+  </g>
+  <g>
+    <rect x="596" y="430" width="226" height="92" rx="22" fill="rgba(245,194,75,0.12)" stroke="rgba(245,194,75,0.24)" />
+    <text x="624" y="468" fill="#f8fafc" font-family="Arial, sans-serif" font-size="20">AI 能力</text>
+    <text x="624" y="502" fill="#f1f5f9" font-family="Georgia, serif" font-size="34" font-weight="700">RAG + 视频工厂</text>
+  </g>
+  <g>
+    <rect x="850" y="430" width="226" height="92" rx="22" fill="rgba(34,211,238,0.1)" stroke="rgba(34,211,238,0.2)" />
+    <text x="878" y="468" fill="#f8fafc" font-family="Arial, sans-serif" font-size="20">运营收口</text>
+    <text x="878" y="502" fill="#f1f5f9" font-family="Georgia, serif" font-size="34" font-weight="700">上线准备中</text>
+  </g>
+</svg>

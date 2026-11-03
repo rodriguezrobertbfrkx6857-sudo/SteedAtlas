@@ -1,0 +1,32 @@
+[
+  {
+    "horse_name": "赤兔",
+    "title": "三国志·魏书·吕布臧洪传",
+    "url": "https://zh.wikisource.org/wiki/三國志/卷07",
+    "kind": "PRIMARY_RECORD",
+    "locator": "卷七·吕布传·良马段",
+    "content": "布有良馬曰赤兔。",
+    "text": "《三国志》吕布传记有良马赤兔。",
+    "epistemic_status": "ATTESTED"
+  },
+  {
+    "horse_name": "的卢",
+    "title": "三国演义·第三十四回",
+    "url": "https://zh.wikisource.org/wiki/三國演義/第034回",
+    "kind": "LITERARY_WORK",
+    "locator": "第三十四回·回目",
+    "content": "蔡夫人隔屏聽密語　劉皇叔躍馬過檀溪",
+    "text": "《三国演义》第三十四回以刘皇叔跃马过檀溪为回目之一；的卢故事属于文学叙事。",
+    "epistemic_status": "LITERARY"
+  },
+  {
+    "horse_name": "乌骓",
+    "title": "史记·项羽本纪",
+    "url": "https://ctext.org/shiji/xiang-yu-ben-ji/zh",
+    "kind": "PRIMARY_RECORD",
+    "locator": "项羽本纪·垓下悲歌",
+    "content": "時不利兮騅不逝。",
+    "text": "《史记》项羽本纪所录悲歌中出现“骓不逝”；这句引文不单独证明后世乌骓传说。",
+    "epistemic_status": "ATTESTED"
+  }
+]

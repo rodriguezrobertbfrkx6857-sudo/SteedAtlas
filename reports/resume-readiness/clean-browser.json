@@ -1,0 +1,266 @@
+{
+  "scope": "ISOLATED_DATABASE_COPY",
+  "pages": [
+    {
+      "route": "/",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/chat",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/atlas",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/workflow-studio/",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/gacha",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/collection",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/product",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/quiz",
+      "device": "desktop",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/chat",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/atlas",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/workflow-studio/",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/gacha",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/collection",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/product",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/quiz",
+      "device": "mobile",
+      "status": 200,
+      "overflow": false
+    }
+  ],
+  "steps": [
+    {
+      "name": "赤兔",
+      "original_chat": true,
+      "mode": "SOURCE_ATTRIBUTED",
+      "verification": "MACHINE_VERIFIED",
+      "citations": [
+        {
+          "claim_id": "wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd",
+          "claim_revision": 1,
+          "source_id": "ws-16112",
+          "source_revision": 1,
+          "passage_id": "wsp-c5f792d55a0a01dd49a607b68b884caa0c09596d940a6ab5",
+          "passage_revision": 1,
+          "span": [
+            0,
+            437
+          ],
+          "quote": "布自以殺卓為術報讎，欲以德之。術惡其反覆，拒而不受。北詣袁紹，紹與布擊張燕于常山。燕精兵萬餘，騎數千。布有良馬曰赤兔。 〈《曹瞞傳》曰：時人語曰：「人中有呂布，馬中有赤兔。」〉常與其親近成廉、魏越等陷鋒突陳，遂破燕軍。而求益兵眾，將士鈔掠，紹患忌之。布覺其意，從紹求去。紹恐還為己害，遣壯士夜掩殺布，不獲。事露，布走河內，〈《英雄記》曰：布自以有功於袁氏，輕傲紹下諸將，以為擅相署置，不足貴也。布求還洛，紹假布領司隸校尉。外言當遣，內欲殺布。明日當發，紹遣甲士三十人，辭以送布。布使止於帳側，偽使人於帳中鼓箏。紹兵臥，布無何出帳去，而兵不覺。夜半兵起，亂斫布床被，謂為已死。明日，紹訊問，知布尚在，乃閉城門。布遂引去。 〉與張楊合。紹令眾追之，皆畏布，莫敢逼近者。 〈《英雄記》曰：楊及部曲諸將，皆受傕、汜購募，共圖布。布聞之，謂楊曰：「布，卿州里也。卿殺布，於卿弱。不如賣布，可極得汜、傕爵寵。」楊於是外許汜、傕，內實保護布。汜、傕患之，更下大封詔書，以布為潁川太守。 〉",
+          "locator": "呂布 / 段4",
+          "source_title": "三國志/卷07",
+          "edition": "維基文庫 oldid=2452141; render=f8664dc54604d052; mediawiki-paragraphs-v1",
+          "source_url": "https://zh.wikisource.org/w/index.php?oldid=2452141",
+          "genre": "PRIMARY_RECORD",
+          "relation": "MENTIONS",
+          "epistemic_status": "ATTESTED",
+          "review_state": "DRAFT",
+          "verification": "MACHINE_VERIFIED",
+          "source_observation": {
+            "source_id": "ws-16112",
+            "checked_at": "2026-11-02T10:39:38.815602+00:00",
+            "status": "AVAILABLE"
+          },
+          "snapshot_only": false,
+          "human_review_state": "NOT_REVIEWED",
+          "presentation_track": "AUTO_VERIFIED_SOURCE",
+          "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+          "entailment": "UNVERIFIED",
+          "entity_identity": "ALIAS_CANDIDATE_NOT_IDENTITY_PROOF",
+          "attribution": "《三國志/卷07》；陳壽；含裴松之注；維基文庫貢獻者；修訂2452141",
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+          "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text.",
+          "upstream_revision": 2452141,
+          "independence_group": [
+            "work:三國志"
+          ],
+          "proposition_key": "",
+          "href": "/api/v2/evidence/wsc-47323fdcfd051d998102f14a16a22fe729e1596d5d2d2dfd@1",
+          "index_snapshot_id": "75ae51fa4c68e744c00f742bb69bf9e261a0493523b33dfd1f0de91358ef9fe7"
+        }
+      ],
+      "opened_exact_quote": "布自以殺卓為術報讎，欲以德之。術惡其反覆，拒而不受。北詣袁紹，紹與布擊張燕于常山。燕精兵萬餘，騎數千。布有良馬曰赤兔。 〈《曹瞞傳》曰：時人語曰：「人中有呂布，馬中有赤兔。」〉常與其親近成廉、魏越等陷鋒突陳，遂破燕軍。而求益兵眾，將士鈔掠，紹患忌之。布覺其意，從紹求去。紹恐還為己害，遣壯士夜掩殺布，不獲。事露，布走河內，〈《英雄記》曰：布自以有功於袁氏，輕傲紹下諸將，以為擅相署置，不足貴也。布求還洛，紹假布領司隸校尉。外言當遣，內欲殺布。明日當發，紹遣甲士三十人，辭以送布。布使止於帳側，偽使人於帳中鼓箏。紹兵臥，布無何出帳去，而兵不覺。夜半兵起，亂斫布床被，謂為已死。明日，紹訊問，知布尚在，乃閉城門。布遂引去。 〉與張楊合。紹令眾追之，皆畏布，莫敢逼近者。 〈《英雄記》曰：楊及部曲諸將，皆受傕、汜購募，共圖布。布聞之，謂楊曰：「布，卿州里也。卿殺布，於卿弱。不如賣布，可極得汜、傕爵寵。」楊於是外許汜、傕，內實保護布。汜、傕患之，更下大封詔書，以布為潁川太守。 〉"
+    },
+    {
+      "name": "乌骓",
+      "original_chat": true,
+      "mode": "SOURCE_ATTRIBUTED",
+      "verification": "MACHINE_VERIFIED",
+      "citations": [
+        {
+          "claim_id": "wsc-58d0f146e14252aaebabe6b6413eadac7fc0ca385341cae4",
+          "claim_revision": 1,
+          "source_id": "ws-7541",
+          "source_revision": 1,
+          "passage_id": "wsp-7504e0b03f9076ee3347d9bf86819d848985c2e7654dcdff",
+          "passage_revision": 1,
+          "span": [
+            0,
+            161
+          ],
+          "quote": "項王軍壁垓下，兵少食盡，漢軍及諸侯兵圍之數重。夜聞漢軍四面皆楚歌，項王乃大驚曰：「漢皆已得楚乎？是何楚人之多也！」項王則夜起，飲帳中。有美人名虞，常幸從；駿馬名騅，常騎之。於是項王乃悲歌忼慨，自為詩曰：「力拔山兮氣蓋世，時不利兮騅不逝。騅不逝兮可柰何，虞兮虞兮柰若何！」歌數闋，美人和之。項王泣數行下，左右皆泣，莫能仰視。",
+          "locator": "項羽 / 段40",
+          "source_title": "史記/卷007",
+          "edition": "維基文庫 oldid=5978360; render=b4d5bc651bb851c7; mediawiki-paragraphs-v1",
+          "source_url": "https://zh.wikisource.org/w/index.php?oldid=5978360",
+          "genre": "PRIMARY_RECORD",
+          "relation": "MENTIONS",
+          "epistemic_status": "ATTESTED",
+          "review_state": "DRAFT",
+          "verification": "MACHINE_VERIFIED",
+          "source_observation": {
+            "source_id": "ws-7541",
+            "checked_at": "2026-11-02T10:39:38.815602+00:00",
+            "status": "AVAILABLE"
+          },
+          "snapshot_only": false,
+          "human_review_state": "NOT_REVIEWED",
+          "presentation_track": "AUTO_VERIFIED_SOURCE",
+          "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+          "entailment": "UNVERIFIED",
+          "entity_identity": "ALIAS_CANDIDATE_NOT_IDENTITY_PROOF",
+          "attribution": "《史記/卷007》；司馬遷；維基文庫貢獻者；修訂5978360",
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+          "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text.",
+          "upstream_revision": 5978360,
+          "independence_group": [
+            "work:史記"
+          ],
+          "proposition_key": "",
+          "href": "/api/v2/evidence/wsc-58d0f146e14252aaebabe6b6413eadac7fc0ca385341cae4@1",
+          "index_snapshot_id": "75ae51fa4c68e744c00f742bb69bf9e261a0493523b33dfd1f0de91358ef9fe7"
+        }
+      ],
+      "opened_exact_quote": "項王軍壁垓下，兵少食盡，漢軍及諸侯兵圍之數重。夜聞漢軍四面皆楚歌，項王乃大驚曰：「漢皆已得楚乎？是何楚人之多也！」項王則夜起，飲帳中。有美人名虞，常幸從；駿馬名騅，常騎之。於是項王乃悲歌忼慨，自為詩曰：「力拔山兮氣蓋世，時不利兮騅不逝。騅不逝兮可柰何，虞兮虞兮柰若何！」歌數闋，美人和之。項王泣數行下，左右皆泣，莫能仰視。"
+    },
+    {
+      "name": "的卢",
+      "original_chat": true,
+      "mode": "SOURCE_ATTRIBUTED",
+      "verification": "MACHINE_VERIFIED",
+      "citations": [
+        {
+          "claim_id": "wsc-2efea90fe3ab5b1c64d21fdcf5a392f4695d0ba3ce8c9f49",
+          "claim_revision": 1,
+          "source_id": "ws-12873",
+          "source_revision": 1,
+          "passage_id": "wsp-f0c6185dd47d9caf1261d0a90e91cc1c18747df4e086d0a7",
+          "passage_revision": 1,
+          "span": [
+            0,
+            393
+          ],
+          "quote": "曹公既破紹，自南擊先主。先主遣麋竺、孫乾與劉表相聞，表自郊迎，以上賓禮待之，益其兵，使屯新野。荊州豪傑歸先主者日益多，表疑其心，陰禦之。 〈《九州春秋》曰：備住荊州數年，嘗於表坐起至廁，見髀裡肉生，慨然流涕。還坐，表怪問備，備曰：「吾常身不離鞍，髀肉皆消。今不復騎，髀裏肉生。日月若馳，老將至矣，而功業不建，是以悲耳。」《世語》曰：備屯樊城，劉表禮焉，憚其為人，不甚信用。曾請備宴會，蒯越、蔡瑁欲因會取備，備覺之，偽如廁，潛遁出。所乘馬名的盧，騎的盧走，墮襄陽城西檀溪水中，溺不得出。備急曰：「的盧：今日厄矣，可努力！」的盧乃一踴三丈，遂得過，乘桴渡河，中流而追者至，以表意謝之，曰：「何去之速乎！」孫盛曰：此不然之言。備時羈旅，客主勢殊，若有此變，豈敢晏然終表之世而無釁故乎？此皆世俗妄說，非事實也。〉使拒夏侯惇、于禁等於博望。久之，先主設伏兵，一旦自燒屯偽遁，惇等追之，為伏兵所破。",
+          "locator": "先主 劉備 / 段9",
+          "source_title": "三國志/卷32",
+          "edition": "維基文庫 oldid=2583378; render=e105341f560b1b56; mediawiki-paragraphs-v1",
+          "source_url": "https://zh.wikisource.org/w/index.php?oldid=2583378",
+          "genre": "PRIMARY_RECORD",
+          "relation": "MENTIONS",
+          "epistemic_status": "ATTESTED",
+          "review_state": "DRAFT",
+          "verification": "MACHINE_VERIFIED",
+          "source_observation": {
+            "source_id": "ws-12873",
+            "checked_at": "2026-11-02T10:39:38.815602+00:00",
+            "status": "AVAILABLE"
+          },
+          "snapshot_only": false,
+          "human_review_state": "NOT_REVIEWED",
+          "presentation_track": "AUTO_VERIFIED_SOURCE",
+          "epistemic_kind": "HISTORICAL_SOURCE_REPORT",
+          "entailment": "UNVERIFIED",
+          "entity_identity": "ALIAS_CANDIDATE_NOT_IDENTITY_PROOF",
+          "attribution": "《三國志/卷32》；陳壽；含裴松之注；維基文庫貢獻者；修訂2583378",
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.zh",
+          "changes": "HTML paragraph text extraction; navigation/reference markers removed; no translation. Offsets refer to extracted_text.",
+          "upstream_revision": 2583378,
+          "independence_group": [
+            "work:三國志"
+          ],
+          "proposition_key": "",
+          "href": "/api/v2/evidence/wsc-2efea90fe3ab5b1c64d21fdcf5a392f4695d0ba3ce8c9f49@1",
+          "index_snapshot_id": "75ae51fa4c68e744c00f742bb69bf9e261a0493523b33dfd1f0de91358ef9fe7"
+        }
+      ],
+      "opened_exact_quote": "曹公既破紹，自南擊先主。先主遣麋竺、孫乾與劉表相聞，表自郊迎，以上賓禮待之，益其兵，使屯新野。荊州豪傑歸先主者日益多，表疑其心，陰禦之。 〈《九州春秋》曰：備住荊州數年，嘗於表坐起至廁，見髀裡肉生，慨然流涕。還坐，表怪問備，備曰：「吾常身不離鞍，髀肉皆消。今不復騎，髀裏肉生。日月若馳，老將至矣，而功業不建，是以悲耳。」《世語》曰：備屯樊城，劉表禮焉，憚其為人，不甚信用。曾請備宴會，蒯越、蔡瑁欲因會取備，備覺之，偽如廁，潛遁出。所乘馬名的盧，騎的盧走，墮襄陽城西檀溪水中，溺不得出。備急曰：「的盧：今日厄矣，可努力！」的盧乃一踴三丈，遂得過，乘桴渡河，中流而追者至，以表意謝之，曰：「何去之速乎！」孫盛曰：此不然之言。備時羈旅，客主勢殊，若有此變，豈敢晏然終表之世而無釁故乎？此皆世俗妄說，非事實也。〉使拒夏侯惇、于禁等於博望。久之，先主設伏兵，一旦自燒屯偽遁，惇等追之，為伏兵所破。"
+    }
+  ],
+  "errors": [],
+  "agent_trace": "search_entities → OK (4.017ms)\nsearch_evidence → OK (81.852ms)\nsearch_evidence → OK (42.511ms)\nsearch_evidence → OK (30.698ms)\ncompare_sources → OK (0.029ms)\ninspect_claim_edges → OK (0.083ms)\ncheck_coverage → OK (9.887ms)",
+  "mobile_flow_overflow": false,
+  "video": "runtime\\resume-rc\\clean-browser.webm"
+}

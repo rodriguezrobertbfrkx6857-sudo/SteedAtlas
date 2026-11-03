@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://baiqipu.com/</loc><priority>1.0</priority></url>
+  <url><loc>https://baiqipu.com/atlas</loc><priority>0.9</priority></url>
+  <url><loc>https://baiqipu.com/atlas/chitu</loc><priority>0.8</priority></url>
+  <url><loc>https://baiqipu.com/atlas/wuzhui</loc><priority>0.8</priority></url>
+  <url><loc>https://baiqipu.com/atlas/dilu</loc><priority>0.8</priority></url>
+  <url><loc>https://baiqipu.com/atlas/jueying</loc><priority>0.7</priority></url>
+  <url><loc>https://baiqipu.com/atlas/hanxue</loc><priority>0.7</priority></url>
+  <url><loc>https://baiqipu.com/quiz</loc><priority>0.9</priority></url>
+  <url><loc>https://baiqipu.com/product</loc><priority>0.8</priority></url>
+  <url><loc>https://baiqipu.com/gacha</loc><priority>0.7</priority></url>
+  <url><loc>https://baiqipu.com/collection</loc><priority>0.6</priority></url>
+  <url><loc>https://baiqipu.com/rag-proof-showcase/</loc><priority>0.6</priority></url>
+</urlset>

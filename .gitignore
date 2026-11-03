@@ -1,0 +1,47 @@
+# Local secrets and personal data
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+*.pem
+*.key
+*.pfx
+*.p12
+auth.json
+cookies.json
+*.db
+*.db-*
+*.db.backup*
+*.sqlite
+*.sqlite3
+# Dependencies, caches and run output
+node_modules/
+.next/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.tsbuildinfo
+*.log
+*.err
+*.out
+generated/
+*.zip
+.DS_Store
+Thumbs.db
+
+runtime/
+frontend/dist/
+.pytest_cache/
+.ruff_cache/
+reports/screenshots/
+
+frontend/preview-dist/
+# Generated media artifacts are reproducible from the manifest; keep binaries out of git history.
+deliverables/*.mp4
+deliverables/*.srt
+deliverables/*.png
+# Keep per-run acquisition/debug iterations local; curated acceptance snapshots are committed.
+reports/rag-upgrade/autonomous/acquisition-*.json
+reports/rag-upgrade/autonomous/unit-tests.xml

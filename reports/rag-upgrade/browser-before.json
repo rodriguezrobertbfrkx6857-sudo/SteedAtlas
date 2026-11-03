@@ -1,0 +1,764 @@
+{
+  "phase": "before",
+  "pages": [
+    {
+      "route": "/",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/chat",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/atlas",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/workflow-studio/",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱视频创作台",
+      "overflow": false,
+      "links": []
+    },
+    {
+      "route": "/gacha",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/collection",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/product",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/quiz",
+      "device": "desktop",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/chat",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/atlas",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/workflow-studio/",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱视频创作台",
+      "overflow": true,
+      "links": []
+    },
+    {
+      "route": "/gacha",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/collection",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/product",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    },
+    {
+      "route": "/quiz",
+      "device": "mobile",
+      "status": 200,
+      "title": "百骑谱 — AI驱动的历史名马数字化商业系统",
+      "overflow": false,
+      "links": [
+        {
+          "text": "百骑谱",
+          "href": "/"
+        },
+        {
+          "text": "主界面",
+          "href": "/"
+        },
+        {
+          "text": "图鉴",
+          "href": "/atlas"
+        },
+        {
+          "text": "AI测验",
+          "href": "/quiz"
+        },
+        {
+          "text": "商品",
+          "href": "/product"
+        },
+        {
+          "text": "抽卡",
+          "href": "/gacha"
+        },
+        {
+          "text": "收藏",
+          "href": "/collection"
+        },
+        {
+          "text": "AI客服",
+          "href": "/chat"
+        },
+        {
+          "text": "跨境管理",
+          "href": "/crossborder"
+        },
+        {
+          "text": "视频工厂",
+          "href": "/workflow-studio/"
+        },
+        {
+          "text": "RAG马库",
+          "href": "/horse-rag/"
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,78 @@
+{
+  "database": "runtime\\resume-rc\\autonomous-demo.db",
+  "offline": false,
+  "imports": [
+    {
+      "source_id": "ws-7226",
+      "title": "三國演義/第003回",
+      "revision": 2567965,
+      "changed": false,
+      "quotes": 3,
+      "new_claims": 0,
+      "updated_links": 0,
+      "entities": [
+        "chitu"
+      ],
+      "mode": "APPLY"
+    }
+  ],
+  "blocked": [],
+  "coverage": {
+    "corpus_snapshot_id": "127be994e69be1f2e2cc34fa41bc4de758d5af93b85bf7524c69eccabdd1cb74",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 83,
+    "review_states": {
+      "DRAFT": 83
+    },
+    "citable_count": 83,
+    "machine_verified_count": 83,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": true
+  },
+  "trace": [
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "meta": "siteinfo",
+        "siprop": "rightsinfo"
+      },
+      "status": "FETCHED",
+      "hash": "15c6880ec09d4a3a944e02b80820f5de38aa835e2ee63709846bb7b6fda77e03"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "query",
+        "prop": "revisions",
+        "rvprop": "ids|timestamp|content|sha1",
+        "rvslots": "main",
+        "revids": 2567965
+      },
+      "status": "FETCHED",
+      "hash": "3c40e6e3d05daae782e0bce2948ad6d2243e2b7a2532b1f8221a0f4bbf946690"
+    },
+    {
+      "params": {
+        "format": "json",
+        "formatversion": 2,
+        "maxlag": 5,
+        "action": "parse",
+        "oldid": 2567965,
+        "prop": "text|revid",
+        "disableeditsection": 1
+      },
+      "status": "FETCHED",
+      "hash": "8b89f2308de9e24e119c107d4154eed2bee21beee5bf6971a6b8a84e7e6c64b9"
+    }
+  ],
+  "network_requests": 3
+}

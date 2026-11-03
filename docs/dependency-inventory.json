@@ -1,0 +1,170 @@
+[
+  {
+    "name": "react",
+    "version": "19.3.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/react/react.git",
+      "directory": "packages/react"
+    },
+    "license_sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "name": "react-dom",
+    "version": "19.3.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/react/react.git",
+      "directory": "packages/react-dom"
+    },
+    "license_sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "name": "vite",
+    "version": "8.3.5",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/vitejs/vite.git",
+      "directory": "packages/vite"
+    },
+    "license_sha256": "a22152baa1aef74402443008e767e7c689a524c0909d19b0431d97f5ab066a13"
+  },
+  {
+    "name": "typescript",
+    "version": "5.9.3",
+    "license": "Apache-2.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/microsoft/TypeScript.git"
+    },
+    "license_sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47"
+  },
+  {
+    "name": "@xyflow/react",
+    "version": "12.12.0",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/xyflow/xyflow.git",
+      "directory": "packages/react"
+    },
+    "license_sha256": "023119ac20fb1c8c9930abe0bcd196989a1960388529a96fc43cebf96f07c9ff"
+  },
+  {
+    "name": "@tiptap/core",
+    "version": "3.32.2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/ueberdosis/tiptap",
+      "directory": "packages/core"
+    },
+    "license_sha256": "c96e5ecb55ac593157ad1d21d1f44a611187f494a0f04c235a1ae692c88d6ba9"
+  },
+  {
+    "name": "@tiptap/react",
+    "version": "3.32.2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/ueberdosis/tiptap",
+      "directory": "packages/react"
+    },
+    "license_sha256": "c96e5ecb55ac593157ad1d21d1f44a611187f494a0f04c235a1ae692c88d6ba9"
+  },
+  {
+    "name": "@tiptap/starter-kit",
+    "version": "3.32.2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/ueberdosis/tiptap",
+      "directory": "packages/starter-kit"
+    },
+    "license_sha256": "c96e5ecb55ac593157ad1d21d1f44a611187f494a0f04c235a1ae692c88d6ba9"
+  },
+  {
+    "name": "@tiptap/pm",
+    "version": "3.32.2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/ueberdosis/tiptap",
+      "directory": "packages/pm"
+    },
+    "license_sha256": "c96e5ecb55ac593157ad1d21d1f44a611187f494a0f04c235a1ae692c88d6ba9"
+  },
+  {
+    "name": "@xzdarcy/react-timeline-editor",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/xzdarcy/react-timeline-editor.git"
+    },
+    "license_sha256": "not found"
+  },
+  {
+    "name": "fastapi",
+    "version": "0.115.12",
+    "license": "see package classifiers",
+    "repository": ""
+  },
+  {
+    "name": "sqlalchemy",
+    "version": "2.0.41",
+    "license": "MIT",
+    "repository": "https://www.sqlalchemy.org"
+  },
+  {
+    "name": "alembic",
+    "version": "1.15.2",
+    "license": "MIT",
+    "repository": ""
+  },
+  {
+    "name": "pydantic",
+    "version": "2.11.3",
+    "license": "MIT",
+    "repository": ""
+  },
+  {
+    "name": "uvicorn",
+    "version": "0.34.3",
+    "license": "BSD-3-Clause",
+    "repository": ""
+  },
+  {
+    "name": "Pillow",
+    "version": "12.0.0",
+    "license": "MIT-CMU",
+    "repository": ""
+  },
+  {
+    "name": "pytest",
+    "version": "8.4.2",
+    "license": "MIT",
+    "repository": ""
+  },
+  {
+    "name": "ruff",
+    "version": "0.17.3",
+    "license": "MIT",
+    "repository": "https://docs.astral.sh/ruff"
+  },
+  {
+    "name": "playwright",
+    "version": "1.64.1",
+    "license": "Apache-2.0",
+    "repository": ""
+  },
+  {
+    "name": "huey",
+    "version": "3.5.3",
+    "license": "see package classifiers",
+    "repository": ""
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "generated_dir": "D:\\视频工厂应用\\baiqipu-github\\wangzhan\\{E4A9AA9B-E341-4443-82B1-6CD600640AE6}\\files\\var\\www\\baiqipu\\server\\generated",
+  "files_on_disk": 0,
+  "legacy_tasks_with_generated_urls": 33,
+  "distinct_claimed_paths": 64,
+  "claimed_paths_present_on_disk": [],
+  "disk_files_without_claim": [],
+  "disk_files_without_claim_count": 0,
+  "claimable": false,
+  "verdict": "No legacy generated file is present on disk; nothing is claimable."
+}

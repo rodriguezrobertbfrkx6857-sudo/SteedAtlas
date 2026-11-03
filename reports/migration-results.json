@@ -1,0 +1,58 @@
+{
+  "mode": "LOCAL_COPY_ONLY",
+  "legacy_counts_before": {
+    "horses": 103,
+    "users": 12,
+    "products": 5,
+    "orders": 0,
+    "gacha_records": 21,
+    "collections": 6,
+    "video_tasks": 3,
+    "shopee_connections": 0,
+    "shopee_publish_configs": 0,
+    "crossborder_publish_records": 0,
+    "workflow_tasks": 56,
+    "gacha_fragments": 3
+  },
+  "legacy_counts_after": {
+    "horses": 103,
+    "users": 12,
+    "products": 5,
+    "orders": 0,
+    "gacha_records": 21,
+    "collections": 6,
+    "video_tasks": 3,
+    "shopee_connections": 0,
+    "shopee_publish_configs": 0,
+    "crossborder_publish_records": 0,
+    "workflow_tasks": 56,
+    "gacha_fragments": 3
+  },
+  "runs": [
+    {
+      "command": [
+        "upgrade",
+        "head"
+      ],
+      "returncode": 0,
+      "stderr": "INFO  [alembic.runtime.migration] Context impl SQLiteImpl.\r\nINFO  [alembic.runtime.migration] Will assume non-transactional DDL.\r\nINFO  [alembic.runtime.migration] Running upgrade a8d4e7f9c201 -> v2_001, Expand-only V2 entities, revisions, jobs, leased nodes and audit outbox.\r\n"
+    },
+    {
+      "command": [
+        "downgrade",
+        "a8d4e7f9c201"
+      ],
+      "returncode": 0,
+      "stderr": "INFO  [alembic.runtime.migration] Context impl SQLiteImpl.\r\nINFO  [alembic.runtime.migration] Will assume non-transactional DDL.\r\nINFO  [alembic.runtime.migration] Running downgrade v2_001 -> a8d4e7f9c201, Expand-only V2 entities, revisions, jobs, leased nodes and audit outbox.\r\n"
+    },
+    {
+      "command": [
+        "upgrade",
+        "head"
+      ],
+      "returncode": 0,
+      "stderr": "INFO  [alembic.runtime.migration] Context impl SQLiteImpl.\r\nINFO  [alembic.runtime.migration] Will assume non-transactional DDL.\r\nINFO  [alembic.runtime.migration] Running upgrade a8d4e7f9c201 -> v2_001, Expand-only V2 entities, revisions, jobs, leased nodes and audit outbox.\r\n"
+    }
+  ],
+  "preserved": true
+}

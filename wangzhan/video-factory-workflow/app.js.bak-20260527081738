@@ -1,0 +1,3789 @@
+const STORAGE_KEY = "baiqipu-video-factory-workflow-v10";
+const AUTH_STORAGE_KEY = "auth-storage";
+const WORKFLOW_API_BASE = "/api/v1/video/workflow";
+const NODE_WIDTH = 205;
+const NODE_HEIGHT = 150;
+const CANVAS_WIDTH = 1680;
+const CANVAS_HEIGHT = 860;
+const TASK_POLL_MS = 2500;
+const NODE_SEQUENCE = [
+  "reference_input",
+  "reference_analyze",
+  "input",
+  "script",
+  "storyboard",
+  "voice",
+  "keyframe",
+  "subtitle",
+  "veo",
+  "compose",
+  "output",
+  "xhs_publish",
+];
+const CONNECTION_LANE_OFFSETS = {
+  "e-script-subtitle": { sourceY: 34, targetY: -34, curveFactor: 0.5, emphasize: true },
+  "e-subtitle-compose": { sourceY: -34, targetY: 34, curveFactor: 0.5, emphasize: true },
+};
+
+const horseImages = {
+  "赤兔": "../images/chitu.png",
+  "乌骓": "../images/wuzhui.png",
+  "的卢": "../images/dilu.png",
+  "汗血": "../images/hanxue.png",
+  "绝影": "../images/jueying.png",
+};
+
+const BASE_VIDEO_TEMPLATE = {
+  id: "ink-war-scroll",
+  name: "水墨古战场卷轴基础模板",
+  source: "vedio/dec20191fecada3542e5dbbef9bc5ba2.mp4",
+  visualStyle: "水墨古战场卷轴动画，纸本留白，灰绿色烟尘，墨黑烽烟，红色战旗点缀，远景士兵剪影，卷轴画框转场，骑马古代将领剪影，庄重史诗氛围",
+  camera: "水墨画卷推进 / 战场横移 / 烟尘揭示 / 低角度骑马剪影",
+  keyframePrompt: "水墨古战场卷轴概念图，灰绿烟尘、红色战旗、纸本留白、远景人群剪影、骑马将领剪影，清晰构图，可作为 Veo 风格关键帧",
+  motionPrompt: "保持水墨卷轴动画质感：烟尘缓慢流动，旗帜轻微飘动，画卷式横移推进，骑马剪影稳定自然，不要黑场开头或结尾",
+};
+
+const nodeMeta = {
+  reference_input: { label: "参考素材上传", kind: "input", type: "参考", color: "cyan" },
+  reference_analyze: { label: "参考风格分析", kind: "ai", type: "分析", color: "violet" },
+  input: { label: "内容输入", kind: "input", type: "入口", color: "cyan" },
+  script: { label: "ChatGPT 剧本", kind: "ai", type: "AI", color: "violet" },
+  storyboard: { label: "分镜拆解", kind: "text", type: "结构化", color: "amber" },
+  keyframe: { label: "关键帧生成", kind: "image", type: "图片", color: "pink" },
+  veo: { label: "Veo 视频生成", kind: "video", type: "视频", color: "blue" },
+  voice: { label: "Veo 声音规划", kind: "audio", type: "音频", color: "green" },
+  subtitle: { label: "字幕规划", kind: "text", type: "字幕", color: "amber" },
+  compose: { label: "视频合成", kind: "video", type: "合成", color: "blue" },
+  output: { label: "成片输出", kind: "output", type: "结果", color: "red" },
+  xhs_publish: { label: "小红书自动发布", kind: "output", type: "发布", color: "red" },
+};
+
+const defaultWorkflow = {
+  settings: {
+    executionMode: "site-workflow",
+    mode: "step-by-step",
+    layoutVersion: 11,
+  },
+  nodes: [
+    {
+      id: "reference_input",
+      type: "reference_input",
+      x: 20,
+      y: 44,
+      status: "idle",
+      progress: 0,
+      fields: {
+        enabled: "关闭",
+        sourceType: "上传文件",
+        mediaType: "unknown",
+        mediaUrl: "",
+        localPath: "",
+        note: "可选：上传图片或视频作为风格参考",
+      },
+      output: null,
+    },
+    {
+      id: "reference_analyze",
+      type: "reference_analyze",
+      x: 255,
+      y: 44,
+      status: "idle",
+      progress: 0,
+      fields: {
+        model: "gpt-5.4",
+        credentialRef: "server/.env: VIDEO_FACTORY_GPT_*",
+        focus: "提取视觉风格、镜头语言、色彩和节奏",
+      },
+      output: null,
+    },
+    {
+      id: "input",
+      type: "input",
+      x: 20,
+      y: 300,
+      status: "idle",
+      progress: 0,
+      fields: {
+        horse: "赤兔",
+        topic: "",
+        brief: "",
+        audience: "抖音 / 视频号历史国风内容",
+        duration: "15",
+        aspect: "9:16",
+        videoCount: "1",
+      },
+      output: null,
+    },
+    {
+      id: "script",
+      type: "script",
+      x: 255,
+      y: 300,
+      status: "idle",
+      progress: 0,
+      fields: {
+        model: "gpt-5.4",
+        credentialRef: "server/.env: VIDEO_FACTORY_GPT_*",
+        style: "情绪叙事",
+        jsonMode: "严格 JSON",
+        temperature: "0.7",
+        customPrompt: "输出适合短视频的强钩子、旁白、分镜和 Veo 提示词。",
+      },
+      output: null,
+    },
+    {
+      id: "storyboard",
+      type: "storyboard",
+      x: 490,
+      y: 300,
+      status: "idle",
+      progress: 0,
+      fields: {
+        shotCount: "3",
+        shotSeconds: "8",
+        camera: BASE_VIDEO_TEMPLATE.camera,
+        visualStyle: BASE_VIDEO_TEMPLATE.visualStyle,
+        promptLanguage: "中文提示词",
+        promptGuidance: `${BASE_VIDEO_TEMPLATE.name}：${BASE_VIDEO_TEMPLATE.visualStyle}。每个镜头都要服务同一个故事线，避免跳戏。`,
+      },
+      output: null,
+    },
+    {
+      id: "keyframe",
+      type: "keyframe",
+      x: 725,
+      y: 300,
+      status: "idle",
+      progress: 0,
+      fields: {
+        provider: "gpt-image-2",
+        credentialRef: "server/.env: VIDEO_FACTORY_IMAGE_*",
+        frameCount: "2",
+        referenceMode: "首尾关键帧",
+        imageSize: "9:16",
+        apiSize: "1024x1792",
+        consistency: "统一马匹、人物、服饰和色调",
+        promptStyle: BASE_VIDEO_TEMPLATE.keyframePrompt,
+        customPrompt: BASE_VIDEO_TEMPLATE.keyframePrompt,
+      },
+      output: null,
+    },
+    {
+      id: "veo",
+      type: "veo",
+      x: 960,
+      y: 300,
+      status: "idle",
+      progress: 0,
+      fields: {
+        provider: "Veo / Gemini API",
+        model: "veo_3_1-fast-4K",
+        credentialRef: "server/.env: VIDEO_FACTORY_VEO_*",
+        generateAudio: "是",
+        aspect: "9:16",
+        quality: "auto",
+        parallel: "3",
+        motionPrompt: BASE_VIDEO_TEMPLATE.motionPrompt,
+        negativePrompt: "低清晰度、错字、畸形、人物脸部崩坏",
+      },
+      output: null,
+    },
+    {
+      id: "voice",
+      type: "voice",
+      x: 725,
+      y: 44,
+      status: "idle",
+      progress: 0,
+      fields: {
+        mode: "中文 TTS 优先",
+        engine: "中文 TTS + Veo 原生备用",
+        voice: "zh-CN-YunxiNeural",
+        speed: "1.0",
+        emotion: "庄重 / 热血",
+        soundscape: "马蹄声、战场风声、低沉鼓点、电影感环境声",
+        format: "mp3",
+      },
+      output: null,
+    },
+    {
+      id: "subtitle",
+      type: "subtitle",
+      x: 725,
+      y: 556,
+      status: "idle",
+      progress: 0,
+      fields: {
+        mode: "仅站内 SRT",
+        style: "金色下三分之一",
+        language: "简体中文",
+        maxChars: "18",
+        position: "底部居中",
+        bilingual: "否",
+      },
+      output: null,
+    },
+    {
+      id: "compose",
+      type: "compose",
+      x: 1195,
+      y: 300,
+      status: "idle",
+      progress: 0,
+      fields: {
+        engine: "FFmpeg / 网站后端",
+        transition: "卷轴擦除",
+        bgm: "史诗鼓点",
+        ducking: "自动压低背景乐",
+        cover: "自动抽帧封面",
+      },
+      output: null,
+    },
+    {
+      id: "output",
+      type: "output",
+      x: 1430,
+      y: 300,
+      status: "idle",
+      progress: 0,
+      fields: {
+        saveTo: "网站 generated/videos",
+        callback: "/api/v1/video/workflow/tasks",
+        notify: "更新视频工厂历史任务",
+        publish: "仅保存",
+      },
+      output: null,
+    },
+    {
+      id: "xhs_publish",
+      type: "xhs_publish",
+      x: 1430,
+      y: 44,
+      status: "idle",
+      progress: 0,
+      fields: {
+        enabled: "关闭",
+        cookiePath: "",
+        title: "",
+        content: "",
+        tags: "",
+        visibility: "公开可见",
+        baseUrl: "",
+        publishPath: "",
+        note: "可选：开启后，成片输出结束自动推送到小红书 MCP",
+      },
+      output: null,
+    },
+  ],
+  connections: [
+    { id: "e-reference-input-analyze", from: "reference_input", to: "reference_analyze", status: "idle" },
+    { id: "e-reference-analyze-script", from: "reference_analyze", to: "script", status: "idle" },
+    { id: "e-input-script", from: "input", to: "script", status: "idle" },
+    { id: "e-script-storyboard", from: "script", to: "storyboard", status: "idle" },
+    { id: "e-storyboard-keyframe", from: "storyboard", to: "keyframe", status: "idle" },
+    { id: "e-keyframe-veo", from: "keyframe", to: "veo", status: "idle" },
+    { id: "e-script-voice", from: "script", to: "voice", status: "idle" },
+    { id: "e-script-subtitle", from: "script", to: "subtitle", status: "idle" },
+    { id: "e-veo-compose", from: "veo", to: "compose", status: "idle" },
+    { id: "e-voice-compose", from: "voice", to: "compose", status: "idle" },
+    { id: "e-subtitle-compose", from: "subtitle", to: "compose", status: "idle" },
+    { id: "e-compose-output", from: "compose", to: "output", status: "idle" },
+    { id: "e-output-xhs", from: "output", to: "xhs_publish", status: "idle" },
+  ],
+};
+
+const fieldDefs = {
+  reference_input: [
+    { key: "enabled", label: "参考流程开关", type: "select", options: ["关闭", "开启"] },
+    { key: "sourceType", label: "素材来源", type: "select", options: ["上传文件", "URL"] },
+    { key: "mediaUrl", label: "素材地址", type: "text", placeholder: "上传后自动填充，或手动粘贴 URL" },
+    { key: "mediaType", label: "素材类型", type: "select", options: ["unknown", "image", "video"] },
+    { key: "localPath", label: "本地路径", type: "text", placeholder: "上传后自动填充" },
+    { key: "note", label: "说明", type: "textarea", placeholder: "可选：补充参考素材用途" },
+  ],
+  reference_analyze: [
+    { key: "model", label: "分析模型", type: "text" },
+    { key: "credentialRef", label: "凭证引用", type: "text", help: "使用 server/.env 的 GPT 中转站配置。" },
+    { key: "focus", label: "分析重点", type: "textarea", placeholder: "例如：风格、镜头、色彩、节奏、人物一致性" },
+  ],
+  input: [
+    { key: "horse", label: "主角名马", type: "select", options: ["赤兔", "乌骓", "的卢", "汗血", "绝影"] },
+    { key: "topic", label: "视频主题", type: "text", placeholder: "例如：赤兔马为什么成为忠义象征" },
+    { key: "brief", label: "内容补充", type: "textarea", placeholder: "补充你想强调的角度、平台或受众情绪。" },
+    { key: "audience", label: "发布场景", type: "text" },
+    { key: "duration", label: "目标时长", type: "select", options: ["15", "30", "60"] },
+    { key: "aspect", label: "画幅", type: "select", options: ["9:16", "16:9", "1:1"] },
+    { key: "videoCount", label: "生成视频数量", type: "select", options: ["1", "3", "5", "10"] },
+  ],
+  script: [
+    { key: "model", label: "模型", type: "text" },
+    { key: "credentialRef", label: "凭证引用", type: "text", help: "密钥只放后端环境变量，不写入前端页面。" },
+    { key: "style", label: "脚本风格", type: "select", options: ["情绪叙事", "知识讲述", "热血激励", "商业转化"] },
+    { key: "jsonMode", label: "输出格式", type: "select", options: ["严格 JSON", "自然语言草稿"] },
+    { key: "temperature", label: "创造度", type: "select", options: ["0.3", "0.5", "0.7", "0.9"] },
+    { key: "customPrompt", label: "剧本提示词补充", type: "textarea", placeholder: "写给 GPT 的额外要求，会进入剧本/分镜生成请求。" },
+  ],
+  storyboard: [
+    { key: "shotCount", label: "分镜数量", type: "select", options: ["1", "2", "3", "4", "5", "6", "8"] },
+    { key: "shotSeconds", label: "单镜时长", type: "select", options: ["4", "5", "6", "8"] },
+    { key: "camera", label: "镜头运动", type: "text" },
+    { key: "visualStyle", label: "画面风格", type: "text" },
+    { key: "promptLanguage", label: "提示词语言", type: "select", options: ["中文提示词", "英文提示词", "中英双语"] },
+    { key: "promptGuidance", label: "分镜提示词补充", type: "textarea", placeholder: "写给分镜拆解的额外约束，会进入 GPT 请求。" },
+  ],
+  keyframe: [
+    { key: "provider", label: "图片模型", type: "text" },
+    { key: "credentialRef", label: "凭证引用", type: "text", help: "图片生成密钥只放后端环境变量，页面只记录使用哪组凭证。" },
+    { key: "frameCount", label: "关键帧数量", type: "select", options: ["1", "2", "3", "4", "5", "6", "8"] },
+    { key: "referenceMode", label: "参考方式", type: "select", options: ["1 张风格锚点图复用", "每个分镜 1 张关键帧", "首尾关键帧", "主视觉统一参考图"] },
+    { key: "imageSize", label: "图片画幅", type: "select", options: ["9:16", "16:9", "1:1"] },
+    { key: "apiSize", label: "API 图片尺寸", type: "text", help: "例如 1024x1792。登录后会自动同步 server/.env 的 VIDEO_FACTORY_IMAGE_SIZE。" },
+    { key: "consistency", label: "一致性约束", type: "textarea" },
+    { key: "promptStyle", label: "图片风格", type: "text" },
+    { key: "customPrompt", label: "图片提示词补充", type: "textarea", placeholder: "写给图片模型的额外要求，会进入关键帧生成请求。" },
+  ],
+  veo: [
+    { key: "provider", label: "视频模型", type: "text" },
+    { key: "model", label: "模型版本", type: "text" },
+    { key: "credentialRef", label: "凭证引用", type: "text" },
+    { key: "generateAudio", label: "Veo 原生音频", type: "select", options: ["是", "否"] },
+    { key: "aspect", label: "生成画幅", type: "select", options: ["9:16", "16:9"] },
+    { key: "quality", label: "质量档位", type: "select", options: ["auto", "standard", "high"] },
+    { key: "parallel", label: "生成片段数", type: "select", options: ["1", "2", "3"] },
+    { key: "motionPrompt", label: "Veo 运动提示词", type: "textarea", placeholder: "写给 Veo 的镜头运动、主体稳定性、动作连续性要求。" },
+    { key: "negativePrompt", label: "负面提示词", type: "textarea" },
+  ],
+  voice: [
+    { key: "mode", label: "执行方式", type: "select", options: ["中文 TTS 优先", "Veo 原生音频优先", "本地 TTS 备用", "仅规划不生成"] },
+    { key: "engine", label: "语音引擎", type: "text" },
+    { key: "voice", label: "音色", type: "text" },
+    { key: "speed", label: "语速", type: "select", options: ["0.85", "1.0", "1.1", "1.2"] },
+    { key: "emotion", label: "情绪", type: "text" },
+    { key: "soundscape", label: "声音场景", type: "textarea" },
+    { key: "format", label: "格式", type: "select", options: ["mp3", "wav"] },
+  ],
+  subtitle: [
+    { key: "mode", label: "执行方式", type: "select", options: ["仅站内 SRT", "仅规划不生成"] },
+    { key: "style", label: "字幕样式", type: "select", options: ["金色下三分之一", "战报横幅", "简洁白字", "月光题咏"] },
+    { key: "language", label: "语言", type: "select", options: ["简体中文", "中英双语", "英文"] },
+    { key: "maxChars", label: "每行字数", type: "select", options: ["14", "18", "22"] },
+    { key: "position", label: "位置", type: "select", options: ["底部居中", "左下角", "中下方"] },
+    { key: "bilingual", label: "双语字幕", type: "select", options: ["否", "是"] },
+  ],
+  compose: [
+    { key: "engine", label: "合成引擎", type: "text" },
+    { key: "transition", label: "转场", type: "select", options: ["卷轴擦除", "淡入淡出", "横向推镜", "镜门开启"] },
+    { key: "bgm", label: "背景音乐", type: "select", options: ["史诗鼓点", "国风器乐", "沉静氛围", "不添加"] },
+    { key: "ducking", label: "混音", type: "select", options: ["自动压低背景乐", "旁白优先", "音乐优先"] },
+    { key: "cover", label: "封面", type: "select", options: ["自动抽帧封面", "第一帧", "自定义上传"] },
+  ],
+  output: [
+    { key: "saveTo", label: "保存位置", type: "text" },
+    { key: "callback", label: "任务接口", type: "text" },
+    { key: "notify", label: "完成动作", type: "text" },
+    { key: "publish", label: "发布方式", type: "select", options: ["仅保存", "保存并加入历史", "保存并待发布"] },
+  ],
+  xhs_publish: [
+    {
+      key: "enabled",
+      label: "自动发布开关",
+      type: "select",
+      options: ["关闭", "开启"],
+      help: "默认建议先关闭。先跑通视频生成与下载，再开启自动发布。",
+    },
+    {
+      key: "cookiePath",
+      label: "Cookies 文件路径",
+      type: "text",
+      placeholder: "例如：D:\\xhs\\cookies.json",
+      help: "建议先在浏览器登录小红书后导出 cookies.json，这里填写绝对路径。",
+    },
+    {
+      key: "title",
+      label: "发布标题",
+      type: "text",
+      placeholder: "留空则使用任务标题",
+      help: "建议 12~20 字，避免特殊符号过多。",
+    },
+    {
+      key: "content",
+      label: "发布文案",
+      type: "textarea",
+      placeholder: "留空则使用默认文案",
+      help: "建议先简短，确认流程稳定后再扩展长文案。",
+    },
+    {
+      key: "tags",
+      label: "标签",
+      type: "text",
+      placeholder: "多个标签用逗号分隔",
+      help: "示例：战马,历史,短片；不要带 #。",
+    },
+    {
+      key: "visibility",
+      label: "可见范围",
+      type: "select",
+      options: ["公开可见", "仅自己可见", "仅粉丝可见"],
+      help: "首轮联调建议选“仅自己可见”。",
+    },
+    {
+      key: "baseUrl",
+      label: "MCP Base URL",
+      type: "text",
+      placeholder: "为空则使用 server/.env",
+      help: "例如：http://127.0.0.1:9000（不要以 / 结尾）。",
+    },
+    {
+      key: "publishPath",
+      label: "发布 API Path",
+      type: "text",
+      placeholder: "为空则使用 server/.env",
+      help: "例如：/api/publish/xiaohongshu。",
+    },
+    {
+      key: "note",
+      label: "说明",
+      type: "textarea",
+      placeholder: "可选：发布策略备注",
+      help: "可记录账号、发布时间窗口、风控策略。",
+    },
+  ],
+};
+
+let workflow = loadWorkflow();
+let selectedId = "reference_input";
+let zoom = 1;
+let autoFitZoom = true;
+let panX = 0;
+let panY = 0;
+let isRunning = false;
+let runToken = 0;
+let activeTask = null;
+let activeTaskId = null;
+let taskPollTimer = null;
+let lastTaskSignature = "";
+let tasks = [];
+let downloadedTaskId = "";
+let providerStatus = null;
+let batchRunState = null;
+let generatedVideos = [];
+let selectedGeneratedTaskId = "";
+let nodeOutputHistory = {};
+
+const els = {
+  nodeList: document.querySelector("#nodeList"),
+  nodesLayer: document.querySelector("#nodesLayer"),
+  linkLayer: document.querySelector("#linkLayer"),
+  canvasInner: document.querySelector("#canvasInner"),
+  canvasViewport: document.querySelector("#canvasViewport"),
+  inspectorContent: document.querySelector("#inspectorContent"),
+  nodeCount: document.querySelector("#nodeCount"),
+  linkCount: document.querySelector("#linkCount"),
+  workflowStatus: document.querySelector("#workflowStatus"),
+  payloadSummary: document.querySelector("#payloadSummary"),
+  zoomLabel: document.querySelector("#zoomLabel"),
+  runLog: document.querySelector("#runLog"),
+  runTitle: document.querySelector("#runTitle"),
+  previewImage: document.querySelector("#previewImage"),
+  previewVideo: document.querySelector("#previewVideo"),
+  previewTitle: document.querySelector("#previewTitle"),
+  previewHeadline: document.querySelector("#previewHeadline"),
+  previewCaption: document.querySelector("#previewCaption"),
+  previewStatus: document.querySelector("#previewStatus"),
+  previewAspect: document.querySelector("#previewAspect"),
+  generatedVideoMenu: document.querySelector("#generatedVideoMenu"),
+  previewEmpty: document.querySelector("#previewEmpty"),
+  sceneStrip: document.querySelector("#sceneStrip"),
+  jsonDialog: document.querySelector("#jsonDialog"),
+  jsonExport: document.querySelector("#jsonExport"),
+  taskList: document.querySelector("#taskList"),
+  executionTimeline: document.querySelector("#executionTimeline"),
+  executionPulse: document.querySelector("#executionPulse"),
+  runtimeEvents: document.querySelector("#runtimeEvents"),
+  nodeBriefGrid: document.querySelector("#nodeBriefGrid"),
+  downloadVideoBtn: document.querySelector("#downloadVideoBtn"),
+  clearTaskHistoryBtn: document.querySelector("#clearTaskHistoryBtn"),
+  runtimeBadge: document.querySelector("#runtimeBadge"),
+};
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function normalizeWorkflow(workflowValue) {
+  const incoming = workflowValue && Array.isArray(workflowValue.nodes) && Array.isArray(workflowValue.connections)
+    ? workflowValue
+    : clone(defaultWorkflow);
+  const next = clone(defaultWorkflow);
+  const useDefaultLayout = Number(incoming.settings?.layoutVersion || 0) < Number(defaultWorkflow.settings.layoutVersion || 1);
+  next.settings = { ...defaultWorkflow.settings, ...(next.settings || {}) };
+  next.settings = { ...next.settings, ...(incoming.settings || {}) };
+  next.settings.layoutVersion = defaultWorkflow.settings.layoutVersion;
+  next.settings.executionMode = "site-workflow";
+  next.nodes = next.nodes.map((defaultNode) => {
+    const savedNode = incoming.nodes.find((node) => node.id === defaultNode.id) || {};
+    const fields = { ...defaultNode.fields, ...(savedNode.fields || {}) };
+    if (defaultNode.id === "script" && ["gpt-5.4-mini", "gpt-mini", "gpt-mini-high"].includes(fields.model)) {
+      fields.model = defaultNode.fields.model;
+      fields.credentialRef = defaultNode.fields.credentialRef;
+    }
+    if (defaultNode.id === "keyframe" && ["图片生成 AI", "图像生成 AI", "image-ai"].includes(fields.provider)) {
+      fields.provider = defaultNode.fields.provider;
+      fields.credentialRef = defaultNode.fields.credentialRef;
+    }
+    if (defaultNode.id === "keyframe") {
+      const mode = String(fields.referenceMode || "").trim();
+      if (!mode || mode === "1 张风格锚点图复用") {
+        fields.referenceMode = defaultNode.fields.referenceMode;
+      }
+      if (String(fields.referenceMode || "").trim() === "首尾关键帧" && (!fields.frameCount || String(fields.frameCount) === "1")) {
+        fields.frameCount = "2";
+      }
+    }
+    if (defaultNode.id === "veo" && ["veo-3.0-generate-001", "veo-3.0", "veo-3"].includes(fields.model)) {
+      fields.model = defaultNode.fields.model;
+      fields.credentialRef = defaultNode.fields.credentialRef;
+    }
+    return {
+      ...defaultNode,
+      ...savedNode,
+      x: useDefaultLayout ? defaultNode.x : (savedNode.x ?? defaultNode.x),
+      y: useDefaultLayout ? defaultNode.y : (savedNode.y ?? defaultNode.y),
+      fields,
+      status: "idle",
+      progress: 0,
+      output: null,
+    };
+  });
+  next.connections = next.connections.map((defaultConnection) => {
+    const savedConnection = incoming.connections.find((connection) => connection.id === defaultConnection.id) || {};
+    return {
+      ...defaultConnection,
+      ...savedConnection,
+      status: "idle",
+    };
+  });
+  return next;
+}
+
+function loadWorkflow() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return normalizeWorkflow(clone(defaultWorkflow));
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.connections)) return normalizeWorkflow(clone(defaultWorkflow));
+    return normalizeWorkflow(parsed);
+  } catch {
+    return normalizeWorkflow(clone(defaultWorkflow));
+  }
+}
+
+function saveWorkflow() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getWorkflowTemplate()));
+  addLog("系统", "当前工作流模板已保存到浏览器本地。");
+}
+
+function getWorkflowTemplate() {
+  return {
+    settings: { ...workflow.settings, executionMode: "site-workflow" },
+    nodes: workflow.nodes.map((node) => ({
+      id: node.id,
+      type: node.type,
+      x: node.x,
+      y: node.y,
+      fields: { ...node.fields },
+    })),
+    connections: workflow.connections.map(({ id, from, to }) => ({ id, from, to })),
+  };
+}
+
+function loadAuthState() {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function getAccessToken() {
+  const state = loadAuthState();
+  return state?.accessToken ?? state?.access_token ?? "";
+}
+
+function getRefreshToken() {
+  const state = loadAuthState();
+  return state?.refreshToken ?? state?.refresh_token ?? "";
+}
+
+function isAuthenticated() {
+  const state = loadAuthState();
+  return Boolean(
+    state &&
+      state.isAuthenticated &&
+      (state.accessToken || state.access_token || state.refreshToken || state.refresh_token || state.user)
+  );
+}
+
+function renderAuthLink() {
+  const link = document.querySelector(".login-link");
+  if (!link) return;
+  if (isAuthenticated()) {
+    link.textContent = "已登录";
+    link.href = "#";
+    link.classList.add("logged-in");
+    link.title = "当前账号已登录";
+    return;
+  }
+  link.textContent = "登录";
+  link.href = "/login?next=%2Fvideo-factory";
+  link.classList.remove("logged-in");
+  link.title = "前往登录";
+}
+
+function saveAuthStatePatch(patch) {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    parsed.state = { ...(parsed.state || {}), ...patch };
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignore malformed auth storage and let the next request ask for login.
+  }
+}
+
+function clearAuthState() {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+async function refreshAccessToken() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return "";
+  const response = await fetch("/api/v1/auth/refresh", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  if (!response.ok) return "";
+  const payload = await response.json();
+  const accessToken = payload?.access_token || payload?.accessToken || "";
+  if (accessToken) {
+    saveAuthStatePatch({ accessToken, access_token: accessToken, isAuthenticated: true });
+  }
+  return accessToken;
+}
+
+async function apiRequest(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  if (!headers.has("Content-Type") && options.body && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+  const token = getAccessToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${WORKFLOW_API_BASE}${path}`, {
+    method: options.method || "GET",
+    headers,
+    body: options.body,
+    credentials: "include",
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    const detail =
+      (payload && (payload.detail || payload.message)) ||
+      `${response.status} ${response.statusText}`;
+    if (response.status === 401 && !options.__retriedAuth) {
+      const nextToken = await refreshAccessToken();
+      if (nextToken) {
+        return apiRequest(path, { ...options, __retriedAuth: true });
+      }
+      clearAuthState();
+      throw new Error("登录已过期，请回到主站重新登录后再运行视频工厂。");
+    }
+    const error = new Error(String(detail));
+    error.status = response.status;
+    throw error;
+  }
+
+  return payload;
+}
+
+function syncProviderFields(status) {
+  if (!status) return false;
+  let changed = false;
+  const setField = (nodeId, key, value) => {
+    if (value === undefined || value === null || value === "") return;
+    const node = findNode(nodeId);
+    if (!node) return;
+    if (String(node.fields[key] ?? "") !== String(value)) {
+      node.fields[key] = String(value);
+      changed = true;
+    }
+  };
+
+  setField("script", "model", status.gpt?.model);
+  setField("script", "credentialRef", "server/.env: VIDEO_FACTORY_GPT_*");
+  setField("reference_analyze", "model", status.gpt?.model);
+  setField("reference_analyze", "credentialRef", "server/.env: VIDEO_FACTORY_GPT_*");
+  setField("keyframe", "provider", status.image?.model);
+  setField("keyframe", "apiSize", status.image?.size);
+  setField("keyframe", "credentialRef", "server/.env: VIDEO_FACTORY_IMAGE_*");
+  setField("veo", "model", status.veo?.model);
+  setField("veo", "credentialRef", "server/.env: VIDEO_FACTORY_VEO_*");
+  setField("xhs_publish", "baseUrl", status.xhs?.baseUrl);
+  setField("xhs_publish", "publishPath", status.xhs?.publishPath);
+  setField("xhs_publish", "cookiePath", status.xhs?.cookiePath);
+  setField("xhs_publish", "visibility", status.xhs?.defaultVisibility);
+  if (typeof status.veo?.generateAudio === "boolean") {
+    setField("veo", "generateAudio", status.veo.generateAudio ? "是" : "否");
+  }
+  return changed;
+}
+
+async function refreshProviderStatus({ silent = true } = {}) {
+  if (!getAccessToken()) return;
+  try {
+    providerStatus = await apiRequest("/provider-status");
+    const changed = syncProviderFields(providerStatus);
+    if (!silent) {
+      addLog("API 配置", providerStatus?.mode ? `已同步后端 provider：${providerStatus.mode}` : "已同步后端 provider。");
+    }
+    if (changed) {
+      render();
+    } else {
+      renderStats();
+      renderInspector();
+      renderNodes();
+    }
+  } catch (error) {
+    if (!silent) {
+      addLog("API 配置", error.message || "无法读取后端 provider 配置。");
+    }
+  }
+}
+
+function findNode(id) {
+  return workflow.nodes.find((node) => node.id === id);
+}
+
+function nodeDisplayOrder(node) {
+  const index = NODE_SEQUENCE.indexOf(node.id);
+  return index >= 0 ? index : NODE_SEQUENCE.length;
+}
+
+function orderedNodes() {
+  return [...workflow.nodes].sort((a, b) => nodeDisplayOrder(a) - nodeDisplayOrder(b));
+}
+
+function optionEnabled(value) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["1", "true", "yes", "on", "enabled", "开启", "是"].includes(text);
+}
+
+function referenceFlowEnabled() {
+  const node = findNode("reference_input");
+  return optionEnabled(node?.fields?.enabled);
+}
+
+function xhsPublishEnabled() {
+  const node = findNode("xhs_publish");
+  return optionEnabled(node?.fields?.enabled);
+}
+
+function shouldRenderConnection(connection) {
+  if (!connection || typeof connection !== "object") return false;
+  if (connection.id === "e-reference-input-analyze" || connection.id === "e-reference-analyze-script") {
+    return referenceFlowEnabled();
+  }
+  if (connection.id === "e-output-xhs") {
+    return xhsPublishEnabled();
+  }
+  return true;
+}
+
+function statusLabel(status) {
+  return {
+    idle: "等待",
+    draft: "待配置",
+    queued: "排队中",
+    processing: "执行中",
+    running: "执行中",
+    cancelled: "已取消",
+    canceled: "已取消",
+    done: "完成",
+    completed: "完成",
+    failed: "失败",
+  }[status] || "等待";
+}
+
+function statusClass(status) {
+  if (status === "done" || status === "completed") return "done";
+  if (status === "running" || status === "processing") return "running";
+  if (status === "queued") return "queued";
+  if (status === "cancelled" || status === "canceled") return "waiting";
+  return "waiting";
+}
+
+function getNodeHighlights(node) {
+  const fields = node.fields;
+  const type = node.type;
+  if (type === "reference_input") {
+    return [
+      ["开关", fields.enabled || "关闭"],
+      ["来源", fields.sourceType || "上传文件"],
+      ["类型", fields.mediaType || "unknown"],
+    ];
+  }
+  if (type === "reference_analyze") {
+    return [
+      ["模型", fields.model || "gpt-5.4"],
+      ["凭证", "server/.env"],
+      ["目标", fields.focus || "风格分析"],
+    ];
+  }
+  if (type === "input") {
+    return [
+      ["主角", fields.horse],
+      ["时长", `${fields.duration}s / ${fields.aspect}`],
+      ["场景", fields.audience],
+    ];
+  }
+  if (type === "script") {
+    return [
+      ["模型", fields.model],
+      ["风格", fields.style],
+      ["格式", fields.jsonMode],
+    ];
+  }
+  if (type === "storyboard") {
+    return [
+      ["分镜", `${fields.shotCount} 镜`],
+      ["节奏", `${fields.shotSeconds}s / 镜`],
+      ["镜头", fields.camera],
+    ];
+  }
+  if (type === "keyframe") {
+    const output = node.output || {};
+    const requested = output.requestedFrameCount || fields.frameCount;
+    const generated = output.generatedFrameCount || fields.frameCount;
+    const reused = Number(output.reusedFrameCount || 0);
+    const cacheHits = Number(output.cacheHits || 0);
+    const quantityText = reused || cacheHits
+      ? `生成 ${generated} / 复用 ${reused} / 缓存 ${cacheHits}`
+      : `${requested} 张`;
+    return [
+      ["模型", fields.provider],
+      ["尺寸", fields.apiSize || fields.imageSize],
+      ["数量", quantityText],
+      ["方式", output.referenceMode || fields.referenceMode],
+    ];
+  }
+  if (type === "veo") {
+    return [
+      ["模型", fields.model || fields.provider],
+      ["音频", fields.generateAudio === "是" ? "Veo 原生" : "关闭"],
+      ["画幅", fields.aspect],
+      ["并发", `${fields.parallel} 段`],
+    ];
+  }
+  if (type === "voice") {
+    return [
+      ["方式", fields.mode],
+      ["引擎", fields.engine],
+      ["情绪", fields.emotion],
+    ];
+  }
+  if (type === "subtitle") {
+    return [
+      ["方式", fields.mode],
+      ["样式", fields.style],
+      ["语言", fields.language],
+    ];
+  }
+  if (type === "compose") {
+    return [
+      ["转场", fields.transition],
+      ["音乐", fields.bgm],
+      ["混音", fields.ducking],
+    ];
+  }
+  if (type === "xhs_publish") {
+    return [
+      ["开关", fields.enabled || "关闭"],
+      ["可见", fields.visibility || "公开可见"],
+      ["Cookie", fields.cookiePath ? "已填写" : "未填写"],
+    ];
+  }
+  return [
+    ["保存", fields.saveTo],
+    ["接口", fields.callback],
+    ["动作", fields.publish],
+  ];
+}
+
+function normalizeNodeStatus(status) {
+  const value = String(status || "idle").toLowerCase();
+  if (value === "completed") return "done";
+  if (value === "processing") return "running";
+  return value;
+}
+
+function buildWorkflowInputPayload() {
+  const referenceNode = findNode("reference_input");
+  const referenceAnalyzeNode = findNode("reference_analyze");
+  const xhsNode = findNode("xhs_publish");
+  const referenceEnabled = referenceFlowEnabled();
+  const xhsEnabled = xhsPublishEnabled();
+  return {
+    horse: findNode("input")?.fields.horse || "",
+    horse_name: findNode("input")?.fields.horse || "",
+    topic: findNode("input")?.fields.topic || "",
+    brief: findNode("input")?.fields.brief || "",
+    audience: findNode("input")?.fields.audience || "",
+    duration: Number(findNode("input")?.fields.duration || 30),
+    aspect_ratio: findNode("input")?.fields.aspect || "9:16",
+    video_count: parsePositiveInt(findNode("input")?.fields.videoCount || "1", 1),
+    baseTemplate: BASE_VIDEO_TEMPLATE.id,
+    baseTemplateName: BASE_VIDEO_TEMPLATE.name,
+    baseTemplateSource: BASE_VIDEO_TEMPLATE.source,
+    script: { ...findNode("script")?.fields },
+    storyboard: { ...findNode("storyboard")?.fields },
+    keyframe: { ...findNode("keyframe")?.fields },
+    veo: { ...findNode("veo")?.fields },
+    voice: { ...findNode("voice")?.fields },
+    subtitle: { ...findNode("subtitle")?.fields },
+    compose: { ...findNode("compose")?.fields },
+    output: { ...findNode("output")?.fields },
+    enableReferenceFlow: referenceEnabled,
+    enableXhsPublish: xhsEnabled,
+    reference: {
+      enabled: referenceEnabled,
+      sourceType: referenceNode?.fields?.sourceType || "上传文件",
+      mediaType: referenceNode?.fields?.mediaType || "unknown",
+      mediaUrl: referenceNode?.fields?.mediaUrl || "",
+      localPath: referenceNode?.fields?.localPath || "",
+      model: referenceAnalyzeNode?.fields?.model || "",
+      focus: referenceAnalyzeNode?.fields?.focus || "",
+      note: referenceNode?.fields?.note || "",
+    },
+    xhs: {
+      enabled: xhsEnabled,
+      cookiePath: xhsNode?.fields?.cookiePath || "",
+      title: xhsNode?.fields?.title || "",
+      content: xhsNode?.fields?.content || "",
+      tags: xhsNode?.fields?.tags || "",
+      visibility: xhsNode?.fields?.visibility || "",
+      baseUrl: xhsNode?.fields?.baseUrl || "",
+      publishPath: xhsNode?.fields?.publishPath || "",
+      note: xhsNode?.fields?.note || "",
+    },
+  };
+}
+
+function syncConnectionStates() {
+  workflow.connections.forEach((connection) => {
+    if (!shouldRenderConnection(connection)) {
+      connection.status = "idle";
+      return;
+    }
+    const fromNode = findNode(connection.from);
+    const toNode = findNode(connection.to);
+    if (!fromNode || !toNode) {
+      connection.status = "idle";
+      return;
+    }
+
+    const fromDone = ["done", "completed"].includes(fromNode.status);
+    const toDone = ["done", "completed"].includes(toNode.status);
+    const toActive = ["queued", "running", "processing"].includes(toNode.status);
+
+    if (fromDone && toDone) {
+      connection.status = "done";
+    } else if (fromDone && toActive) {
+      connection.status = "flowing";
+    } else {
+      connection.status = "idle";
+    }
+  });
+}
+
+function activeRuntimeState() {
+  return activeTask?.runtime_state && typeof activeTask.runtime_state === "object"
+    ? activeTask.runtime_state
+    : null;
+}
+
+function activeRuntimeEvents() {
+  const runtime = activeRuntimeState();
+  return Array.isArray(runtime?.events) ? runtime.events : [];
+}
+
+function runtimeNodeStateMap() {
+  const runtime = activeRuntimeState();
+  const nodeStates = Array.isArray(runtime?.nodeStates) && runtime.nodeStates.length
+    ? runtime.nodeStates
+    : activeTask?.node_states || [];
+  return new Map(nodeStates.map((state) => [state.node_id, state]));
+}
+
+function currentExecutionNodeId() {
+  return activeRuntimeState()?.currentNode || activeTask?.current_node || "";
+}
+
+function activeExecutionNodeIds() {
+  const runtime = activeRuntimeState();
+  const activeNodes = Array.isArray(runtime?.activeNodes) ? runtime.activeNodes : [];
+  const ids = activeNodes
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+  const current = currentExecutionNodeId();
+  if (current) {
+    ids.push(...String(current).split(",").map((value) => value.trim()).filter(Boolean));
+  }
+  return new Set(ids);
+}
+
+function nodeVisualPhase(node) {
+  const status = normalizeNodeStatus(node.status);
+  if (activeExecutionNodeIds().has(node.id) && ["queued", "running"].includes(status)) {
+    return "current";
+  }
+  if (status === "done") return "done";
+  if (status === "failed") return "failed";
+  if (status === "queued") return "queued";
+  if (status === "running") return "running";
+  return "idle";
+}
+
+function connectionVisualPhase(connection) {
+  const fromNode = findNode(connection.from);
+  const toNode = findNode(connection.to);
+  if (!fromNode || !toNode) return "idle";
+  const fromStatus = normalizeNodeStatus(fromNode.status);
+  const toStatus = normalizeNodeStatus(toNode.status);
+  const activeNodeIds = activeExecutionNodeIds();
+  if (toStatus === "failed" || fromStatus === "failed") return "failed";
+  if (fromStatus === "done" && toStatus === "done") return "done";
+  if (connection.status === "flowing" || activeNodeIds.has(toNode.id) || (fromStatus === "done" && ["queued", "running"].includes(toStatus))) {
+    return "flowing";
+  }
+  if (fromStatus === "done") return "primed";
+  return "idle";
+}
+
+function applyTaskSnapshot(task) {
+  if (!task) return;
+
+  activeTask = task;
+  activeTaskId = task.task_id || activeTaskId;
+  const runtime = activeRuntimeState();
+  isRunning = ["queued", "processing"].includes(runtime?.status || task.status);
+
+  const inputNode = findNode("input");
+  if (inputNode && task.input_payload) {
+    inputNode.fields.horse = task.input_payload.horse_name || task.input_payload.horse || inputNode.fields.horse;
+    inputNode.fields.topic = task.input_payload.topic || task.title || inputNode.fields.topic;
+    inputNode.fields.brief = task.input_payload.brief || inputNode.fields.brief;
+    inputNode.fields.audience = task.input_payload.audience || inputNode.fields.audience;
+    inputNode.fields.duration = String(task.duration || inputNode.fields.duration);
+    inputNode.fields.aspect = task.aspect_ratio || task.input_payload.aspect_ratio || inputNode.fields.aspect;
+  }
+
+  const byId = runtimeNodeStateMap();
+  workflow.nodes.forEach((node) => {
+    const state = byId.get(node.id);
+    if (!state) return;
+    node.status = normalizeNodeStatus(state.status);
+    node.progress = Number(state.progress || 0);
+    node.output = state.output && Object.keys(state.output).length ? state.output : node.output;
+  });
+
+  syncConnectionStates();
+
+  const taskStatus = statusLabel(task.status);
+  els.workflowStatus.textContent = taskStatus;
+  els.payloadSummary.textContent =
+    task.result_payload?.videoUrl ||
+    task.result_payload?.note ||
+    `${task.title} / ${task.duration}s / ${task.aspect_ratio}`;
+  els.runTitle.textContent = `${task.title} · ${taskStatus}`;
+
+  const outputNode = findNode("output");
+  if (outputNode) {
+    const resultPayload = task.result_payload || {};
+    if (Object.keys(resultPayload).length) {
+      outputNode.output = resultPayload;
+      outputNode.status = normalizeNodeStatus(task.status);
+      outputNode.progress = Number(task.progress || outputNode.progress || 0);
+    }
+  }
+
+  if (task.status === "completed") {
+    const index = parsePositiveInt(task?.input_payload?.batch?.index, generatedVideos.length + 1);
+    const total = parsePositiveInt(task?.input_payload?.batch?.total, batchRunState?.total || targetVideoCount());
+    upsertGeneratedVideoTask(task, index, total);
+    rememberNodeHistory(task, index);
+    attachGeneratedVideosToOutputNode();
+    if (!selectedGeneratedTaskId) {
+      selectedGeneratedTaskId = task.task_id || "";
+    }
+  }
+
+  render();
+}
+
+function isRealVideoUrl(value) {
+  const text = String(value || "").trim();
+  return Boolean(text) && !text.startsWith("pending://") && !text.startsWith("mock://");
+}
+
+function firstRealVideoUrlFromOutput(output) {
+  if (!output || typeof output !== "object") return "";
+  if (isRealVideoUrl(output.videoUrl)) return output.videoUrl;
+  if (isRealVideoUrl(output.firstVideoUrl)) return output.firstVideoUrl;
+  const sourceClips = Array.isArray(output.sourceClips) ? output.sourceClips : [];
+  const directClip = sourceClips.find((url) => isRealVideoUrl(url));
+  if (directClip) return directClip;
+  const clips = Array.isArray(output.clips) ? output.clips : [];
+  for (const clip of clips) {
+    if (isRealVideoUrl(clip?.url)) return clip.url;
+    if (isRealVideoUrl(clip?.videoUrl)) return clip.videoUrl;
+  }
+  return "";
+}
+
+function getTaskVideoUrl(task) {
+  const directUrl = firstRealVideoUrlFromOutput(task?.result_payload);
+  if (directUrl) return directUrl;
+  for (const state of task?.node_states || []) {
+    const output = state?.output || {};
+    const url = firstRealVideoUrlFromOutput(output);
+    if (url) return url;
+  }
+  return "";
+}
+
+function parsePositiveInt(value, fallback = 1) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  const intValue = Math.max(1, Math.floor(number));
+  return intValue || fallback;
+}
+
+function targetVideoCount() {
+  const raw = findNode("input")?.fields?.videoCount || "1";
+  const count = parsePositiveInt(raw, 1);
+  if ([1, 3, 5, 10].includes(count)) return count;
+  return 1;
+}
+
+function resetGeneratedVideoState() {
+  generatedVideos = [];
+  selectedGeneratedTaskId = "";
+  nodeOutputHistory = {};
+}
+
+function summarizeNodeHistory(nodeId, output) {
+  const data = output && typeof output === "object" ? output : {};
+  if (nodeId === "script") {
+    return compactText(data.title || data.voiceover || data.note || "script generated", 72);
+  }
+  if (nodeId === "storyboard") {
+    const shotCount = Array.isArray(data.shots) ? data.shots.length : 0;
+    const seconds = data.shotSeconds || data.totalSeconds || "";
+    return compactText(
+      shotCount ? `${shotCount} shots${seconds ? ` / ${seconds}s` : ""}` : data.note || "storyboard generated",
+      72
+    );
+  }
+  if (nodeId === "keyframe") {
+    const count = Array.isArray(data.images) ? data.images.length : 0;
+    return compactText(count ? `${count} keyframes ready` : "keyframes generated", 72);
+  }
+  if (nodeId === "veo") {
+    const count = Array.isArray(data.clips) ? data.clips.length : 0;
+    return compactText(count ? `${count} clips generated` : data.summary || "veo generated", 72);
+  }
+  if (nodeId === "voice") {
+    return compactText(data.voiceover || data.note || "voice planned", 72);
+  }
+  if (nodeId === "subtitle") {
+    const count = Array.isArray(data.segments) ? data.segments.length : 0;
+    return compactText(count ? `${count} subtitle lines` : data.note || "subtitle planned", 72);
+  }
+  if (nodeId === "compose") {
+    return compactText(data.videoUrl ? "composition completed" : data.note || "composed", 72);
+  }
+  if (nodeId === "output") {
+    return compactText(data.videoUrl || data.note || "output completed", 72);
+  }
+  return compactText(JSON.stringify(data), 72);
+}
+
+function rememberNodeHistory(task, batchIndex) {
+  const states = Array.isArray(task?.node_states) ? task.node_states : [];
+  states.forEach((state) => {
+    const nodeId = String(state?.node_id || "").trim();
+    if (!nodeId) return;
+    const output = state?.output;
+    if (!output || typeof output !== "object" || !Object.keys(output).length) return;
+    if (!nodeOutputHistory[nodeId]) {
+      nodeOutputHistory[nodeId] = [];
+    }
+    if (nodeOutputHistory[nodeId].some((item) => item.taskId === (task.task_id || "") && item.batchIndex === batchIndex)) {
+      return;
+    }
+    nodeOutputHistory[nodeId].push({
+      batchIndex,
+      taskId: task.task_id || "",
+      summary: summarizeNodeHistory(nodeId, output),
+    });
+    nodeOutputHistory[nodeId] = nodeOutputHistory[nodeId].slice(-10);
+  });
+}
+
+function upsertGeneratedVideoTask(task, batchIndex = 1, batchTotal = 1) {
+  if (!task?.task_id) return;
+  const videoUrl = getTaskVideoUrl(task);
+  if (!videoUrl) return;
+  const index = generatedVideos.findIndex((item) => item.taskId === task.task_id);
+  const entry = {
+    taskId: task.task_id,
+    title: task.title || `Video ${batchIndex}`,
+    videoUrl,
+    duration: Number(task.duration || 0),
+    aspect: task.aspect_ratio || "9:16",
+    status: task.status || "completed",
+    batchIndex,
+    batchTotal,
+    createdAt: task.updated_at || task.created_at || "",
+  };
+  if (index === -1) {
+    generatedVideos.push(entry);
+  } else {
+    generatedVideos[index] = { ...generatedVideos[index], ...entry };
+  }
+  generatedVideos.sort((a, b) => {
+    if (a.batchIndex !== b.batchIndex) return a.batchIndex - b.batchIndex;
+    return a.taskId.localeCompare(b.taskId);
+  });
+  if (!selectedGeneratedTaskId) {
+    selectedGeneratedTaskId = entry.taskId;
+  }
+}
+
+function generatedTaskById(taskId) {
+  if (!taskId) return null;
+  return tasks.find((item) => item.task_id === taskId) || (activeTask?.task_id === taskId ? activeTask : null);
+}
+
+function previewTaskFromState() {
+  const selectedTask = generatedTaskById(selectedGeneratedTaskId);
+  if (selectedTask && getTaskVideoUrl(selectedTask)) return selectedTask;
+  if (activeTask && getTaskVideoUrl(activeTask)) return activeTask;
+  const latestGenerated = generatedVideos.find((item) => item.videoUrl);
+  if (latestGenerated) {
+    return generatedTaskById(latestGenerated.taskId);
+  }
+  return null;
+}
+
+function renderGeneratedVideoMenu() {
+  if (!els.generatedVideoMenu) return;
+  if (!generatedVideos.length) {
+    els.generatedVideoMenu.innerHTML = `<div class="video-menu-empty">运行完成后，这里会逐条出现视频并支持下载。</div>`;
+    return;
+  }
+  els.generatedVideoMenu.innerHTML = generatedVideos
+    .map((item, index) => {
+      const active = item.taskId === selectedGeneratedTaskId;
+      const completed = item.status === "completed";
+      const summary = [item.duration ? `${item.duration}s` : "", item.aspect].filter(Boolean).join(" / ");
+      return `
+        <div class="video-menu-item ${active ? "active" : ""}">
+          <button class="video-menu-select" type="button" data-select-generated-task="${item.taskId}">
+            <span class="video-menu-index">${String(index + 1).padStart(2, "0")}</span>
+            <span class="video-menu-copy">
+              <strong>${escapeHtml(item.title)}</strong>
+              <small>${escapeHtml(summary)}</small>
+            </span>
+          </button>
+          <button class="video-menu-download" type="button" data-download-task-id="${item.taskId}" ${completed ? "" : "disabled"}>
+            下载
+          </button>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function taskDownloadUrl(taskId) {
+  return `${WORKFLOW_API_BASE}/tasks/${encodeURIComponent(taskId)}/download`;
+}
+
+function safeMediaUrl(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (text.startsWith("/generated/")) return text;
+  if (/^https?:\/\//i.test(text)) return text;
+  return "";
+}
+
+function safeDownloadFilename(value, fallback = "video.mp4") {
+  const text = String(value || "").trim();
+  if (!text) return fallback;
+  const cleaned = text.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_");
+  return cleaned || fallback;
+}
+
+function taskDownloadFilename(task) {
+  const title = String(task?.title || "").trim().replace(/\s+/g, "_");
+  const base = safeDownloadFilename(title, "video");
+  const suffix = String(task?.task_id || "").trim();
+  const name = suffix ? `${base}_${suffix}` : base;
+  return name.toLowerCase().endsWith(".mp4") ? name : `${name}.mp4`;
+}
+
+function filenameFromDisposition(disposition, fallback) {
+  const value = String(disposition || "");
+  if (!value) return fallback;
+
+  const utf8Match = value.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return safeDownloadFilename(decodeURIComponent(utf8Match[1]), fallback);
+    } catch {
+      // ignore and continue
+    }
+  }
+
+  const plainMatch = value.match(/filename="?([^\";]+)"?/i);
+  if (plainMatch?.[1]) {
+    return safeDownloadFilename(plainMatch[1], fallback);
+  }
+  return fallback;
+}
+
+function triggerBrowserDownloadUrl(url, filename = "") {
+  const href = safeMediaUrl(url);
+  if (!href) return false;
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = filename;
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  return true;
+}
+
+function triggerBlobDownload(blob, filename) {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = safeDownloadFilename(filename || "video.mp4", "video.mp4");
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 4000);
+}
+
+async function triggerTaskDownload(task) {
+  if (!task?.task_id || !getTaskVideoUrl(task)) return false;
+  const fallbackFilename = taskDownloadFilename(task);
+  const directUrl = safeMediaUrl(getTaskVideoUrl(task));
+  const headers = new Headers();
+  const token = getAccessToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  try {
+    const response = await fetch(taskDownloadUrl(task.task_id), {
+      method: "GET",
+      headers,
+      credentials: "include",
+    });
+    if (response.ok) {
+      const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+      const isVideoPayload =
+        contentType.includes("video/") || contentType.includes("application/octet-stream");
+      if (isVideoPayload) {
+        const blob = await response.blob();
+        if (blob.size > 0) {
+          const filename = filenameFromDisposition(
+            response.headers.get("content-disposition"),
+            fallbackFilename
+          );
+          triggerBlobDownload(blob, filename);
+          return true;
+        }
+      }
+    }
+  } catch {
+    // fall through to direct media URL
+  }
+
+  if (directUrl) {
+    return triggerBrowserDownloadUrl(directUrl, fallbackFilename);
+  }
+  return false;
+}
+
+function downloadButtonTask() {
+  const selectedTask = generatedTaskById(selectedGeneratedTaskId);
+  if (selectedTask && getTaskVideoUrl(selectedTask)) return selectedTask;
+  if (activeTask && getTaskVideoUrl(activeTask)) return activeTask;
+  return tasks.find((task) => task.task_id === activeTaskId && getTaskVideoUrl(task)) || null;
+}
+
+function renderDownloadButton() {
+  if (!els.downloadVideoBtn) return;
+  const task = downloadButtonTask();
+  const hasDownloadedCurrent = Boolean(task?.task_id && downloadedTaskId === task.task_id);
+  const canDownload = Boolean(
+    task?.task_id && task.status === "completed" && getTaskVideoUrl(task) && !hasDownloadedCurrent
+  );
+  els.downloadVideoBtn.disabled = !canDownload;
+  els.downloadVideoBtn.classList.toggle("ready", canDownload);
+  if (canDownload) {
+    els.downloadVideoBtn.textContent = "下载成片";
+    els.downloadVideoBtn.title = "点击下载当前工作流生成的视频";
+  } else if (hasDownloadedCurrent) {
+    els.downloadVideoBtn.textContent = "工作流完成后可下载";
+    els.downloadVideoBtn.title = "当前视频已提交下载，重新运行后可再次下载新成片";
+  } else if (isRunning || ["queued", "processing"].includes(activeTask?.status || "")) {
+    els.downloadVideoBtn.textContent = "工作流运行中";
+    els.downloadVideoBtn.title = "工作流完成后才能下载";
+  } else {
+    els.downloadVideoBtn.textContent = "工作流完成后可下载";
+    els.downloadVideoBtn.title = "当前还没有可下载的视频";
+  }
+}
+
+async function downloadCurrentTaskVideo() {
+  const task = downloadButtonTask();
+  if (!task || task.status !== "completed" || !getTaskVideoUrl(task)) {
+    addLog("下载提示", "工作流还没完成，或后端还没有返回可下载的视频地址。");
+    renderDownloadButton();
+    return;
+  }
+  const ok = await triggerTaskDownload(task);
+  if (!ok) {
+    addLog("下载失败", "当前任务没有可下载的视频文件，请刷新任务后重试。");
+    return;
+  }
+  downloadedTaskId = task.task_id;
+  addLog("下载成片", "已提交到浏览器下载栏。");
+  renderDownloadButton();
+  return;
+  if (false) {
+    downloadedTaskId = task.task_id;
+    addLog("下载成片", "已提交到浏览器下载栏。");
+    renderDownloadButton();
+  }
+}
+
+async function downloadTaskVideoById(taskId) {
+  if (!taskId) return;
+  const task = generatedTaskById(taskId);
+  if (!task || task.status !== "completed" || !getTaskVideoUrl(task)) {
+    addLog("下载提示", "该任务暂时没有可下载的视频。");
+    return;
+  }
+  const ok = await triggerTaskDownload(task);
+  if (!ok) {
+    addLog("下载失败", "该任务的视频下载失败，请稍后重试。");
+    return;
+  }
+  downloadedTaskId = task.task_id;
+  selectedGeneratedTaskId = task.task_id;
+  if (activeTaskId === task.task_id) {
+    renderDownloadButton();
+  }
+  renderGeneratedVideoMenu();
+  renderPreview();
+}
+
+function taskSignature(task) {
+  return JSON.stringify([
+    task?.status,
+    task?.progress,
+    task?.current_node,
+    task?.error_message,
+    (task?.node_states || []).map((node) => [node.node_id, node.status, node.progress]),
+  ]);
+}
+
+function logTaskUpdate(task, force = false) {
+  const signature = taskSignature(task);
+  if (!force && signature === lastTaskSignature) {
+    return;
+  }
+  lastTaskSignature = signature;
+  const currentNode = task.current_node ? ` / ${task.current_node}` : "";
+  addLog("任务状态", `${statusLabel(task.status)} ${task.progress || 0}%${currentNode}`);
+    if (task.error_message) {
+      addLog("任务错误", task.error_message);
+    }
+  }
+
+function clearTaskPolling() {
+  if (taskPollTimer) {
+    window.clearInterval(taskPollTimer);
+    taskPollTimer = null;
+  }
+}
+
+function startTaskPolling(taskId) {
+  clearTaskPolling();
+  if (!taskId) return;
+  taskPollTimer = window.setInterval(async () => {
+    try {
+      const task = await apiRequest(`/tasks/${taskId}`);
+      rememberTask(task);
+      applyTaskSnapshot(task);
+      logTaskUpdate(task);
+      renderTaskList();
+      if (!["draft", "queued", "processing"].includes(task.status)) {
+        clearTaskPolling();
+      }
+    } catch (error) {
+      addLog("轮询失败", error.message || "无法更新任务状态。");
+      clearTaskPolling();
+      isRunning = false;
+      render();
+    }
+  }, TASK_POLL_MS);
+}
+
+async function hydrateLatestTask() {
+  if (!getAccessToken()) return;
+  try {
+    const result = await apiRequest("/tasks?limit=1");
+    const task = result?.items?.[0];
+    if (!task) return;
+    rememberTask(task);
+    applyTaskSnapshot(task);
+    logTaskUpdate(task, true);
+    if (["draft", "queued", "processing"].includes(task.status)) {
+      startTaskPolling(task.task_id);
+    }
+  } catch {
+    // Ignore hydration failures quietly to avoid blocking the page.
+  }
+}
+
+function rememberTask(task) {
+  if (!task?.task_id) return;
+  const existingIndex = tasks.findIndex((item) => item.task_id === task.task_id);
+  if (existingIndex === -1) {
+    tasks = [task, ...tasks].slice(0, 12);
+  } else {
+    tasks[existingIndex] = task;
+    tasks = [tasks[existingIndex], ...tasks.filter((_, index) => index !== existingIndex)];
+  }
+}
+
+function renderTaskList() {
+  if (!els.taskList) return;
+  if (!getAccessToken()) {
+    els.taskList.innerHTML = `<div class="task-list-empty">登录后会显示最近的工作流任务。</div>`;
+    return;
+  }
+  if (!tasks.length) {
+    els.taskList.innerHTML = `<div class="task-list-empty">还没有工作流任务。点击“运行工作流”后，这里会显示最近的执行记录。</div>`;
+    return;
+  }
+
+  els.taskList.innerHTML = tasks
+    .map((task) => {
+      const active = task.task_id === activeTaskId;
+      const meta = `${task.horse_name || "未指定名马"} / ${task.duration}s / ${task.aspect_ratio}`;
+      const hasVideo = Boolean(getTaskVideoUrl(task));
+      return `
+        <div class="task-card ${active ? "active" : ""}">
+          <button class="task-delete-button" type="button" data-delete-task-id="${task.task_id}" title="删除这条历史">删除</button>
+          <button class="task-card-main" data-task-id="${task.task_id}">
+          <div class="task-card-title">${escapeHtml(task.title)}</div>
+          <div class="task-card-meta">${escapeHtml(meta)}</div>
+          <div class="task-card-row">
+            <span class="status-pill ${statusClass(task.status)}">${statusLabel(task.status)}</span>
+            <span class="task-card-meta">${task.progress || 0}%</span>
+          </div>
+          <div class="task-card-progress"><span style="width:${task.progress || 0}%"></span></div>
+          </button>
+          ${
+            hasVideo
+              ? `<button class="task-download-link" type="button" data-download-task-id="${task.task_id}">下载成片</button>`
+              : ""
+          }
+        </div>
+      `;
+    })
+    .join("");
+}
+
+async function refreshTaskList() {
+  if (!getAccessToken()) {
+    renderTaskList();
+    return;
+  }
+  try {
+    const result = await apiRequest("/tasks?limit=12");
+    tasks = Array.isArray(result?.items) ? result.items : [];
+    renderTaskList();
+  } catch (error) {
+    addLog("任务列表", error.message || "无法加载任务历史。");
+  }
+}
+
+async function deleteTaskHistory(taskId) {
+  if (!taskId || !getAccessToken()) return;
+  const task = tasks.find((item) => item.task_id === taskId);
+  const label = task?.title ? `“${task.title}”` : "这条任务历史";
+  if (!window.confirm(`确定删除${label}吗？生成文件也会一起清理。`)) return;
+  try {
+    await apiRequest(`/tasks/${encodeURIComponent(taskId)}`, { method: "DELETE" });
+    tasks = tasks.filter((item) => item.task_id !== taskId);
+    if (activeTaskId === taskId) {
+      activeTaskId = null;
+      activeTask = null;
+      downloadedTaskId = "";
+      clearTaskPolling();
+    }
+    addLog("任务历史", "已删除 1 条历史记录。");
+    render();
+  } catch (error) {
+    addLog("任务历史", error.message || "删除任务历史失败。");
+  }
+}
+
+async function clearTaskHistory() {
+  if (!getAccessToken()) {
+    renderTaskList();
+    return;
+  }
+  if (!tasks.length) {
+    addLog("任务历史", "当前没有可清空的历史记录。");
+    return;
+  }
+  if (!window.confirm("确定清空全部任务历史吗？所有本地生成文件也会一起清理。")) return;
+  try {
+    const result = await apiRequest("/tasks", { method: "DELETE" });
+    const count = Number(result?.deleted_count || tasks.length || 0);
+    tasks = [];
+    activeTaskId = null;
+    activeTask = null;
+    downloadedTaskId = "";
+    clearTaskPolling();
+    addLog("任务历史", `已清空 ${count} 条历史记录。`);
+    render();
+  } catch (error) {
+    addLog("任务历史", error.message || "清空任务历史失败。");
+  }
+}
+
+async function selectTask(taskId) {
+  if (!taskId) return;
+  try {
+    const task = await apiRequest(`/tasks/${taskId}`);
+    rememberTask(task);
+    applyTaskSnapshot(task);
+    logTaskUpdate(task, true);
+    renderTaskList();
+    if (["draft", "queued", "processing"].includes(task.status)) {
+      startTaskPolling(task.task_id);
+    } else {
+      clearTaskPolling();
+    }
+  } catch (error) {
+    addLog("任务详情", error.message || "无法读取任务详情。");
+  }
+}
+
+async function retryActiveTask() {
+  if (!activeTaskId) {
+    addLog("重新执行", "请先在左侧任务历史中选择一个任务。");
+    return;
+  }
+  try {
+    const result = await apiRequest(`/tasks/${activeTaskId}/run`, {
+      method: "POST",
+    });
+    const task = result?.task;
+    if (!task) {
+      throw new Error("后端没有返回任务状态。");
+    }
+    rememberTask(task);
+    applyTaskSnapshot(task);
+    logTaskUpdate(task, true);
+    renderTaskList();
+    if (["queued", "processing"].includes(task.status)) {
+      startTaskPolling(task.task_id);
+    }
+  } catch (error) {
+    addLog("重新执行", error.message || "无法重新执行当前任务。");
+  }
+}
+
+function render() {
+  if (autoFitZoom) {
+    zoom = getFitZoom();
+    centerCanvas();
+  }
+  renderAuthLink();
+  renderTaskList();
+  renderNodeList();
+  renderNodes();
+  renderLinks();
+  renderInspector();
+  renderPreview();
+  renderStats();
+  renderExecutionTimeline();
+  renderExecutionPulse();
+  renderRuntimeEvents();
+  renderNodeBriefGrid();
+  renderDownloadButton();
+  applyCanvasZoom();
+  els.zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
+}
+
+function getFitZoom() {
+  const box = els.canvasViewport.getBoundingClientRect();
+  if (!box.width || !box.height) {
+    return 1;
+  }
+  const widthZoom = (box.width - 24) / CANVAS_WIDTH;
+  const heightZoom = (box.height - 24) / CANVAS_HEIGHT;
+  return Math.max(0.45, Math.min(1, widthZoom, heightZoom));
+}
+
+function centerCanvas() {
+  const box = els.canvasViewport.getBoundingClientRect();
+  if (!box.width || !box.height) return;
+  const scaledWidth = CANVAS_WIDTH * zoom;
+  const scaledHeight = CANVAS_HEIGHT * zoom;
+  panX = (box.width - scaledWidth) / 2;
+  panY = (box.height - scaledHeight) / 2;
+}
+
+function applyCanvasZoom() {
+  els.canvasInner.style.zoom = "";
+  els.canvasInner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+}
+
+function renderNodeList() {
+  els.nodeList.innerHTML = orderedNodes()
+    .map((node, index) => {
+      const meta = nodeMeta[node.type];
+      return `
+        <button class="node-list-item ${node.id === selectedId ? "active" : ""}" data-select-node="${node.id}">
+          <span class="node-list-name">
+            <span class="node-dot ${meta.kind}"></span>
+            <span>${index + 1}. ${meta.label}</span>
+          </span>
+          <span>${statusLabel(node.status)}</span>
+        </button>
+      `;
+    })
+    .join("");
+}
+
+function renderNodes() {
+  const activeNodeIds = activeExecutionNodeIds();
+  els.nodesLayer.innerHTML = orderedNodes()
+    .map((node, index) => {
+      const meta = nodeMeta[node.type];
+      const isParallelActive = activeNodeIds.size > 1 && activeNodeIds.has(node.id);
+      const highlights = getNodeHighlights(node)
+        .map(([label, value]) => {
+          return `<div class="node-value"><span>${label}</span><strong>${escapeHtml(value || "待填")}</strong></div>`;
+        })
+        .join("");
+      const quickInput =
+        node.type === "input"
+          ? `<textarea class="node-quick-input" data-node-id="${node.id}" data-node-field="topic" placeholder="输入视频主题...">${escapeHtml(node.fields.topic)}</textarea>`
+          : `<div class="node-values">${highlights}</div>`;
+
+      return `
+        <article
+          class="workflow-node ${meta.kind} ${node.status} phase-${nodeVisualPhase(node)} ${isParallelActive ? "parallel-active" : ""} ${node.id === selectedId ? "selected" : ""}"
+          data-node-id="${node.id}"
+          style="transform: translate(${node.x}px, ${node.y}px);"
+        >
+          <span class="port in"></span>
+          <span class="port out"></span>
+          <div class="node-top" data-drag-node="${node.id}">
+            <span class="node-index">${String(index + 1).padStart(2, "0")}</span>
+            <div class="node-title-block">
+              <div class="node-title">${meta.label}</div>
+              <div class="node-type">${meta.type}</div>
+            </div>
+            <span class="status-dot"></span>
+          </div>
+          <div class="node-body">${quickInput}</div>
+          <div class="node-footer">
+            <div class="node-progress"><span style="width: ${node.progress}%"></span></div>
+            <div class="node-status-text">${statusLabel(node.status)}</div>
+          </div>
+          <span class="node-scan"></span>
+          <span class="node-burst"></span>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function renderLinks() {
+  const visibleConnections = workflow.connections.filter((connection) => shouldRenderConnection(connection));
+  const paths = visibleConnections
+    .map((connection) => {
+      const from = findNode(connection.from);
+      const to = findNode(connection.to);
+      if (!from || !to) return "";
+      const outgoing = visibleConnections.filter((item) => item.from === from.id);
+      const incoming = visibleConnections.filter((item) => item.to === to.id);
+      const outIndex = Math.max(0, outgoing.findIndex((item) => item.id === connection.id));
+      const inIndex = Math.max(0, incoming.findIndex((item) => item.id === connection.id));
+      const lane = CONNECTION_LANE_OFFSETS[connection.id] || {};
+      const sourceY = from.y + NODE_HEIGHT / 2 + (outIndex - (outgoing.length - 1) / 2) * 26 + Number(lane.sourceY || 0);
+      const targetY = to.y + NODE_HEIGHT / 2 + (inIndex - (incoming.length - 1) / 2) * 26 + Number(lane.targetY || 0);
+      const sourceX = from.x + NODE_WIDTH;
+      const targetX = to.x;
+      const curveFactor = Number(lane.curveFactor || 0.42);
+      const curve = Math.max(70, Math.abs(targetX - sourceX) * curveFactor);
+      const d = `M ${sourceX} ${sourceY} C ${sourceX + curve} ${sourceY}, ${targetX - curve} ${targetY}, ${targetX} ${targetY}`;
+      const phase = connectionVisualPhase(connection);
+      const className = `link-path ${connection.status || "idle"} phase-${phase}${lane.emphasize ? " link-emphasis" : ""}`;
+      return `
+        <path class="${className}" d="${d}" marker-end="url(#arrow)" />
+        ${phase === "flowing" ? `<circle class="link-packet" r="4"><animateMotion dur="1.35s" repeatCount="indefinite" path="${d}" /></circle>` : ""}
+      `;
+    })
+    .join("");
+
+  els.linkLayer.innerHTML = `
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8da3c1"></path>
+      </marker>
+    </defs>
+    ${paths}
+  `;
+}
+
+function renderInspectorExtra(node) {
+  if (!node) return "";
+  if (node.id === "reference_input") {
+    const mediaUrl = String(node.fields?.mediaUrl || "").trim();
+    const localPath = String(node.fields?.localPath || "").trim();
+    const mediaType = String(node.fields?.mediaType || "unknown").trim();
+    const hasReference = Boolean(mediaUrl || localPath);
+    const statusText = hasReference ? `已选择参考素材（${mediaType}）` : "尚未上传参考素材";
+    return `
+      <div class="inspector-extra-panel">
+        <div class="field-group">
+          <label>上传参考文件</label>
+          <div class="reference-upload-row">
+            <button type="button" class="rail-button compact" data-reference-upload-trigger>选择图片/视频</button>
+            <input type="file" accept="image/*,video/*" data-reference-upload-input hidden />
+          </div>
+          <div class="field-help">${escapeHtml(statusText)}</div>
+        </div>
+      </div>
+    `;
+  }
+  if (node.id === "xhs_publish") {
+    return `
+      <div class="inspector-extra-panel">
+        <div class="field-group">
+          <label>小红书节点详细配置说明</label>
+          <div class="field-help">该节点可选，不影响视频生成。建议先跑通视频链路，再开启自动发布。</div>
+          <div class="xhs-guide-block">
+            <div class="xhs-guide-title">配置顺序</div>
+            <ol class="xhs-quick-steps">
+              <li>在浏览器先登录小红书创作后台。</li>
+              <li>用 Cookie Editor 导出 <code>cookies.json</code>（仅你自己的登录态）。</li>
+              <li>把文件放到服务器本地，并在“Cookies 文件路径”填写绝对路径。</li>
+              <li>先设置“可见范围”为仅自己可见，再把“自动发布开关”改为开启。</li>
+            </ol>
+          </div>
+          <div class="xhs-guide-block">
+            <div class="xhs-guide-title">字段模板（推荐）</div>
+            <ul class="xhs-kv-list">
+              <li><strong>Cookies 文件路径</strong><span>例如：<code>D:\\xhs\\cookies.json</code></span></li>
+              <li><strong>MCP Base URL</strong><span>例如：<code>http://127.0.0.1:9000</code></span></li>
+              <li><strong>发布 API Path</strong><span>例如：<code>/api/publish/xiaohongshu</code></span></li>
+              <li><strong>标签</strong><span>逗号分隔，不带 #，例如：<code>战马,历史,短片</code></span></li>
+            </ul>
+          </div>
+          <div class="xhs-guide-block">
+            <div class="xhs-guide-title">常见错误定位</div>
+            <ul class="xhs-error-list">
+              <li><strong>Cookie 失效</strong><span>重新登录小红书并导出新的 cookies.json。</span></li>
+              <li><strong>接口不可达</strong><span>检查 MCP Base URL 与发布 API Path 拼接后的地址是否能访问。</span></li>
+              <li><strong>发布失败</strong><span>先改“仅自己可见”做联调，确认成功后再切公开。</span></li>
+            </ul>
+          </div>
+          <div class="field-help">联调建议：先关闭自动发布跑一轮；确认成片正常后，再开启自动发布。</div>
+        </div>
+      </div>
+    `;
+  }
+  return "";
+}
+
+function renderInspector() {
+  const node = findNode(selectedId) || workflow.nodes[0];
+  const meta = nodeMeta[node.type];
+  const fields = fieldDefs[node.type] || [];
+  const fieldHtml = fields
+    .map((field) => {
+      const value = node.fields[field.key] ?? "";
+      let control = "";
+      const placeholder = field.placeholder ? ` placeholder="${escapeHtml(field.placeholder)}"` : "";
+      if (field.type === "textarea") {
+        control = `<textarea class="field-textarea" data-field="${field.key}"${placeholder}>${escapeHtml(value)}</textarea>`;
+      } else if (field.type === "select") {
+        control = `
+          <select class="field-select" data-field="${field.key}">
+            ${field.options.map((option) => `<option value="${escapeHtml(option)}" ${String(option) === String(value) ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+          </select>
+        `;
+      } else {
+        control = `<input class="field-input" data-field="${field.key}" value="${escapeHtml(value)}" autocomplete="off"${placeholder} />`;
+      }
+      const help = field.help ? `<div class="field-help">${field.help}</div>` : "";
+      return `
+        <div class="field-group">
+          <label>${field.label}</label>
+          ${control}
+          ${help}
+        </div>
+      `;
+    })
+    .join("");
+  const extraPanel = renderInspectorExtra(node);
+
+  els.inspectorContent.innerHTML = `
+    <div class="inspector-title">
+      <div>
+        <div class="section-heading">${meta.type}</div>
+        <h2>${meta.label}</h2>
+      </div>
+      <span class="status-pill ${statusClass(node.status)}">${statusLabel(node.status)}</span>
+    </div>
+    ${fieldHtml}
+    ${extraPanel}
+    <div class="node-output">
+      <div class="section-heading">节点输出</div>
+      <div class="output-box">${renderNodeOutput(node)}</div>
+    </div>
+  `;
+}
+
+function renderPreview() {
+  const input = findNode("input");
+  const script = findNode("script");
+  const storyboard = findNode("storyboard");
+  const output = findNode("output");
+  const topic = String(input.fields.topic || "").trim();
+  const title = activeTask?.title || script?.output?.title || topic || "等待输入视频主题";
+  const horse = input.fields.horse || "赤兔";
+  const image = horseImages[horse] || horseImages["赤兔"];
+  const videoUrl = getTaskVideoUrl(activeTask);
+  const status = activeTask ? statusLabel(activeTask.status) : output.status === "done" ? "已生成" : isRunning ? "生成中" : "预览";
+  const caption =
+    activeTask?.result_payload?.note ||
+    activeTask?.error_message ||
+    (!topic
+      ? "先在内容输入节点填写主题，工作流会用 RAG 知识库匹配史料后生成提示词。"
+      : null) ||
+    (output.status === "done"
+      ? "当前任务已有结果返回，后续会继续接入真实成片地址。"
+      : script?.output?.voiceover || input.fields.brief || "等待工作流生成脚本与分镜");
+
+  els.previewImage.src = image;
+  if (els.previewVideo) {
+    const frame = els.previewVideo.closest(".video-frame");
+    if (videoUrl && activeTask?.status === "completed") {
+      if (els.previewVideo.getAttribute("src") !== videoUrl) {
+        els.previewVideo.setAttribute("src", videoUrl);
+      }
+      frame?.classList.add("has-video");
+    } else {
+      els.previewVideo.removeAttribute("src");
+      els.previewVideo.load();
+      frame?.classList.remove("has-video");
+    }
+  }
+  els.previewTitle.textContent = title;
+  els.previewHeadline.textContent = title;
+  els.previewCaption.textContent = caption;
+  els.previewAspect.textContent = input.fields.aspect || "9:16";
+  els.previewStatus.textContent = status;
+  els.previewStatus.className = `status-pill ${output.status === "done" ? "done" : isRunning ? "running" : "waiting"}`;
+
+  const count = Number(storyboard.fields.shotCount || 5);
+  const activeCount = storyboard.output?.shots?.length || 0;
+  els.sceneStrip.innerHTML = Array.from({ length: Math.max(3, count) })
+    .map((_, index) => {
+      const shot = storyboard.output?.shots?.[index];
+      return `<div class="scene-chip ${index < activeCount ? "active" : ""}">镜头 ${index + 1}<br>${escapeHtml(shot?.camera || "待生成")}</div>`;
+    })
+    .join("");
+}
+
+function renderStats() {
+  els.nodeCount.textContent = String(workflow.nodes.length);
+  els.linkCount.textContent = String(workflow.connections.filter((connection) => shouldRenderConnection(connection)).length);
+  if (els.runtimeBadge) {
+    const runtime = providerStatus?.runtime;
+    const connected = Boolean(runtime?.enabled && runtime?.connected);
+    const veoLimit = providerStatus?.veo?.maxClipsPerTask || findNode("veo")?.fields.parallel || 1;
+    els.runtimeBadge.textContent = connected ? `Redis 已启用 / DAG 并行 / Veo ${veoLimit} 段` : "Redis 未连接";
+    els.runtimeBadge.className = `runtime-badge ${connected ? "connected" : "offline"}`;
+  }
+  const doneCount = workflow.nodes.filter((node) => node.status === "done").length;
+  if (activeTask) {
+    els.workflowStatus.textContent = `${statusLabel(activeTask.status)} ${activeTask.progress || 0}%`;
+  } else if (providerStatus) {
+    const configured = ["gpt", "image", "veo"].filter((key) => providerStatus?.[key]?.configured).length;
+    els.workflowStatus.textContent = isRunning
+      ? `运行中 ${doneCount}/${workflow.nodes.length}`
+      : `API ${configured}/3 已配置`;
+  } else {
+    els.workflowStatus.textContent = isRunning ? `运行中 ${doneCount}/${workflow.nodes.length}` : doneCount ? `已完成 ${doneCount}/${workflow.nodes.length}` : "待运行";
+  }
+  const input = findNode("input");
+  const output = findNode("output");
+  const script = findNode("script");
+  const keyframe = findNode("keyframe");
+  const veo = findNode("veo");
+  const topic = String(input.fields.topic || "").trim();
+  els.payloadSummary.textContent =
+    activeTask?.result_payload?.videoUrl ||
+    activeTask?.result_payload?.note ||
+    (output.status === "done"
+      ? "成片地址、字幕、音频和封面已写入输出节点"
+      : topic
+        ? `${topic} / ${input.fields.duration}s / ${input.fields.aspect}`
+        : `${script.fields.model} -> ${keyframe.fields.provider} -> ${veo.fields.model}`);
+}
+
+function renderExecutionTimeline() {
+  if (!els.executionTimeline) return;
+  const states = runtimeNodeStateMap();
+  const activeNodeIds = activeExecutionNodeIds();
+  els.executionTimeline.innerHTML = orderedNodes()
+    .map((node, index) => {
+      const state = states.get(node.id);
+      const status = normalizeNodeStatus(state?.status || node.status);
+      const progress = Number(state?.progress ?? node.progress ?? 0);
+      const meta = nodeMeta[node.type] || { label: node.id, kind: "text" };
+      const phase = nodeVisualPhase({ ...node, status });
+      const isCurrent = activeNodeIds.has(node.id);
+      const isParallelActive = activeNodeIds.size > 1 && isCurrent;
+      return `
+        <button class="timeline-step ${status} phase-${phase} ${isCurrent ? "current" : ""} ${isParallelActive ? "parallel-active" : ""}" data-select-node="${node.id}">
+          <span class="timeline-index">${index + 1}</span>
+          <span class="timeline-copy">
+            <strong>${escapeHtml(meta.label)}</strong>
+            <small>${statusLabel(status)} · ${progress}%</small>
+          </span>
+          <span class="timeline-bar"><span style="width:${Math.max(0, Math.min(100, progress))}%"></span></span>
+        </button>
+      `;
+    })
+    .join("");
+}
+
+function renderExecutionPulse() {
+  if (!els.executionPulse) return;
+  const runtime = activeRuntimeState();
+  const status = runtime?.status || activeTask?.status || (isRunning ? "processing" : "draft");
+  const progress = Math.max(0, Math.min(100, Number(runtime?.progress ?? activeTask?.progress ?? 0)));
+  const activeNodeIds = activeExecutionNodeIds();
+  const activeLabels = [...activeNodeIds]
+    .map((nodeId) => {
+      const node = findNode(nodeId);
+      return node ? nodeMeta[node.type]?.label || node.id : "";
+    })
+    .filter(Boolean);
+  const currentNodeId = currentExecutionNodeId();
+  const currentNode = currentNodeId ? findNode(String(currentNodeId).split(",")[0]) : null;
+  const currentLabel = activeLabels.length > 1
+    ? `${activeLabels.length} 个节点并行`
+    : activeLabels[0] || (currentNode ? nodeMeta[currentNode.type]?.label || currentNode.id : "等待运行");
+  const active = ["queued", "processing"].includes(String(status));
+  els.executionPulse.className = `execution-pulse ${active ? "active" : ""} ${statusClass(status)}`;
+  els.executionPulse.innerHTML = `
+    <span class="pulse-label">${escapeHtml(currentLabel)}</span>
+    <span class="pulse-track">
+      <span class="pulse-fill" style="width:${progress}%"></span>
+      <span class="pulse-runner"></span>
+    </span>
+    <span class="pulse-percent">${progress}%</span>
+  `;
+}
+
+function runtimeEventLabel(event) {
+  const name = String(event?.event || "runtime");
+  const labels = {
+    "veo-clip-started": "Veo 片段开始",
+    "veo-clip-submitted": "Veo 片段提交",
+    "veo-clip-completed": "Veo 片段完成",
+    "veo-clip-failed": "Veo 片段失败",
+    "task-created": "任务创建",
+    "workflow-queued": "进入队列",
+    "workflow-started": "开始执行",
+    "stage-started": "并行阶段开始",
+    "parallel-nodes-started": "并行节点开始",
+    "parallel-nodes-completed": "并行节点完成",
+    "node-started": "节点开始",
+    "node-completed": "节点完成",
+    "workflow-completed": "工作流完成",
+    "workflow-failed": "工作流失败",
+    "workflow-cancelled": "工作流取消",
+    "workflow-cleared": "清空状态",
+    inspection: "状态同步",
+  };
+  return labels[name] || name;
+}
+
+function renderRuntimeEvents() {
+  if (!els.runtimeEvents) return;
+  const events = activeRuntimeEvents().slice(-5).reverse();
+  if (!events.length) {
+    els.runtimeEvents.innerHTML = `<div class="runtime-event muted">运行时事件会在工作流开始后显示</div>`;
+    return;
+  }
+  els.runtimeEvents.innerHTML = events
+    .map((event) => {
+      const payload = event?.payload && typeof event.payload === "object" ? event.payload : {};
+      const nodeIds = Array.isArray(payload.nodeIds) ? payload.nodeIds : [];
+      const nodeId = payload.nodeId || event.currentNode || "";
+      const nodeLabel = nodeIds.length
+        ? nodeIds
+            .map((id) => {
+              const node = findNode(id);
+              return node ? nodeMeta[node.type]?.label || node.id : id;
+            })
+            .join(" + ")
+        : (() => {
+            const node = nodeId ? findNode(nodeId) : null;
+            return node ? nodeMeta[node.type]?.label || node.id : nodeId;
+          })();
+      const time = event?.at ? new Date(event.at).toLocaleTimeString("zh-CN", { hour12: false }) : "";
+      const status = statusLabel(event?.status || "");
+      return `
+        <div class="runtime-event ${statusClass(event?.status || "")}">
+          <span>${escapeHtml(time)}</span>
+          <strong>${escapeHtml(runtimeEventLabel(event))}</strong>
+          <small>${escapeHtml([nodeLabel, status].filter(Boolean).join(" · "))}</small>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderJsonOutput(output) {
+  return `<pre class="output-json">${escapeHtml(formatOutput(output))}</pre>`;
+}
+
+function keyframeOutputImages(output) {
+  const images = Array.isArray(output?.images) ? output.images : [];
+  return images
+    .map((item, index) => {
+      const rawUrl = item?.imageUrl ?? item?.url;
+      const imageUrl = safeMediaUrl(rawUrl);
+      if (!imageUrl) return null;
+      const scene = Number.isFinite(Number(item?.scene)) ? Number(item.scene) : index + 1;
+      const cacheMode = String(item?.cacheMode || "");
+      const reusedFromScene = Number.isFinite(Number(item?.reusedFromScene)) ? Number(item.reusedFromScene) : 0;
+      const prompt = String(item?.prompt || "").trim();
+      const rawRole = String(item?.frameRole || item?.role || "").trim().toLowerCase();
+      const frameRole = rawRole.includes("end") || rawRole.includes("tail")
+        ? "尾帧"
+        : rawRole.includes("start") || rawRole.includes("head")
+          ? "首帧"
+          : "";
+      return {
+        scene,
+        imageUrl,
+        cacheMode,
+        reusedFromScene,
+        prompt,
+        frameRole,
+      };
+    })
+    .filter(Boolean);
+}
+
+function renderKeyframeOutput(output) {
+  const images = keyframeOutputImages(output);
+  if (!images.length) {
+    return renderJsonOutput(output);
+  }
+  const cards = images
+    .map((item) => {
+      const sceneLabel = `Scene ${item.scene}${item.frameRole ? ` · ${item.frameRole}` : ""}`;
+      const sourceLabel = item.reusedFromScene
+        ? `复用 Scene ${item.reusedFromScene} 尾帧`
+        : item.cacheMode === "hit"
+          ? "缓存命中"
+          : "新生成";
+      const prompt = item.prompt ? `<p>${escapeHtml(item.prompt)}</p>` : "";
+      return `
+        <figure class="output-image-card">
+          <a class="output-image-link" href="${escapeHtml(item.imageUrl)}" target="_blank" rel="noopener">
+            <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(`关键帧 ${sceneLabel}`)}" loading="lazy" />
+          </a>
+          <figcaption>
+            <strong>${escapeHtml(sceneLabel)}</strong>
+            <span>${escapeHtml(sourceLabel)}</span>
+            ${prompt}
+          </figcaption>
+        </figure>
+      `;
+    })
+    .join("");
+  return `<div class="output-image-grid">${cards}</div>`;
+}
+
+function renderNodeOutput(node) {
+  if (!node?.output) {
+    return `<div class="output-empty">等待该节点执行。</div>`;
+  }
+  if (node.type === "keyframe") {
+    return renderKeyframeOutput(node.output);
+  }
+  return renderJsonOutput(node.output);
+}
+
+function compactText(value, maxLength = 120) {
+  const text = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}...`;
+}
+
+function asList(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function hasOutput(node) {
+  return Boolean(node?.output && typeof node.output === "object" && Object.keys(node.output).length);
+}
+
+function nodeOutputOptional(node) {
+  if (!node) return false;
+  if (node.type === "input") return true;
+  if (node.type === "reference_input" && !optionEnabled(node?.fields?.enabled)) return true;
+  if (node.type === "reference_analyze" && !optionEnabled(findNode("reference_input")?.fields?.enabled)) return true;
+  if (node.type === "xhs_publish" && !optionEnabled(node?.fields?.enabled)) return true;
+  return false;
+}
+
+function nodeMissingPrimaryOutput(node) {
+  const status = normalizeNodeStatus(node?.status);
+  const workflowSettled = Boolean(
+    activeTask && !["draft", "queued", "processing"].includes(String(activeTask.status || ""))
+  );
+  if (!workflowSettled && status !== "failed") return false;
+  if (status !== "done" && status !== "failed") return false;
+  if (hasOutput(node)) return false;
+  if (nodeOutputOptional(node)) return false;
+  return true;
+}
+
+function nodeFailureHint(node) {
+  const status = normalizeNodeStatus(node?.status);
+  if (status === "failed") {
+    const errorText = compactText(
+      node?.output?.error || node?.output?.providerError || activeTask?.error_message || "节点执行失败，请查看日志。",
+      170
+    );
+    return {
+      level: "failed",
+      chip: "执行失败",
+      message: `故障定位：${errorText}`,
+    };
+  }
+  if (nodeMissingPrimaryOutput(node)) {
+    const nodeLabel = nodeMeta[node.type]?.label || node.id;
+    return {
+      level: "attention",
+      chip: "疑似空输出",
+      message: `故障定位：${nodeLabel} 已结束但无主要输出，请优先检查该节点配置与上游输入。`,
+    };
+  }
+  return null;
+}
+
+function renderBriefChips(chips) {
+  const safe = asList(chips)
+    .map((item) => compactText(item, 28))
+    .filter(Boolean);
+  if (!safe.length) return "";
+  return `
+    <div class="brief-chip-row">
+      ${safe.map((item) => `<span class="brief-chip">${escapeHtml(item)}</span>`).join("")}
+    </div>
+  `;
+}
+
+function renderBriefLines(lines) {
+  const safe = asList(lines)
+    .map((item) => compactText(item, 100))
+    .filter(Boolean);
+  if (!safe.length) return "";
+  return `
+    <ul class="brief-line-list">
+      ${safe.map((item) => `<li title="${escapeHtml(item)}">${escapeHtml(item)}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function renderBriefImages(images) {
+  const safe = asList(images).slice(0, 4);
+  if (!safe.length) return "";
+  return `
+    <div class="brief-image-grid">
+      ${safe
+        .map((item) => {
+          const imageUrl = safeMediaUrl(item?.url);
+          if (!imageUrl) return "";
+          const label = compactText(item?.label || "", 26);
+          return `
+            <figure class="brief-image-item">
+              <a href="${escapeHtml(imageUrl)}" target="_blank" rel="noopener">
+                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(label || "node media")}" loading="lazy" />
+              </a>
+              ${label ? `<figcaption>${escapeHtml(label)}</figcaption>` : ""}
+            </figure>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function normalizeTextLine(value, maxLength = 120) {
+  const text = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return compactText(text, maxLength);
+}
+
+function collectSubtitleLines(output) {
+  const rawSegments = asList(output?.segments || output?.subtitleSegments);
+  const lines = rawSegments
+    .map((item) => {
+      if (typeof item === "string") return normalizeTextLine(item, 60);
+      return normalizeTextLine(item?.text || item?.subtitle || item?.narration || "", 60);
+    })
+    .filter(Boolean);
+  if (lines.length) return lines;
+
+  const storyboardShots = asList(findNode("storyboard")?.output?.shots);
+  const scriptShots = asList(findNode("script")?.output?.shots);
+  const fallbackLines = [...storyboardShots, ...scriptShots]
+    .map((shot) => normalizeTextLine(shot?.subtitle || shot?.narration || "", 60))
+    .filter(Boolean);
+  return fallbackLines;
+}
+
+function nodeBriefModel(node) {
+  const output = node.output || {};
+  const fields = node.fields || {};
+
+  if (node.type === "reference_input") {
+    const mediaUrl = String(fields.mediaUrl || "").trim();
+    const localPath = String(fields.localPath || "").trim();
+    const hasReference = Boolean(mediaUrl || localPath);
+    const imageUrl = safeMediaUrl(mediaUrl);
+    return {
+      title: compactText(hasReference ? "参考素材已配置" : "参考素材上传", 80),
+      chips: [fields.enabled || "关闭", fields.sourceType || "上传文件", fields.mediaType || "unknown"],
+      lines: [mediaUrl, localPath, fields.note].filter(Boolean),
+      images: fields.mediaType === "image" && imageUrl ? [{ url: imageUrl, label: "参考图" }] : [],
+    };
+  }
+
+  if (node.type === "reference_analyze") {
+    return {
+      title: compactText(output.summary || "参考风格分析", 80),
+      chips: [fields.model || "gpt", output.analysisMode || "", output.mediaType || ""],
+      lines: [
+        output.visualStyle,
+        output.cameraLanguage,
+        output.lighting,
+        output.motion,
+        output.negative,
+      ],
+      images: output.source?.frameUrl ? [{ url: output.source.frameUrl, label: "视频首帧" }] : [],
+    };
+  }
+
+  if (node.type === "input") {
+    return {
+      title: compactText(fields.topic || "等待输入主题", 80),
+      chips: [fields.horse, `${fields.duration || 0}s`, fields.aspect],
+      lines: [fields.brief, fields.audience].filter(Boolean),
+      images: [],
+    };
+  }
+
+  if (node.type === "script") {
+    const shots = asList(output.shots);
+    const shotNarrations = shots.slice(0, 3).map((shot) => shot?.narration || shot?.subtitle).filter(Boolean);
+    return {
+      title: compactText(output.title || "剧本内容", 80),
+      chips: [fields.model, shots.length ? `${shots.length} 镜头` : "", fields.style],
+      lines: [output.voiceover, ...shotNarrations, output.note],
+      images: [],
+    };
+  }
+
+  if (node.type === "storyboard") {
+    const shots = asList(output.shots);
+    const shotLines = shots.slice(0, 3).map((shot, index) => {
+      const scene = Number.isFinite(Number(shot?.scene)) ? Number(shot.scene) : index + 1;
+      const camera = compactText(shot?.camera || "", 42);
+      const subtitle = compactText(shot?.subtitle || shot?.narration || "", 56);
+      return `S${scene} ${camera}${subtitle ? ` | ${subtitle}` : ""}`.trim();
+    });
+    return {
+      title: compactText(output.storyTitle || output.title || "分镜拆解", 80),
+      chips: [shots.length ? `${shots.length} 镜` : "", `${fields.shotSeconds || ""}s/镜`, fields.promptLanguage],
+      lines: shotLines.length ? shotLines : [output.note],
+      images: [],
+    };
+  }
+
+  if (node.type === "voice") {
+    const segments = asList(output.segments);
+    const audioUrl = safeMediaUrl(output.audioUrl || output.voiceUrl || output.narrationUrl);
+    return {
+      title: compactText(output.voiceover || output.narration || "配音规划", 80),
+      chips: [fields.voice, fields.emotion, segments.length ? `${segments.length} 段` : ""],
+      lines: [...segments.slice(0, 4).map((item) => item?.text), audioUrl ? "音频已生成" : ""],
+      images: [],
+    };
+  }
+
+  if (node.type === "keyframe") {
+    const images = keyframeOutputImages(output);
+    return {
+      title: compactText(output.promptStyle || fields.promptStyle || "关键帧生成", 80),
+      chips: [images.length ? `${images.length} 张` : "", output.referenceMode || fields.referenceMode, output.imageSize || fields.imageSize],
+      lines: images.slice(0, 3).map((item) => item?.prompt),
+      images: images.map((item) => ({ url: item.imageUrl, label: `Scene ${item.scene}${item.frameRole ? ` ${item.frameRole}` : ""}` })),
+    };
+  }
+
+  if (node.type === "subtitle") {
+    const segments = asList(output.segments || output.subtitleSegments);
+    return {
+      title: compactText("字幕规划", 80),
+      chips: [output.style || fields.style, output.language || fields.language, segments.length ? `${segments.length} 行` : ""],
+      lines: segments.slice(0, 5).map((item) => item?.text),
+      images: [],
+    };
+  }
+
+  if (node.type === "veo") {
+    const clips = asList(output.clips);
+    return {
+      title: compactText(output.summary || "Veo 视频生成", 80),
+      chips: [fields.model, clips.length ? `${clips.length} 段` : "", fields.aspect],
+      lines: [
+        clips[0]?.prompt,
+        clips[0]?.narration,
+        clips[1]?.prompt,
+        clips[1]?.narration,
+        output.durationStrategy,
+      ],
+      images: [],
+    };
+  }
+
+  if (node.type === "compose") {
+    const sourceClips = asList(output.sourceClips);
+    return {
+      title: compactText(output.videoUrl ? "成片合成完成" : "视频合成", 80),
+      chips: [sourceClips.length ? `${sourceClips.length} 段合成` : "", output.compositionMode || "", output.subtitleStyle || ""],
+      lines: [output.note, output.subtitleUrl],
+      images: [],
+    };
+  }
+
+  if (node.type === "xhs_publish") {
+    const cookiePath = String(fields.cookiePath || "").trim();
+    const endpoint = compactText(String(output.endpoint || "").trim(), 66);
+    const errorMessage = compactText(String(output.error || "").trim(), 72);
+    return {
+      title: compactText(output.message || "小红书自动发布", 80),
+      chips: [fields.enabled || "关闭", output.status || "待执行", fields.visibility || "公开可见"],
+      lines: [
+        cookiePath ? "Cookie：已配置" : "Cookie：未配置（该节点会自动跳过）",
+        endpoint ? `发布接口：${endpoint}` : "",
+        errorMessage ? `错误：${errorMessage}` : "",
+      ].filter(Boolean),
+      images: [],
+    };
+  }
+
+  const sourceClips = asList(output.sourceClips);
+  return {
+    title: compactText(output.videoUrl ? "成片已输出" : "输出节点", 80),
+    chips: [output.aspect || fields.aspect, output.duration ? `${output.duration}s` : "", sourceClips.length ? `${sourceClips.length} 段来源` : ""],
+    lines: [output.videoUrl, output.subtitleUrl, output.note],
+    images: [],
+  };
+}
+
+function nodeBriefModelV2(node) {
+  const output = node.output || {};
+  const fields = node.fields || {};
+
+  if (node.type === "voice") {
+    const expectedSoundscape = normalizeTextLine(
+      output.soundscape || fields.soundscape || "马蹄声、环境风声、战场氛围音，旁白清晰靠前",
+      72
+    );
+    const expectedVoice = normalizeTextLine(
+      output.voiceStyle || `${fields.voice || "中文音色"}，语速 ${fields.speed || "1.0"}x`,
+      72
+    );
+    const expectedEmotion = normalizeTextLine(
+      output.emotion || fields.emotion || "庄重、克制、有力量感的中文口语旁白",
+      72
+    );
+    const audioReady = safeMediaUrl(output.audioUrl || output.voiceUrl || output.narrationUrl);
+    return {
+      title: compactText("声音预期效果", 80),
+      chips: [fields.mode || "中文 TTS 优先", fields.engine || "中文配音", fields.voice || "中文音色"],
+      lines: [
+        `旁白风格：${expectedEmotion}`,
+        `音色与语速：${expectedVoice}`,
+        `环境音层：${expectedSoundscape}`,
+        audioReady ? "状态：音频已生成，可用于合成" : "状态：等待音频生成",
+      ],
+      images: [],
+    };
+  }
+
+  if (node.type === "subtitle") {
+    const subtitleLines = collectSubtitleLines(output).slice(0, 8);
+    return {
+      title: compactText("字幕内容", 80),
+      chips: [output.style || fields.style || "标准样式", output.language || fields.language || "简体中文"],
+      lines: subtitleLines.length
+        ? subtitleLines.map((line, index) => `${index + 1}. ${line}`)
+        : ["暂无字幕内容，等待字幕节点执行完成"],
+      images: [],
+    };
+  }
+
+  return nodeBriefModel(node);
+}
+
+function renderNodeBriefCard(node, index) {
+  const history = asList(nodeOutputHistory[node.id]);
+  const issue = nodeFailureHint(node);
+  const shouldShow =
+    node.type === "input" ||
+    node.type === "reference_input" ||
+    node.type === "xhs_publish" ||
+    hasOutput(node) ||
+    node.status === "failed" ||
+    nodeMissingPrimaryOutput(node) ||
+    history.length > 0 ||
+    (node.id === "output" && generatedVideos.length > 0) ||
+    Boolean(issue);
+  if (!shouldShow) return "";
+  const meta = nodeMeta[node.type] || { label: node.id };
+  const brief = nodeBriefModelV2(node);
+  const batchLines =
+    node.id === "output" && generatedVideos.length
+      ? generatedVideos.map((item, itemIndex) => {
+          const summary = [item.duration ? `${item.duration}s` : "", item.aspect].filter(Boolean).join(" / ");
+          return `${itemIndex + 1}. ${item.title}${summary ? ` (${summary})` : ""}`;
+        })
+      : history.slice(-4).map((item) => `V${item.batchIndex}: ${item.summary}`);
+  const chips = [...asList(brief.chips)];
+  if (history.length > 1 && node.id !== "output") {
+    chips.push(`批次 ${history.length}`);
+  }
+  if (node.id === "output" && (generatedVideos.length || batchRunState?.total)) {
+    const total = batchRunState?.total || targetVideoCount();
+    chips.push(`成片 ${generatedVideos.length}/${total}`);
+  }
+  if (issue?.chip) {
+    chips.unshift(issue.chip);
+  }
+  const lines = [issue?.message, ...batchLines, ...asList(brief.lines)]
+    .filter(Boolean)
+    .slice(0, node.id === "output" ? 14 : 10);
+  return `
+    <article class="node-brief-card ${statusClass(node.status)} ${issue ? issue.level : ""}">
+      <header class="node-brief-head">
+        <span class="node-brief-index">${String(index + 1).padStart(2, "0")}</span>
+        <div class="node-brief-title-wrap">
+          <strong>${escapeHtml(meta.label)}</strong>
+          <small>${escapeHtml(statusLabel(node.status))}</small>
+        </div>
+      </header>
+      <h3 class="node-brief-title">${escapeHtml(brief.title || meta.label)}</h3>
+      ${renderBriefChips(chips)}
+      <div class="node-brief-body">
+        ${renderBriefLines(lines)}
+        ${renderBriefImages(brief.images)}
+      </div>
+    </article>
+  `;
+}
+
+function renderNodeBriefGrid() {
+  if (!els.nodeBriefGrid) return;
+  const cards = orderedNodes()
+    .map((node, index) => renderNodeBriefCard(node, index))
+    .filter(Boolean)
+    .join("");
+  if (!cards) {
+    els.nodeBriefGrid.innerHTML = `<div class="node-brief-empty">节点执行后，这里会展示每个节点的主要内容。</div>`;
+    return;
+  }
+  els.nodeBriefGrid.innerHTML = cards;
+}
+
+function formatOutput(output) {
+  if (!output) return "等待该节点执行。";
+  return JSON.stringify(output, null, 2);
+}
+
+function addLog(title, detail) {
+  const now = new Date();
+  const item = document.createElement("div");
+  item.className = "run-log-item";
+  item.innerHTML = `
+    <span class="run-time">${now.toLocaleTimeString("zh-CN", { hour12: false })}</span>
+    <div><strong>${escapeHtml(title)}</strong><br>${escapeHtml(detail)}</div>
+  `;
+  els.runLog.prepend(item);
+}
+
+function resetRuntime({ keepLog = false, detachTask = true } = {}) {
+  if (detachTask) {
+    clearTaskPolling();
+    activeTask = null;
+    activeTaskId = null;
+    lastTaskSignature = "";
+    isRunning = false;
+  }
+  workflow.nodes.forEach((node) => {
+    node.status = "idle";
+    node.progress = 0;
+    node.output = null;
+  });
+  workflow.connections.forEach((connection) => {
+    connection.status = "idle";
+  });
+  if (!keepLog) {
+    els.runLog.innerHTML = "";
+    els.runTitle.textContent = "尚未运行";
+  }
+  render();
+}
+
+async function clearCurrentWorkflow() {
+  const taskId = activeTaskId || activeTask?.task_id || "";
+  if (taskId && getAccessToken()) {
+    try {
+      const result = await apiRequest(`/tasks/${encodeURIComponent(taskId)}/clear`, {
+        method: "POST",
+        body: JSON.stringify({ clear_files: true }),
+      });
+      const removedCount = Array.isArray(result?.removed_files) ? result.removed_files.length : 0;
+      if (result?.task) {
+        rememberTask(result.task);
+      }
+      addLog("清空状态", removedCount ? `已取消任务并清理 ${removedCount} 个本地生成文件。` : "已取消任务并清空当前状态。");
+    } catch (error) {
+      addLog("清空状态", error.message || "后端取消任务失败，已清空本地画布状态。");
+    }
+  }
+  downloadedTaskId = "";
+  resetRuntime();
+}
+
+function setNodeStatus(id, status, progress) {
+  const node = findNode(id);
+  if (!node) return;
+  node.status = status;
+  node.progress = progress;
+  render();
+}
+
+function setIncomingConnections(id, status) {
+  workflow.connections.forEach((connection) => {
+    if (connection.to === id) connection.status = status;
+  });
+  renderLinks();
+}
+
+function setOutgoingConnections(id, status) {
+  workflow.connections.forEach((connection) => {
+    if (connection.from === id) connection.status = status;
+  });
+  renderLinks();
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function runWorkflow() {
+  if (isRunning) return;
+  if (!getAccessToken()) {
+    addLog("登录提示", "请先登录主站账号，再运行视频工厂工作流。");
+    return;
+  }
+  await refreshProviderStatus({ silent: true });
+
+  const inputNode = findNode("input");
+  const title = String(inputNode?.fields.topic || "").trim();
+  if (!title) {
+    selectedId = "input";
+    addLog("需要主题", "请先在“内容输入”节点填写视频主题，再运行工作流。");
+    render();
+    return;
+  }
+
+  runToken += 1;
+  activeTask = null;
+  activeTaskId = null;
+  downloadedTaskId = "";
+  clearTaskPolling();
+  lastTaskSignature = "";
+  resetRuntime({ keepLog: true, detachTask: false });
+  isRunning = true;
+  els.runLog.innerHTML = "";
+  els.runTitle.textContent = "正在创建工作流任务";
+  addLog("开始", "准备把当前工作流交给网站后端逐步执行。");
+
+  const payload = {
+    title,
+    horse_name: inputNode?.fields.horse || "",
+    duration: Number(inputNode?.fields.duration || 30),
+    aspect_ratio: inputNode?.fields.aspect || "9:16",
+    workflow_definition: getWorkflowDefinition(),
+    input_payload: buildWorkflowInputPayload(),
+    auto_start: true,
+  };
+
+  try {
+    const result = await apiRequest("/tasks", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    const task = result?.task;
+    if (!task) {
+      throw new Error("后端没有返回工作流任务。");
+    }
+
+    rememberTask(task);
+    addLog("任务创建", `${task.task_id} 已创建`);
+    if (result.message) {
+      addLog("工作流", result.message);
+    }
+    applyTaskSnapshot(task);
+    logTaskUpdate(task, true);
+
+    if (result.dispatch_status === "queued" || ["queued", "processing"].includes(task.status)) {
+      startTaskPolling(task.task_id);
+    } else {
+      isRunning = false;
+      render();
+    }
+  } catch (error) {
+    isRunning = false;
+    els.runTitle.textContent = "创建失败";
+    addLog("创建失败", error.message || "无法创建工作流任务。");
+    render();
+  }
+}
+
+function stopWorkflow() {
+  clearTaskPolling();
+  isRunning = false;
+  addLog("停止", activeTaskId ? `已停止本地轮询，任务 ${activeTaskId} 仍可在后端继续执行。` : "当前没有正在轮询的任务。");
+  render();
+}
+
+function buildMockOutput(id) {
+  const input = findNode("input").fields;
+  const script = findNode("script").output;
+  const storyboard = findNode("storyboard").output;
+  const keyframe = findNode("keyframe").output;
+  const shotCount = Number(findNode("storyboard").fields.shotCount || 5);
+  if (id === "input") {
+    return {
+      topic: input.topic,
+      horse: input.horse,
+      duration: Number(input.duration),
+      aspect: input.aspect,
+      brief: input.brief,
+    };
+  }
+  if (id === "script") {
+    return {
+      title: input.topic,
+      voiceover: `${input.horse}不是一匹普通坐骑，它把速度、忠义和战场上的命运感凝成一个名字。`,
+      scriptStyle: findNode("script").fields.style,
+      scenesExpected: shotCount,
+      model: findNode("script").fields.model,
+    };
+  }
+  if (id === "storyboard") {
+    return {
+      shots: Array.from({ length: shotCount }).map((_, index) => ({
+        scene: index + 1,
+        seconds: Number(findNode("storyboard").fields.shotSeconds || 6),
+        camera: ["低角度登场", "战场横移", "人物并肩", "高速冲锋", "片尾定格"][index % 5],
+        prompt: `${input.horse}，国风史诗电影感，第 ${index + 1} 镜，${findNode("storyboard").fields.camera}`,
+      })),
+    };
+  }
+  if (id === "keyframe") {
+    return {
+      provider: findNode("keyframe").fields.provider,
+      referenceMode: findNode("keyframe").fields.referenceMode,
+      images: (storyboard?.shots || []).map((shot) => ({
+        scene: shot.scene,
+        prompt: `${shot.prompt}，${findNode("keyframe").fields.consistency}`,
+        imageUrl: `mock://keyframes/${input.horse}_${shot.scene}.png`,
+      })),
+    };
+  }
+  if (id === "veo") {
+    const soundscape = findNode("voice").fields.soundscape || "马蹄声、战场风声、低沉鼓点、电影感环境声";
+    const subtitleStyle = findNode("subtitle").fields.style || "金色下三分之一";
+    return {
+      provider: findNode("veo").fields.provider,
+      modelTarget: findNode("veo").fields.model,
+      generateAudio: findNode("veo").fields.generateAudio === "是",
+      audioPrompt: `生成电影感音频：${soundscape}。中文普通话口语旁白优先，禁止英文和无声片段。`,
+      subtitlePrompt: `如模型支持片内字幕，使用${subtitleStyle}简体中文字幕；站内 SRT 作为备用。`,
+      clips: (storyboard?.shots || []).map((shot) => ({
+        scene: shot.scene,
+        operation: `veo_operation_${String(shot.scene).padStart(2, "0")}`,
+        url: `mock://veo/clips/${input.horse}_${shot.scene}.mp4`,
+        prompt: `${shot.prompt}，包含同步马蹄声、环境声和字幕意图。`,
+        referenceImage: keyframe?.images?.find((image) => image.scene === shot.scene)?.imageUrl || null,
+      })),
+    };
+  }
+  if (id === "voice") {
+    return {
+      text: script?.voiceover || "",
+      mode: findNode("voice").fields.mode,
+      engine: findNode("voice").fields.engine,
+      voice: findNode("voice").fields.voice,
+      soundscape: findNode("voice").fields.soundscape,
+      audioUrl: null,
+      duration: Number(input.duration),
+      fallback: "优先使用中文 TTS 音轨；未配置 TTS 时退回 Veo 中文配音提示。",
+    };
+  }
+  if (id === "subtitle") {
+    return {
+      mode: findNode("subtitle").fields.mode,
+      style: findNode("subtitle").fields.style,
+      srtUrl: "mock://subtitle/storyboard.srt",
+      segments: (storyboard?.shots || []).map((shot, index) => ({
+        start: index * Number(findNode("storyboard").fields.shotSeconds || 6),
+        end: (index + 1) * Number(findNode("storyboard").fields.shotSeconds || 6),
+        text: `${input.horse}，第 ${shot.scene} 幕：${shot.camera}`,
+      })),
+    };
+  }
+  if (id === "compose") {
+    return {
+      engine: findNode("compose").fields.engine,
+      transition: findNode("compose").fields.transition,
+      videoUrl: "mock://final/video-factory-preview.mp4",
+      thumbnailUrl: horseImages[input.horse] || horseImages["赤兔"],
+      audioMix: findNode("compose").fields.ducking,
+    };
+  }
+  return {
+    taskId: `vid_preview_${Date.now().toString(36)}`,
+    status: "completed",
+    videoUrl: "mock://final/video-factory-preview.mp4",
+    callback: findNode("output").fields.callback,
+    executionMode: "site-workflow",
+  };
+}
+
+function getCompletionText(id) {
+  return {
+    input: "内容、时长、画幅已进入 payload。",
+    script: "脚本标题、旁白和结构化要求已生成。",
+    storyboard: "分镜提示词已拆分为多个镜头。",
+    keyframe: "关键帧提示词和参考图任务已生成。",
+    veo: "模拟 Veo 片段已返回 operation、clip URL 和原生音频提示。",
+    voice: "中文口语配音规划已写入；配置 TTS 后会合成普通话音轨。",
+    subtitle: "字幕意图已写入 Veo 提示词，站内 SRT 作为备用。",
+    compose: "模拟合成视频、封面和混音结果已生成。",
+    output: "任务完成，后续会把占位结果替换为真实 API 输出。",
+  }[id];
+}
+
+function getWorkflowDefinition() {
+  return {
+    name: "baiqipu-video-factory-site-workflow",
+    mode: "site-workflow",
+    orchestration: {
+      engine: "baiqipu-backend",
+      runEndpoint: "/api/v1/video/workflow/tasks/{task_id}/run",
+      secrets: "store-in-backend-env",
+    },
+    nodes: workflow.nodes.map((node) => ({
+      id: node.id,
+      type: node.type,
+      label: nodeMeta[node.type]?.label || node.id,
+      position: { x: node.x, y: node.y },
+      parameters: node.fields,
+    })),
+    connections: workflow.connections.map(({ id, from, to }) => ({ id, from, to })),
+  };
+}
+
+function resetLayout() {
+  const fresh = clone(defaultWorkflow);
+  autoFitZoom = true;
+  workflow.nodes.forEach((node) => {
+    const next = fresh.nodes.find((item) => item.id === node.id);
+    if (next) {
+      node.x = next.x;
+      node.y = next.y;
+    }
+  });
+  addLog("布局", "节点位置已恢复为默认工作流布局。");
+  render();
+}
+
+function updateField(nodeId, key, value) {
+  const node = findNode(nodeId);
+  if (!node) return;
+  node.fields[key] = value;
+  if (node.status !== "idle") {
+    node.status = "idle";
+    node.progress = 0;
+    node.output = null;
+  }
+  renderNodes();
+  renderLinks();
+  renderPreview();
+  renderStats();
+}
+
+function updateFieldQuietly(nodeId, key, value) {
+  const node = findNode(nodeId);
+  if (!node) return;
+  node.fields[key] = value;
+  if (node.status !== "idle") {
+    node.status = "idle";
+    node.progress = 0;
+    node.output = null;
+  }
+  renderInspector();
+  renderPreview();
+  renderStats();
+}
+
+function pickUploadValue(container, keys) {
+  if (!container || typeof container !== "object") return "";
+  for (const key of keys) {
+    const value = container[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return "";
+}
+
+function inferReferenceMediaType(file) {
+  const mime = String(file?.type || "").toLowerCase();
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  const name = String(file?.name || "").toLowerCase();
+  if (/\.(png|jpg|jpeg|webp|gif|bmp|avif)$/i.test(name)) return "image";
+  if (/\.(mp4|mov|m4v|webm|avi|mkv)$/i.test(name)) return "video";
+  return "unknown";
+}
+
+function applyReferenceUploadResult(payload) {
+  const node = findNode("reference_input");
+  if (!node || !payload || typeof payload !== "object") return;
+  const payloadData = payload.data && typeof payload.data === "object" ? payload.data : payload;
+  const mediaTypeValue =
+    pickUploadValue(payloadData, ["mediaType", "media_type"]) ||
+    pickUploadValue(payload, ["mediaType", "media_type"]);
+  const mediaUrlValue =
+    pickUploadValue(payloadData, ["mediaUrl", "media_url", "url", "fileUrl", "file_url"]) ||
+    pickUploadValue(payload, ["mediaUrl", "media_url", "url", "fileUrl", "file_url"]);
+  const localPathValue =
+    pickUploadValue(payloadData, ["localPath", "local_path", "path"]) ||
+    pickUploadValue(payload, ["localPath", "local_path", "path"]);
+
+  node.fields.sourceType = "上传文件";
+  if (mediaTypeValue) {
+    node.fields.mediaType = String(mediaTypeValue);
+  } else if (!node.fields.mediaType) {
+    node.fields.mediaType = "unknown";
+  }
+  if (mediaUrlValue) node.fields.mediaUrl = String(mediaUrlValue);
+  if (localPathValue) node.fields.localPath = String(localPathValue);
+}
+
+function applyReferenceUploadLocalFallback(file, reason = "") {
+  const node = findNode("reference_input");
+  if (!node) return;
+  const inferredType = inferReferenceMediaType(file);
+  node.fields.sourceType = "上传文件";
+  node.fields.mediaType = inferredType || node.fields.mediaType || "unknown";
+  node.fields.localPath = `[local] ${String(file?.name || "reference")}`;
+  node.fields.mediaUrl = String(node.fields.mediaUrl || "");
+  if (reason) {
+    node.fields.note = `上传接口不可用：${reason}`;
+  }
+}
+
+async function uploadReferenceFile(file) {
+  if (!file) return;
+  if (!getAccessToken()) {
+    addLog("参考素材", "请先登录后再上传参考素材。");
+    return;
+  }
+  const formData = new FormData();
+  formData.append("file", file, file.name || "reference");
+  addLog("参考素材", `正在上传：${file.name || "reference"}`);
+  try {
+    const payload = await apiRequest("/reference/upload", {
+      method: "POST",
+      body: formData,
+    });
+    applyReferenceUploadResult(payload);
+    if (!String(findNode("reference_input")?.fields?.mediaUrl || "").trim()) {
+      applyReferenceUploadLocalFallback(file);
+    }
+    addLog("参考素材", payload?.message || "上传成功，已写入参考节点。");
+    selectedId = "reference_input";
+    render();
+  } catch (error) {
+    const message = String(error?.message || "上传失败，请检查登录态和文件格式。");
+    const isUploadEndpointMissing = Number(error?.status || 0) === 404 || /not found/i.test(message);
+    applyReferenceUploadLocalFallback(file, isUploadEndpointMissing ? "后端缺少 /reference/upload 路由" : "");
+    if (isUploadEndpointMissing) {
+      addLog("参考素材", "后端未启用上传接口，已保留本地素材选择。请补齐 /api/v1/video/workflow/reference/upload。");
+    } else {
+      addLog("参考素材", message);
+    }
+    selectedId = "reference_input";
+    render();
+  }
+}
+
+function bindEvents() {
+  const loginLink = document.querySelector(".login-link");
+  if (loginLink) {
+    loginLink.addEventListener("click", (event) => {
+      if (isAuthenticated()) {
+        event.preventDefault();
+      }
+    });
+  }
+  window.addEventListener("storage", (event) => {
+    if (!event.key || event.key === AUTH_STORAGE_KEY) {
+      renderAuthLink();
+    }
+  });
+  window.addEventListener("pageshow", renderAuthLink);
+
+  if (els.taskList) {
+    els.taskList.addEventListener("click", (event) => {
+      const deleteButton = event.target.closest("[data-delete-task-id]");
+      if (deleteButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        deleteTaskHistory(deleteButton.dataset.deleteTaskId);
+        return;
+      }
+      const downloadLink = event.target.closest(".task-download-link");
+      if (downloadLink) {
+        event.preventDefault();
+        event.stopPropagation();
+        const taskIdFromData = downloadLink.getAttribute("data-download-task-id");
+        const cardTaskId = downloadLink.closest(".task-card")?.querySelector("[data-task-id]")?.dataset?.taskId;
+        const taskId = taskIdFromData || cardTaskId || "";
+        if (taskId) {
+          void downloadTaskVideoById(taskId);
+        }
+        return;
+      }
+      const button = event.target.closest("[data-task-id]");
+      if (!button) return;
+      selectTask(button.dataset.taskId);
+    });
+  }
+
+  if (els.generatedVideoMenu) {
+    els.generatedVideoMenu.addEventListener("click", (event) => {
+      const selectButton = event.target.closest("[data-select-generated-task]");
+      if (selectButton) {
+        selectedGeneratedTaskId = selectButton.getAttribute("data-select-generated-task") || "";
+        renderGeneratedVideoMenu();
+        renderPreview();
+        renderDownloadButton();
+        return;
+      }
+      const downloadButton = event.target.closest("[data-download-task-id]");
+      if (downloadButton) {
+        const taskId = downloadButton.getAttribute("data-download-task-id") || "";
+        if (taskId) {
+          void downloadTaskVideoById(taskId);
+        }
+      }
+    });
+  }
+
+  if (els.executionTimeline) {
+    els.executionTimeline.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-select-node]");
+      if (!button) return;
+      selectedId = button.dataset.selectNode;
+      render();
+    });
+  }
+
+  els.nodeList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-select-node]");
+    if (!button) return;
+    selectedId = button.dataset.selectNode;
+    render();
+  });
+
+  els.nodesLayer.addEventListener("click", (event) => {
+    const nodeEl = event.target.closest("[data-node-id]");
+    if (!nodeEl) return;
+    selectedId = nodeEl.dataset.nodeId;
+    render();
+  });
+
+  els.nodesLayer.addEventListener("input", (event) => {
+    const target = event.target;
+    if (!target.matches("[data-node-field]")) return;
+    updateFieldQuietly(target.dataset.nodeId, target.dataset.nodeField, target.value);
+  });
+
+  els.inspectorContent.addEventListener("input", (event) => {
+    const target = event.target;
+    if (!target.matches("[data-field]")) return;
+    updateField(selectedId, target.dataset.field, target.value);
+  });
+
+  els.inspectorContent.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!target.matches("[data-field]")) return;
+    updateField(selectedId, target.dataset.field, target.value);
+    renderInspector();
+  });
+
+  els.inspectorContent.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-reference-upload-trigger]");
+    if (!trigger) return;
+    const input = els.inspectorContent.querySelector("[data-reference-upload-input]");
+    input?.click();
+  });
+
+  els.inspectorContent.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!target.matches("[data-reference-upload-input]")) return;
+    const file = target.files?.[0];
+    if (file) {
+      void uploadReferenceFile(file);
+    }
+    target.value = "";
+  });
+
+  document.querySelector("#runBtn").addEventListener("click", runWorkflow);
+  document.querySelector("#downloadVideoBtn")?.addEventListener("click", downloadCurrentTaskVideo);
+  document.querySelector("#stopBtn").addEventListener("click", stopWorkflow);
+  document.querySelector("#resetBtn").addEventListener("click", clearCurrentWorkflow);
+  document.querySelector("#saveBtn").addEventListener("click", saveWorkflow);
+  document.querySelector("#layoutBtn").addEventListener("click", resetLayout);
+  document.querySelector("#refreshTasksBtn").addEventListener("click", refreshTaskList);
+  document.querySelector("#retryTaskBtn").addEventListener("click", retryActiveTask);
+  els.clearTaskHistoryBtn?.addEventListener("click", clearTaskHistory);
+  document.querySelector("#exportBtn").addEventListener("click", () => {
+    els.jsonExport.value = JSON.stringify(getWorkflowDefinition(), null, 2);
+    els.jsonDialog.showModal();
+  });
+  document.querySelector("#closeJsonBtn").addEventListener("click", () => els.jsonDialog.close());
+  document.querySelector("#zoomInBtn").addEventListener("click", () => {
+    autoFitZoom = false;
+    zoom = Math.min(1.25, zoom + 0.1);
+    render();
+  });
+  document.querySelector("#zoomOutBtn").addEventListener("click", () => {
+    autoFitZoom = false;
+    zoom = Math.max(0.7, zoom - 0.1);
+    render();
+  });
+  window.addEventListener("resize", () => {
+    if (autoFitZoom) {
+      render();
+    }
+  });
+
+  bindCanvasPan();
+  bindDrag();
+}
+
+function bindCanvasPan() {
+  let panState = null;
+
+  const endPan = () => {
+    panState = null;
+    els.canvasViewport.classList.remove("panning");
+  };
+
+  els.canvasViewport.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    if (
+      event.target.closest(
+        "[data-node-id], [data-drag-node], textarea, input, select, button, a, .task-download-link, .icon-button"
+      )
+    ) {
+      return;
+    }
+    autoFitZoom = false;
+    panState = {
+      pointerId: event.pointerId,
+      lastX: event.clientX,
+      lastY: event.clientY,
+    };
+    els.canvasViewport.classList.add("panning");
+    els.canvasViewport.setPointerCapture?.(event.pointerId);
+  });
+
+  els.canvasViewport.addEventListener("pointermove", (event) => {
+    if (!panState || panState.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    const deltaX = event.clientX - panState.lastX;
+    const deltaY = event.clientY - panState.lastY;
+    panState.lastX = event.clientX;
+    panState.lastY = event.clientY;
+    panX += deltaX;
+    panY += deltaY;
+    applyCanvasZoom();
+  });
+
+  els.canvasViewport.addEventListener("pointerup", endPan);
+  els.canvasViewport.addEventListener("pointercancel", endPan);
+  els.canvasViewport.addEventListener("pointerleave", (event) => {
+    if (!panState) return;
+    if (event.buttons === 0) {
+      endPan();
+    }
+  });
+}
+
+function bindDrag() {
+  let dragState = null;
+  let dragFrame = 0;
+
+  function paintDraggedNode() {
+    dragFrame = 0;
+    if (!dragState) return;
+    const node = findNode(dragState.id);
+    const nodeEl = document.querySelector(`[data-node-id="${dragState.id}"]`);
+    if (!node || !nodeEl) return;
+    nodeEl.style.transform = `translate(${node.x}px, ${node.y}px)`;
+    renderLinks();
+  }
+
+  els.nodesLayer.addEventListener("pointerdown", (event) => {
+    const handle = event.target.closest("[data-drag-node]");
+    if (!handle) return;
+    const node = findNode(handle.dataset.dragNode);
+    if (!node) return;
+    selectedId = node.id;
+    dragState = {
+      id: node.id,
+      lastX: event.clientX,
+      lastY: event.clientY,
+    };
+    handle.setPointerCapture(event.pointerId);
+    const nodeEl = handle.closest("[data-node-id]");
+    if (nodeEl) {
+      nodeEl.classList.add("dragging", "selected");
+    }
+    renderNodeList();
+    renderInspector();
+    renderPreview();
+  });
+
+  els.nodesLayer.addEventListener("pointermove", (event) => {
+    if (!dragState) return;
+    const node = findNode(dragState.id);
+    if (!node) return;
+    event.preventDefault();
+    const deltaX = (event.clientX - dragState.lastX) / zoom;
+    const deltaY = (event.clientY - dragState.lastY) / zoom;
+    dragState.lastX = event.clientX;
+    dragState.lastY = event.clientY;
+    const minX = -NODE_WIDTH + 30;
+    const minY = -NODE_HEIGHT + 30;
+    const maxX = CANVAS_WIDTH - 30;
+    const maxY = CANVAS_HEIGHT - 30;
+    node.x = Math.max(minX, Math.min(maxX, node.x + deltaX));
+    node.y = Math.max(minY, Math.min(maxY, node.y + deltaY));
+    if (!dragFrame) {
+      dragFrame = window.requestAnimationFrame(paintDraggedNode);
+    }
+  });
+
+  window.addEventListener("pointerup", () => {
+    if (!dragState) return;
+    dragState = null;
+    if (dragFrame) {
+      window.cancelAnimationFrame(dragFrame);
+      dragFrame = 0;
+    }
+    renderNodes();
+    renderLinks();
+  });
+
+  window.addEventListener("pointercancel", () => {
+    dragState = null;
+    if (dragFrame) {
+      window.cancelAnimationFrame(dragFrame);
+      dragFrame = 0;
+    }
+    renderNodes();
+    renderLinks();
+  });
+}
+
+function batchRoundDisplay(index, total) {
+  return total > 1 ? `${index}/${total}` : "1/1";
+}
+
+function batchVariantInstruction(index, total) {
+  const variants = [
+    "focus on dramatic opening conflict and faster rhythm",
+    "focus on inner emotion and restrained narration",
+    "focus on turning point and decisive action",
+    "focus on reflective ending and aftertaste",
+  ];
+  const direction = variants[(index - 1) % variants.length];
+  return `Batch ${index}/${total}. Keep same topic, but script and narration must be clearly different from other versions. ${direction}. Output Chinese spoken narration.`;
+}
+
+function buildTaskPayloadForRound(index, total) {
+  const inputNode = findNode("input");
+  const baseTitle = String(inputNode?.fields?.topic || "").trim();
+  const inputPayload = buildWorkflowInputPayload();
+  const roundHint = batchVariantInstruction(index, total);
+  const scriptFields = { ...(inputPayload.script || {}) };
+  const basePrompt = String(scriptFields.customPrompt || "").trim();
+  scriptFields.customPrompt = [basePrompt, roundHint].filter(Boolean).join("\n\n");
+  inputPayload.script = scriptFields;
+  inputPayload.batch = {
+    index,
+    total,
+    roundHint,
+    seed: `${Date.now()}-${index}`,
+  };
+  if (total > 1) {
+    inputPayload.brief = [String(inputPayload.brief || "").trim(), `Batch version ${index}/${total}`]
+      .filter(Boolean)
+      .join(" | ");
+  }
+
+  return {
+    title: total > 1 ? `${baseTitle} #${index}` : baseTitle,
+    horse_name: inputNode?.fields?.horse || "",
+    duration: Number(inputNode?.fields?.duration || 30),
+    aspect_ratio: inputNode?.fields?.aspect || "9:16",
+    workflow_definition: getWorkflowDefinition(),
+    input_payload: inputPayload,
+    auto_start: true,
+  };
+}
+
+function resetPipelineForNextRound(nextIndex, total) {
+  const inputNode = findNode("input");
+  if (inputNode) {
+    inputNode.status = "done";
+    inputNode.progress = 100;
+  }
+  NODE_SEQUENCE.forEach((nodeId) => {
+    if (nodeId === "input") return;
+    const node = findNode(nodeId);
+    if (!node) return;
+    node.status = "idle";
+    node.progress = 0;
+    node.output = null;
+  });
+  workflow.connections.forEach((connection) => {
+    connection.status = "idle";
+  });
+  syncConnectionStates();
+  addLog("批量生成", `开始第 ${batchRoundDisplay(nextIndex, total)} 条视频`);
+  render();
+}
+
+function attachGeneratedVideosToOutputNode() {
+  const outputNode = findNode("output");
+  if (!outputNode) return;
+  const current = outputNode.output && typeof outputNode.output === "object" ? outputNode.output : {};
+  outputNode.output = {
+    ...current,
+    generatedVideos: generatedVideos.map((item) => ({
+      taskId: item.taskId,
+      title: item.title,
+      videoUrl: item.videoUrl,
+      duration: item.duration,
+      aspect: item.aspect,
+      batchIndex: item.batchIndex,
+      batchTotal: item.batchTotal,
+    })),
+    batch: {
+      total: batchRunState?.total || targetVideoCount(),
+      completed: generatedVideos.length,
+    },
+  };
+}
+
+function renderPreview() {
+  const input = findNode("input");
+  const script = findNode("script");
+  const storyboard = findNode("storyboard");
+  const output = findNode("output");
+  const topic = String(input?.fields?.topic || "").trim();
+  const previewTask = previewTaskFromState();
+  const videoUrl = getTaskVideoUrl(previewTask);
+  const title = previewTask?.title || activeTask?.title || script?.output?.title || topic || "等待输入视频主题";
+  const status = previewTask
+    ? statusLabel(previewTask.status)
+    : activeTask
+      ? statusLabel(activeTask.status)
+      : output.status === "done"
+        ? "已生成"
+        : isRunning
+          ? "生成中"
+          : "预览";
+  const batchSummary = batchRunState
+    ? `批量 ${Math.min(batchRunState.completed, batchRunState.total)}/${batchRunState.total}`
+    : generatedVideos.length > 1
+      ? `已生成 ${generatedVideos.length} 条`
+      : "";
+  const caption =
+    previewTask?.result_payload?.note ||
+    activeTask?.result_payload?.note ||
+    activeTask?.error_message ||
+    (!topic
+      ? "先在内容输入节点填写主题，工作流会生成脚本与分镜。"
+      : null) ||
+    (output.status === "done"
+      ? "当前任务已返回结果，可在上方菜单选择并下载。"
+      : script?.output?.voiceover || input?.fields?.brief || "等待工作流生成脚本与分镜");
+
+  renderGeneratedVideoMenu();
+  if (els.previewImage) {
+    const horse = input?.fields?.horse || "璧ゅ厰";
+    const image = horseImages[horse] || horseImages["璧ゅ厰"];
+    if (image) {
+      els.previewImage.src = image;
+    }
+  }
+  if (els.previewVideo) {
+    const frame = els.previewVideo.closest(".video-frame");
+    if (videoUrl && previewTask?.status === "completed") {
+      if (els.previewVideo.getAttribute("src") !== videoUrl) {
+        els.previewVideo.setAttribute("src", videoUrl);
+      }
+      frame?.classList.add("has-video");
+      els.previewEmpty?.classList.remove("show");
+    } else {
+      els.previewVideo.removeAttribute("src");
+      els.previewVideo.load();
+      frame?.classList.remove("has-video");
+      els.previewEmpty?.classList.add("show");
+    }
+  }
+
+  els.previewTitle.textContent = title;
+  els.previewHeadline.textContent = title;
+  els.previewCaption.textContent = [caption, batchSummary].filter(Boolean).join(" · ");
+  els.previewAspect.textContent = input?.fields?.aspect || "9:16";
+  els.previewStatus.textContent = status;
+  els.previewStatus.className = `status-pill ${previewTask?.status === "completed" ? "done" : isRunning ? "running" : "waiting"}`;
+
+  const count = Number(storyboard?.fields?.shotCount || 5);
+  const activeCount = storyboard?.output?.shots?.length || 0;
+  els.sceneStrip.innerHTML = Array.from({ length: Math.max(3, count) })
+    .map((_, index) => {
+      const shot = storyboard?.output?.shots?.[index];
+      return `<div class="scene-chip ${index < activeCount ? "active" : ""}">镜头 ${index + 1}<br>${escapeHtml(shot?.camera || "等待生成")}</div>`;
+    })
+    .join("");
+}
+
+function startTaskPolling(taskId, options = {}) {
+  clearTaskPolling();
+  if (!taskId) return;
+  const { onUpdate = null, onFinal = null, onError = null } = options;
+  let completed = false;
+  taskPollTimer = window.setInterval(async () => {
+    if (completed) return;
+    try {
+      const task = await apiRequest(`/tasks/${taskId}`);
+      rememberTask(task);
+      applyTaskSnapshot(task);
+      logTaskUpdate(task);
+      renderTaskList();
+      if (typeof onUpdate === "function") {
+        onUpdate(task);
+      }
+      if (!["draft", "queued", "processing"].includes(task.status)) {
+        completed = true;
+        clearTaskPolling();
+        if (typeof onFinal === "function") {
+          await onFinal(task);
+        }
+      }
+    } catch (error) {
+      completed = true;
+      clearTaskPolling();
+      if (typeof onError === "function") {
+        onError(error);
+      } else {
+        addLog("轮询失败", error.message || "无法更新任务状态。");
+        isRunning = false;
+        render();
+      }
+    }
+  }, TASK_POLL_MS);
+}
+
+async function launchBatchRound(index, total, runId) {
+  if (!batchRunState || batchRunState.stopped || runId !== runToken) return;
+  batchRunState.current = index;
+  if (index > 1) {
+    resetPipelineForNextRound(index, total);
+  }
+
+  const payload = buildTaskPayloadForRound(index, total);
+  const result = await apiRequest("/tasks", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  const task = result?.task;
+  if (!task) {
+    throw new Error("Backend did not return a workflow task.");
+  }
+
+  rememberTask(task);
+  addLog("任务创建", `${task.task_id} (${batchRoundDisplay(index, total)})`);
+  if (result.message) {
+    addLog("工作流", result.message);
+  }
+  applyTaskSnapshot(task);
+  logTaskUpdate(task, true);
+  renderTaskList();
+
+  if (result.dispatch_status !== "queued" && !["queued", "processing"].includes(task.status)) {
+    if (task.status === "completed") {
+      upsertGeneratedVideoTask(task, index, total);
+      rememberNodeHistory(task, index);
+      attachGeneratedVideosToOutputNode();
+      batchRunState.completed = index;
+      selectedGeneratedTaskId = task.task_id;
+    }
+    isRunning = false;
+    batchRunState.running = false;
+    render();
+    return;
+  }
+
+  startTaskPolling(task.task_id, {
+    onFinal: async (finalTask) => {
+      if (!batchRunState || runId !== runToken) return;
+      rememberTask(finalTask);
+      rememberNodeHistory(finalTask, index);
+      if (finalTask.status === "completed") {
+        upsertGeneratedVideoTask(finalTask, index, total);
+        attachGeneratedVideosToOutputNode();
+        selectedGeneratedTaskId = finalTask.task_id;
+        batchRunState.completed = index;
+        renderGeneratedVideoMenu();
+        renderNodeBriefGrid();
+        renderDownloadButton();
+        renderPreview();
+        if (index < total && !batchRunState.stopped) {
+          batchRunState.nextIndex = index + 1;
+          await launchBatchRound(index + 1, total, runId);
+          return;
+        }
+        isRunning = false;
+        batchRunState.running = false;
+        addLog("批量生成", `已完成 ${generatedVideos.length}/${total} 条视频。`);
+        render();
+        return;
+      }
+      isRunning = false;
+      batchRunState.running = false;
+      addLog("批量生成", `第 ${batchRoundDisplay(index, total)} 条失败：${finalTask.error_message || finalTask.status}`);
+      render();
+    },
+    onError: (error) => {
+      if (runId !== runToken) return;
+      isRunning = false;
+      if (batchRunState) {
+        batchRunState.running = false;
+      }
+      addLog("轮询失败", error.message || "无法更新任务状态。");
+      render();
+    },
+  });
+}
+
+async function runWorkflow() {
+  if (isRunning) return;
+  if (!getAccessToken()) {
+    addLog("登录提示", "请先登录主站账号，再运行视频工厂工作流。");
+    return;
+  }
+  await refreshProviderStatus({ silent: true });
+
+  const inputNode = findNode("input");
+  const title = String(inputNode?.fields?.topic || "").trim();
+  if (!title) {
+    selectedId = "input";
+    addLog("需要主题", "请先在“内容输入”节点填写视频主题。");
+    render();
+    return;
+  }
+
+  runToken += 1;
+  const currentRunToken = runToken;
+  activeTask = null;
+  activeTaskId = null;
+  downloadedTaskId = "";
+  clearTaskPolling();
+  lastTaskSignature = "";
+  resetGeneratedVideoState();
+  resetRuntime({ keepLog: true, detachTask: false });
+  isRunning = true;
+  els.runLog.innerHTML = "";
+  els.runTitle.textContent = "正在创建工作流任务";
+
+  const total = targetVideoCount();
+  batchRunState = {
+    total,
+    nextIndex: 1,
+    current: 1,
+    completed: 0,
+    stopped: false,
+    running: true,
+    runToken: currentRunToken,
+    title,
+  };
+
+  addLog("开始", total > 1 ? `准备批量生成 ${total} 条视频。` : "准备提交单条视频任务。");
+
+  try {
+    await launchBatchRound(1, total, currentRunToken);
+  } catch (error) {
+    isRunning = false;
+    if (batchRunState) {
+      batchRunState.running = false;
+    }
+    els.runTitle.textContent = "创建失败";
+    addLog("创建失败", error.message || "无法创建工作流任务。");
+    render();
+  }
+}
+
+function stopWorkflow() {
+  clearTaskPolling();
+  isRunning = false;
+  if (batchRunState) {
+    batchRunState.stopped = true;
+    batchRunState.running = false;
+  }
+  addLog("停止", activeTaskId ? `已停止轮询，任务 ${activeTaskId} 可在后端继续执行。` : "当前没有正在轮询的任务。");
+  render();
+}
+
+async function clearCurrentWorkflow() {
+  const taskId = activeTaskId || activeTask?.task_id || "";
+  if (taskId && getAccessToken()) {
+    try {
+      const result = await apiRequest(`/tasks/${encodeURIComponent(taskId)}/clear`, {
+        method: "POST",
+        body: JSON.stringify({ clear_files: true }),
+      });
+      const removedCount = Array.isArray(result?.removed_files) ? result.removed_files.length : 0;
+      if (result?.task) {
+        rememberTask(result.task);
+      }
+      addLog("清空状态", removedCount ? `已清理 ${removedCount} 个文件。` : "已清空当前运行状态。");
+    } catch (error) {
+      addLog("清空状态", error.message || "后端清理失败，已重置本地状态。");
+    }
+  }
+  downloadedTaskId = "";
+  batchRunState = null;
+  resetGeneratedVideoState();
+  resetRuntime();
+}
+
+render();
+bindEvents();
+refreshProviderStatus({ silent: true });
+refreshTaskList();
+addLog("就绪", "视频工厂工作流原型已载入。");

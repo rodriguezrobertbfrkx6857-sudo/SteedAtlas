@@ -1,0 +1,14 @@
+{
+  "scope": "ISOLATED_DATABASE_COPY",
+  "steps": [
+    "original_chat_submit",
+    "pending_exact_revision_opened",
+    "real_rule_based_tools"
+  ],
+  "errors": [],
+  "answer_mode": "INSUFFICIENT · 来源资料（审核状态见下）\n\n待核候选：三国志·魏书·吕布臧洪传 · PRIMARY_RECORD · DRAFT（不可作已证实引文）",
+  "exact_excerpt": "布有良馬曰赤兔。",
+  "source_url": "http://127.0.0.1:5175/api/v2/evidence/claim-1@2",
+  "trace": "search_entities → OK (4.154ms)\nsearch_evidence → OK (60.018ms)\nsearch_evidence → OK (21.099ms)\nsearch_evidence → OK (30.918ms)\ncompare_sources → OK (0.04ms)\ninspect_claim_edges → OK (0.173ms)\ncheck_coverage → OK (0.267ms)",
+  "mobile_overflow": false
+}

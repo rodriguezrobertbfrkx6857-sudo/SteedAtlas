@@ -1,0 +1,528 @@
+{
+  "schema_version": 1,
+  "seed": 20261031,
+  "provenance": "Derived from legacy corpus, not independent historical adjudication",
+  "corpus_sha256": "2cec0b44ef911bc0755bbc9bbdd56278dc40b3c27b01868666a55a4fa019c522",
+  "queries": [
+    {
+      "query": "赤兔",
+      "gold": "horse-001",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌骓",
+      "gold": "horse-002",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "的卢",
+      "gold": "horse-003",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "绝影",
+      "gold": "horse-004",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "爪黄飞电",
+      "gold": "horse-005",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "照夜玉狮子",
+      "gold": "horse-006",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "黄骠马",
+      "gold": "horse-007",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "呼雷豹",
+      "gold": "horse-008",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "玉兰白龙驹",
+      "gold": "horse-009",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "里飞沙",
+      "gold": "horse-010",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "菊花青",
+      "gold": "horse-011",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "黄骠透骨龙",
+      "gold": "horse-012",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "踏雪乌骓",
+      "gold": "horse-013",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌云踏雪",
+      "gold": "horse-014",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "白龙马",
+      "gold": "horse-015",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "飒露紫",
+      "gold": "horse-016",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "拳毛騧",
+      "gold": "horse-017",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "白蹄乌",
+      "gold": "horse-018",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "特勒骠",
+      "gold": "horse-019",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青骓",
+      "gold": "horse-020",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "什伐赤",
+      "gold": "horse-021",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "照夜白",
+      "gold": "horse-022",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "汗血天马",
+      "gold": "horse-023",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌孙天马",
+      "gold": "horse-024",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青海骢",
+      "gold": "horse-025",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "紫骍",
+      "gold": "horse-026",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "九花虬",
+      "gold": "horse-027",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "狮子骢",
+      "gold": "horse-028",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "五花马",
+      "gold": "horse-029",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青骢马",
+      "gold": "horse-030",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "纤离",
+      "gold": "horse-031",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "绝地",
+      "gold": "horse-032",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "翻羽",
+      "gold": "horse-033",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "奔霄",
+      "gold": "horse-034",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "越影",
+      "gold": "horse-035",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "逾辉",
+      "gold": "horse-036",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "超光",
+      "gold": "horse-037",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "腾雾",
+      "gold": "horse-038",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "盗骊",
+      "gold": "horse-039",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "骅骝",
+      "gold": "horse-040",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "騄耳",
+      "gold": "horse-041",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "赤骥",
+      "gold": "horse-042",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "白义",
+      "gold": "horse-043",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "渠黄",
+      "gold": "horse-044",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "绿耳",
+      "gold": "horse-045",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "玉花骢",
+      "gold": "horse-046",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌云盖雪",
+      "gold": "horse-047",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "雪里白",
+      "gold": "horse-048",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌龙驹",
+      "gold": "horse-049",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "白龙驹",
+      "gold": "horse-050",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青鬃马",
+      "gold": "horse-051",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "黑风驹",
+      "gold": "horse-052",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "千里火龙驹",
+      "gold": "horse-053",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "卷毛狮子兽",
+      "gold": "horse-054",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "一字板肋癞麒麟",
+      "gold": "horse-055",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "万里烟云罩",
+      "gold": "horse-056",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "闪电白龙驹",
+      "gold": "horse-057",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "踏雪无痕",
+      "gold": "horse-058",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "紫电青霜驹",
+      "gold": "horse-059",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "白玉追风驹",
+      "gold": "horse-060",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌金踏雪驹",
+      "gold": "horse-061",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "赤焰流云驹",
+      "gold": "horse-062",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "金睛兽马",
+      "gold": "horse-063",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "卷云乌骓",
+      "gold": "horse-064",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "飞霞骠",
+      "gold": "horse-065",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "白鼻騧",
+      "gold": "horse-066",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青花骢",
+      "gold": "horse-067",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "狮子骢王",
+      "gold": "horse-068",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "赤炭火龙驹",
+      "gold": "horse-069",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌骓踏雪",
+      "gold": "horse-070",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "银鬃白龙驹",
+      "gold": "horse-071",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青骢追风马",
+      "gold": "horse-072",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "龙鳞驹",
+      "gold": "horse-073",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "飞电骢",
+      "gold": "horse-074",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "踏雪梅花驹",
+      "gold": "horse-075",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "赤鬃烈马",
+      "gold": "horse-076",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "玉麒麟马",
+      "gold": "horse-077",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "火眼狻猊马",
+      "gold": "horse-078",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青鬃追月马",
+      "gold": "horse-079",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌骓胭脂马",
+      "gold": "horse-080",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "金眼墨龙驹",
+      "gold": "horse-081",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "胭脂兽",
+      "gold": "horse-082",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "赛龙驹",
+      "gold": "horse-083",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "追风驹",
+      "gold": "horse-084",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "奔雷驹",
+      "gold": "horse-085",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "踏燕乌骓",
+      "gold": "horse-086",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "赤焰驹",
+      "gold": "horse-087",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "银雪龙驹",
+      "gold": "horse-088",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "飞云骠",
+      "gold": "horse-089",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "天霜白骥",
+      "gold": "horse-090",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "龙骧",
+      "gold": "horse-091",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "虎步",
+      "gold": "horse-092",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "飞黄",
+      "gold": "horse-093",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "骐骥",
+      "gold": "horse-094",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "白骐",
+      "gold": "horse-095",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "乌骝",
+      "gold": "horse-096",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "黄骝",
+      "gold": "horse-097",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "青骝",
+      "gold": "horse-098",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "玄驹",
+      "gold": "horse-099",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "苍麟驹",
+      "gold": "horse-100",
+      "category": "derived_exact_name"
+    },
+    {
+      "query": "赤菟",
+      "gold": "horse-001",
+      "category": "synthetic_alias"
+    },
+    {
+      "query": "赤兔马",
+      "gold": "horse-001",
+      "category": "synthetic_alias"
+    },
+    {
+      "query": "的颅",
+      "gold": "horse-003",
+      "category": "synthetic_alias"
+    },
+    {
+      "query": "乌骓马",
+      "gold": "horse-002",
+      "category": "synthetic_alias"
+    }
+  ]
+}

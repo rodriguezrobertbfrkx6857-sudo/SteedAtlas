@@ -1,0 +1,135 @@
+[
+  {
+    "tool": "search_evidence",
+    "arguments": {
+      "query": "赤兔"
+    },
+    "status": "OK",
+    "output": {
+      "corpus_snapshot_id": "e428c34df59554a15c6e704aa95f4480c8c772f224e01f5cb2c93a6f6e986f0a",
+      "results": [],
+      "entities": [
+        {
+          "id": "chitu",
+          "kind": "knowledge_entity",
+          "version": 1,
+          "data": {
+            "name": "赤兔",
+            "entity_type": "Horse",
+            "aliases": [
+              "赤菟",
+              "赤兔马"
+            ],
+            "visibility": "PUBLIC"
+          }
+        }
+      ],
+      "candidates": [
+        {
+          "id": "claim-1",
+          "version": 2,
+          "text": "布有良马曰赤兔。 《三国志》吕布传记有良马赤兔。",
+          "source_title": "三国志·魏书·吕布臧洪传",
+          "genre": "PRIMARY_RECORD",
+          "review_state": "DRAFT",
+          "locator": "卷七·吕布传·良马段",
+          "href": "/api/v2/evidence/claim-1@2",
+          "usable_as_fact": false,
+          "score": 1.2329231676504893
+        }
+      ],
+      "editorial": [
+        {
+          "id": "editorial:horse-001",
+          "text": "赤兔。对应人物:吕布、关羽。朝代/出处:东汉末年《三国志》/《三国演义》。故事:先从吕布,后归关羽,是三国最具辨识度的名马之一。人格标签:忠义、速度、锋芒。",
+          "knowledge_class": "EDITORIAL",
+          "review_state": "UNVERIFIED",
+          "usable_as_fact": false,
+          "revision": "aa092e3999e59674815539a418a7b43f7719db876c6a2f92f58ea12521faed84",
+          "score": 10.053491090673836
+        },
+        {
+          "id": "editorial:horse-042",
+          "text": "赤骥。对应人物:帝王/英雄谱系。朝代/出处:古代名马传统。故事:“赤”与“骥”叠加,天生就有热血传奇感。人格标签:热烈、王气、进取。",
+          "knowledge_class": "EDITORIAL",
+          "review_state": "UNVERIFIED",
+          "usable_as_fact": false,
+          "revision": "a77b3654d37ee1fdb84782fa6dfaa5dbf95c481f55b3d64e0891758e0860636f",
+          "score": 3.7527442189467055
+        },
+        {
+          "id": "editorial:horse-087",
+          "text": "赤焰驹。对应人物:少年英雄。朝代/出处:民间叙事。故事:适合成长型热血主角坐骑。人格标签:热血、成长、勇往。",
+          "knowledge_class": "EDITORIAL",
+          "review_state": "UNVERIFIED",
+          "usable_as_fact": false,
+          "revision": "93157d7e718d064ca690fa80bde342ce2e0f7f85baa3af843da8a36d64c3e248",
+          "score": 2.7452890984492098
+        },
+        {
+          "id": "editorial:horse-021",
+          "text": "什伐赤。对应人物:李世民。朝代/出处:唐代昭陵六骏。故事:异域命名感强,天然带传奇稀有属性。人格标签:稀有、神秘、贵重。",
+          "knowledge_class": "EDITORIAL",
+          "review_state": "UNVERIFIED",
+          "usable_as_fact": false,
+          "revision": "851b030d5e427e96722f9a689fed6027f9f3a5370512363628a5343cd72e6a40",
+          "score": 2.608563107614112
+        },
+        {
+          "id": "editorial:horse-069",
+          "text": "赤炭火龙驹。对应人物:岳云/高宠型少年猛将。朝代/出处:评书传统。故事:热血、短兵猛冲、少年豪气。人格标签:爆裂、成长、冲锋。",
+          "knowledge_class": "EDITORIAL",
+          "review_state": "UNVERIFIED",
+          "usable_as_fact": false,
+          "revision": "9496f69ad417924aac0de811c2f081bc792ee8ab7cdf42fafbf1021910af8c6e",
+          "score": 2.608563107614112
+        },
+        {
+          "id": "editorial:horse-062",
+          "text": "赤焰流云驹。对应人物:热血先锋。朝代/出处:演义命名传统。故事:像火焰穿云而行的进攻型名驹。人格标签:热烈、速度、先锋。",
+          "knowledge_class": "EDITORIAL",
+          "review_state": "UNVERIFIED",
+          "usable_as_fact": false,
+          "revision": "325ebe484e9fe8a13591545264aca15c0aa34c0cbc85fecc9a5dc01d4ef501f6",
+          "score": 2.5659647914946593
+        },
+        {
+          "id": "editorial:horse-076",
+          "text": "赤鬃烈马。对应人物:草原英雄/边军。朝代/出处:历史演义混合。故事:野性与爆发兼具,适合疆场硬派角色。人格标签:野性、爆发、自由。",
+          "knowledge_class": "EDITORIAL",
+          "review_state": "UNVERIFIED",
+          "usable_as_fact": false,
+          "revision": "41e6b58c503066809ea504b1db846ac7d177bc1f7f71478c3f7e80487d4d8a4e",
+          "score": 2.511285126473286
+        }
+      ],
+      "independent_support_groups": 0,
+      "score_semantics": "LEXICAL_RELEVANCE_ONLY",
+      "scope": "all",
+      "mode": "INSUFFICIENT_EVIDENCE"
+    },
+    "output_hash": "b96de96c0b9cf6a26b8a657dbc8e0d37cf2f80618fb02ed2a35f53628b9a387c",
+    "elapsed_ms": 24.044
+  },
+  {
+    "tool": "get_passage_revision",
+    "arguments": {
+      "id": "passage-1",
+      "version": 1
+    },
+    "status": "OK",
+    "output": {
+      "source_id": "source-1",
+      "locator": "卷七·吕布传·良马段",
+      "content": "布有良馬曰赤兔。",
+      "text_hash": "46d25ffce244c062404c8aa9717b2f3c6239de1936e103680ad78484d4ae119a",
+      "language": "zh-Hant",
+      "span": [
+        0,
+        8
+      ]
+    },
+    "output_hash": "08518c6dba02e3b9e887785af33d84cdd84c619314db604b688c43a8e9ce2e04",
+    "elapsed_ms": 6.5
+  }
+]

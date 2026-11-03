@@ -1,0 +1,39 @@
+{
+  "database": "runtime\\resume-rc\\autonomous-demo.db",
+  "offline": true,
+  "imports": [],
+  "blocked": [
+    {
+      "title": "三國演義/第003回",
+      "reason": "OFFLINE_CACHE_MISS"
+    },
+    {
+      "title": "三國志/卷32",
+      "reason": "OFFLINE_CACHE_MISS"
+    },
+    {
+      "title": "史記/卷007",
+      "reason": "OFFLINE_CACHE_MISS"
+    },
+    {
+      "title": "三國志/卷07",
+      "reason": "OFFLINE_CACHE_MISS"
+    }
+  ],
+  "coverage": {
+    "corpus_snapshot_id": "b783eefe74d9989086f7728921546c57f0f569d3f53b999571e757b5b535b92f",
+    "editorial_count": 100,
+    "legacy_editorial_count": 100,
+    "claim_count": 0,
+    "review_states": {},
+    "citable_count": 0,
+    "machine_verified_count": 0,
+    "human_reviewed_count": 0,
+    "llm_available": false,
+    "source_present": true,
+    "index_ready": true,
+    "evidence_verified": false
+  },
+  "trace": [],
+  "network_requests": 0
+}

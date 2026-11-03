@@ -1,0 +1,24 @@
+name: SteedAtlas V2 local-first checks
+on: workflow_dispatch  # Explicit execution; no CI spend triggered by this private backup push.
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: CPU media tools (ephemeral CI runner only)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk
+      - run: pip install -r requirements-dev.txt
+      - run: mkdir -p runtime reports && python -m pytest tests -q --junitxml=reports/pytest.xml
+      - run: npm ci && npm test && npm run build
+        working-directory: frontend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification
+          path: reports/pytest.xml

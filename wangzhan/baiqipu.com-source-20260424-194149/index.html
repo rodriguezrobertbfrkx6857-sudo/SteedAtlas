@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>百骑谱 — AI驱动的历史名马数字化商业系统</title>
+    <meta name="description" content="百骑谱是基于AI的历史名马数字化商业平台，融合文化IP、AI性格测试、游戏化抽卡和跨境电商，让每个人找到属于自己的精神守护名马。" />
+    <meta name="keywords" content="百骑谱,历史名马,赤兔,乌骓,的卢,AI性格测试,文化IP,手办,游戏化,抽卡" />
+    <meta property="og:title" content="百骑谱 — 找到你的守护名马" />
+    <meta property="og:description" content="AI驱动的历史名马数字化商业系统，融合文化故事、性格测试与游戏化体验" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://baiqipu.com" />
+    <meta property="og:image" content="/images/og-cover.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0c0a09" />
+    <link rel="canonical" href="https://baiqipu.com" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "百骑谱",
+      "url": "https://baiqipu.com",
+      "description": "AI驱动的历史名马数字化商业系统",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://baiqipu.com/atlas?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="module" crossorigin src="/assets/js/index-CpqDpQs9.js"></script>
+    <script defer src="/evidence-adapter.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/js/router-BGfvzgzq.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/motion-CDZyDkei.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/charts-TQ27S2Uq.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/icons-DW3jfwfF.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CAKZiFLw.css">
+    <style>
+      .main-auth-link {
+        position: fixed;
+        top: 76px;
+        left: 18px;
+        z-index: 60;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 84px;
+        min-height: 40px;
+        border: 1px solid rgba(251, 191, 36, 0.7);
+        border-radius: 999px;
+        background: #fbbf24;
+        color: #17110a;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 14px 36px rgba(251, 191, 36, 0.2);
+        transition:
+          transform 150ms ease,
+          border-color 150ms ease,
+          background 150ms ease;
+      }
+
+      .main-auth-link:hover {
+        transform: translateY(-1px);
+        border-color: rgba(254, 240, 138, 0.9);
+        background: #fcd34d;
+      }
+
+      .main-auth-link.is-logged-in {
+        border-color: rgba(52, 211, 153, 0.62);
+        background: #123326;
+        color: #d1fae5;
+        box-shadow: 0 14px 36px rgba(16, 185, 129, 0.14);
+        cursor: default;
+      }
+
+      .main-auth-link.is-logged-in:hover {
+        transform: none;
+        background: #123326;
+      }
+
+      .main-auth-link[hidden] {
+        display: none;
+      }
+
+      @media (max-width: 720px) {
+        .main-auth-link {
+          top: 72px;
+          left: 12px;
+          min-width: 76px;
+          min-height: 38px;
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <a id="mainAuthLink" class="main-auth-link" href="/login?next=%2F">登录</a>
+    <script>
+      (function () {
+        const AUTH_STORAGE_KEY = "auth-storage";
+        const loginHref = "/login?next=%2F";
+        const homePaths = new Set(["/", ""]);
+
+        function loadAuthState() {
+          try {
+            const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return parsed && parsed.state ? parsed.state : null;
+          } catch {
+            return null;
+          }
+        }
+
+        function isLoggedIn() {
+          const state = loadAuthState();
+          return Boolean(
+            state &&
+              state.isAuthenticated &&
+              (state.accessToken || state.access_token || state.refreshToken || state.refresh_token || state.user)
+          );
+        }
+
+        function syncMainAuthLink() {
+          const link = document.getElementById("mainAuthLink");
+          if (!link) return;
+          const isHome = homePaths.has(window.location.pathname);
+          link.hidden = !isHome;
+          if (isLoggedIn()) {
+            link.textContent = "已登录";
+            link.href = "#";
+            link.classList.add("is-logged-in");
+            link.title = "当前账号已登录";
+          } else {
+            link.textContent = "登录";
+            link.href = loginHref;
+            link.classList.remove("is-logged-in");
+            link.title = "前往登录";
+          }
+        }
+
+        document.addEventListener("click", (event) => {
+          const link = event.target.closest("#mainAuthLink");
+          if (link && isLoggedIn()) {
+            event.preventDefault();
+          }
+        });
+        window.addEventListener("storage", (event) => {
+          if (!event.key || event.key === AUTH_STORAGE_KEY) syncMainAuthLink();
+        });
+        window.addEventListener("pageshow", syncMainAuthLink);
+        window.addEventListener("popstate", syncMainAuthLink);
+        setInterval(syncMainAuthLink, 1200);
+        syncMainAuthLink();
+      })();
+    </script>
+    <script>
+      (function () {
+        const desktopBase =
+          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition xl:px-3.5";
+        const desktopIdle = `${desktopBase} text-stone-300 hover:bg-white/[0.06] hover:text-amber-100`;
+        const desktopActive = `${desktopBase} bg-amber-200 text-stone-950 shadow-[0_8px_24px_rgba(250,204,21,0.18)]`;
+        const mobileBase = "rounded-2xl border px-4 py-3 text-sm font-medium transition";
+        const mobileIdle = `${mobileBase} border-white/10 bg-white/[0.04] text-stone-200 hover:border-amber-200/25 hover:text-amber-100`;
+        const mobileActive = `${mobileBase} border-amber-200/40 bg-amber-200 text-stone-950`;
+        const desktopFactoryClass =
+          "inline-flex items-center rounded-full bg-amber-300 px-4 py-2 text-sm font-medium text-stone-950 transition hover:bg-amber-200";
+        const desktopProofClass =
+          "inline-flex items-center rounded-full border border-cyan-200/30 bg-cyan-200/10 px-4 py-2 text-sm font-medium text-cyan-50 transition hover:border-cyan-100/60 hover:bg-cyan-200/16";
+        const mobileActionClass =
+          "inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition";
+        const mobileProofClass =
+          `${mobileActionClass} border-cyan-200/30 bg-cyan-200/10 text-cyan-50 hover:border-cyan-100/60 hover:bg-cyan-200/16`;
+        const mobileFactoryClass =
+          `${mobileActionClass} border-amber-200/40 bg-amber-200 text-stone-950 hover:bg-amber-100`;
+
+        function buildLink(href, label, className) {
+          const link = document.createElement("a");
+          link.href = href;
+          link.className = className;
+          link.textContent = label;
+          return link;
+        }
+
+        function buildFactoryButton() {
+          const link = document.createElement("a");
+          link.href = "/workflow-studio/";
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.dataset.vfEntry = "desktop";
+          link.className = desktopFactoryClass;
+          link.textContent = "视频工厂";
+          return link;
+        }
+
+        function buildProofButton(target = "desktop") {
+          const link = document.createElement("a");
+          link.href = "/horse-rag/";
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.dataset.ragEntry = target;
+          link.className = target === "mobile" ? mobileProofClass : desktopProofClass;
+          link.textContent = "RAG马库";
+          return link;
+        }
+
+        function buildMobileFactoryButton() {
+          const link = buildFactoryButton();
+          link.dataset.vfEntry = "mobile";
+          link.className = mobileFactoryClass;
+          return link;
+        }
+
+        function isHomePath(pathname) {
+          return pathname === "/" || pathname === "";
+        }
+
+        function patchDesktopNav(nav) {
+          const centerWrap = nav.children[1];
+          const centerInner = centerWrap && centerWrap.firstElementChild;
+          const rightWrap = nav.children[2];
+          const currentPath = window.location.pathname;
+
+          if (centerInner) {
+            centerInner.querySelectorAll("a").forEach((node) => {
+              if (node.textContent.trim() === "视频工厂") {
+                node.remove();
+              }
+            });
+
+            const existingHome = Array.from(centerInner.querySelectorAll("a")).find(
+              (node) => node.textContent.trim() === "主界面"
+            );
+            if (!existingHome) {
+              centerInner.prepend(
+                buildLink("/", "主界面", isHomePath(currentPath) ? desktopActive : desktopIdle)
+              );
+            } else {
+              existingHome.className = isHomePath(currentPath) ? desktopActive : desktopIdle;
+            }
+          }
+
+          if (rightWrap) {
+            rightWrap.querySelectorAll("a").forEach((node) => {
+              const label = node.textContent.trim();
+              if ((label === "视频工厂" && !node.dataset.vfEntry) || (label === "RAG马库" && !node.dataset.ragEntry)) {
+                node.remove();
+              }
+            });
+            if (!rightWrap.querySelector("[data-rag-entry='desktop']")) {
+              rightWrap.insertBefore(buildProofButton(), rightWrap.firstChild);
+            }
+            if (!rightWrap.querySelector("[data-vf-entry='desktop']")) {
+              rightWrap.insertBefore(buildFactoryButton(), rightWrap.firstChild);
+            }
+          }
+        }
+
+        function patchMobileNav() {
+          const currentPath = window.location.pathname;
+          const panel = document.querySelector("header > div.border-t");
+          if (!panel) return;
+          const grid = panel.querySelector("div.grid");
+          if (!grid) return;
+
+          grid.querySelectorAll("a").forEach((node) => {
+            if (["视频工厂", "RAG马库"].includes(node.textContent.trim())) {
+              node.remove();
+            }
+          });
+
+          const existingHome = Array.from(grid.querySelectorAll("a")).find(
+            (node) => node.textContent.trim() === "主界面"
+          );
+          if (!existingHome) {
+            grid.prepend(buildLink("/", "主界面", isHomePath(currentPath) ? mobileActive : mobileIdle));
+          } else {
+            existingHome.className = isHomePath(currentPath) ? mobileActive : mobileIdle;
+          }
+
+          let actionRow = panel.querySelector("[data-proof-actions='mobile']");
+          if (!actionRow) {
+            actionRow = document.createElement("div");
+            actionRow.dataset.proofActions = "mobile";
+            actionRow.className = "mb-3 grid grid-cols-2 gap-2";
+            panel.insertBefore(actionRow, grid);
+          }
+          if (!actionRow.querySelector("[data-rag-entry='mobile']")) {
+            actionRow.appendChild(buildProofButton("mobile"));
+          }
+          if (!actionRow.querySelector("[data-vf-entry='mobile']")) {
+            actionRow.appendChild(buildMobileFactoryButton());
+          }
+        }
+
+        function patchNavigation() {
+          const nav = document.querySelector("header nav");
+          if (!nav) return;
+          patchDesktopNav(nav);
+          patchMobileNav();
+        }
+
+        let rafId = 0;
+        function schedulePatch() {
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+          }
+          rafId = requestAnimationFrame(() => {
+            rafId = 0;
+            patchNavigation();
+          });
+        }
+
+        const observer = new MutationObserver(schedulePatch);
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", schedulePatch, { once: true });
+        } else {
+          schedulePatch();
+        }
+
+        window.addEventListener("load", schedulePatch);
+        window.addEventListener("popstate", schedulePatch);
+      })();
+    </script>
+  </body>
+</html>

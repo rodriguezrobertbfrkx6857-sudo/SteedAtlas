@@ -1,0 +1,86 @@
+{
+  "mode": "REAL_BROWSER_LOCAL_CPU",
+  "checks": [
+    "home renders",
+    "catalogue to exact passage",
+    "register create edit save proposal compile approve render preview",
+    "320px no horizontal overflow"
+  ],
+  "console_errors": [],
+  "browser": "156.0.4314.58",
+  "performance": {
+    "navigation": {
+      "name": "http://127.0.0.1:5173/",
+      "entryType": "navigation",
+      "startTime": 0,
+      "duration": 266.5,
+      "navigationId": 7452,
+      "initiatorType": "navigation",
+      "deliveryType": "",
+      "nextHopProtocol": "http/1.1",
+      "renderBlockingStatus": "non-blocking",
+      "contentType": "text/html",
+      "contentEncoding": "",
+      "workerStart": 0,
+      "workerRouterEvaluationStart": 0,
+      "workerCacheLookupStart": 0,
+      "workerMatchedSourceType": "",
+      "workerFinalSourceType": "",
+      "redirectStart": 0,
+      "redirectEnd": 0,
+      "fetchStart": 6.1000000005587935,
+      "domainLookupStart": 6.1000000005587935,
+      "domainLookupEnd": 6.1000000005587935,
+      "connectStart": 6.1000000005587935,
+      "secureConnectionStart": 0,
+      "connectEnd": 6.1000000005587935,
+      "requestStart": 7.6000000005587935,
+      "responseStart": 14,
+      "firstInterimResponseStart": 0,
+      "finalResponseHeadersStart": 14,
+      "responseEnd": 14.800000000745058,
+      "transferSize": 736,
+      "encodedBodySize": 436,
+      "decodedBodySize": 436,
+      "responseStatus": 200,
+      "serverTiming": [],
+      "unloadEventStart": 0,
+      "unloadEventEnd": 0,
+      "domInteractive": 24.40000000037253,
+      "domContentLoadedEventStart": 265.1000000005588,
+      "domContentLoadedEventEnd": 265.20000000018626,
+      "domComplete": 266.5,
+      "loadEventStart": 266.5,
+      "loadEventEnd": 266.5,
+      "type": "navigate",
+      "redirectCount": 0,
+      "activationStart": 0,
+      "criticalCHRestart": 0,
+      "notRestoredReasons": null,
+      "confidence": {
+        "randomizedTriggerRate": 0.4994798,
+        "value": "low"
+      }
+    },
+    "paint": [
+      {
+        "name": "first-paint",
+        "entryType": "paint",
+        "startTime": 288,
+        "duration": 0,
+        "navigationId": 7452,
+        "paintTime": 265.70000000018626,
+        "presentationTime": 288
+      },
+      {
+        "name": "first-contentful-paint",
+        "entryType": "paint",
+        "startTime": 372,
+        "duration": 0,
+        "navigationId": 7452,
+        "paintTime": 317.20000000018626,
+        "presentationTime": 372
+      }
+    ]
+  }
+}
